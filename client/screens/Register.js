@@ -6,7 +6,7 @@
  * @flow strict-local
  */
 
- import React, {Component} from 'react';
+ import React, {Component, useRef} from 'react';
  import Icon from 'react-native-vector-icons/dist/FontAwesome';
  import SelectDropdown from 'react-native-select-dropdown';
  import PhoneInput from 'react-native-phone-number-input';
@@ -30,6 +30,8 @@ import Lottie from '../Components/Lottie';
    ScrollView,
    TouchableOpacity,
    TextInput,
+   Alert,
+   Modal,
  } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native';
 
@@ -38,19 +40,88 @@ import { KeyboardAvoidingView } from 'react-native';
  class Register extends Component{
   constructor(props){
     super(props);
+    this.phoneinput = React.createRef();
+
   }
+  async addUser(){
+    const response = await fetch("http://172.19.37.153:3001/addUser", {
+      method: "POST",
+      headers: {
+       "Content-Type": "application/json"
+       },
+      body: JSON.stringify(
+        {
+                "FirstName": this.state.FirstName,
+                "LastName":this.state.LastName,
+                "Gender": this.state.Gender,
+                "BirthDate": this.state.BYear+"-"+this.state.BMonth+"-"+this.state.BDay,
+                "Country": this.state.Country,
+                "PhoneNumber": this.state.PhoneNumber,
+                "Email": this.state.Email,
+                "Password":this.state.PasswordValue,
+        }
+      )
+     });   
+   const body = await response.json();
+   console.log(body);
+  }
+
+ 
    state = {
-     Country: "Palestine",
      secure: true,
-     passwordValue:"",
      focus: false,
      confirmsecure: true,
      confirmfocus: false,
-     confirmpasswordValue:"",
+     FirstName:"",
+     LastName: "",
+     Gender: "",
+     BDay:0,
+     BMonth:0,
+     BYear:0,
+     Country:"Palestine",
+     PhoneNumber:"",
+     phonevalid:true,
+     phonevalue: "",
+     Email:"",
+     emailvalid:false,
+     PasswordValue:"",
+     ConfirmpasswordValue:"",
+  
+
    }
- 
+   validate = (text) => {
+    
+    let reg = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w\w+)+$/;
+    if (reg.test(text) === true) {
+      this.setState({ Email: text ,
+      emailvalid:true})
+
+    }
+    else{
+      this.setState({emailvalid:false})
+  
+    }
+    
+  }
+ showAlert = (title,field) =>
+  Alert.alert(
+    title,
+    field,
+    [
+      {
+        text: "Cancel",
+      
+        style: "cancel",
+      },
+    ],
+    {
+      cancelable: true,
+      
+      
+    }
+  );
    render(){
-     
+  
      return (
 
        <View style={styles.MainView}>
@@ -87,7 +158,13 @@ import { KeyboardAvoidingView } from 'react-native';
                     size={25}
                   />
         
-                 <TextInput style={styles.textinputstyle} placeholder="First Name" />
+                 <TextInput style={styles.textinputstyle} 
+                 onChangeText={(text)=>
+                   this.setState({
+                     FirstName:text
+                   })
+                 }
+                 placeholder="First Name" />
                 </View>
 
                 </View>
@@ -105,7 +182,13 @@ import { KeyboardAvoidingView } from 'react-native';
                     size={25}
                   />
         
-                 <TextInput style={styles.textinputstyle} placeholder="Last Name"/>
+                 <TextInput style={styles.textinputstyle}
+                  onChangeText={(text)=>
+                    this.setState({
+                      LastName:text
+                    })
+                  }
+                   placeholder="Last Name"/>
                 </View>
 
                 </View>
@@ -127,12 +210,17 @@ import { KeyboardAvoidingView } from 'react-native';
                 <SelectDropdown 
                   dropdownBackgroundColor={"#98a988"}
                   buttonStyle={styles.textinputstyle}
+                  styleInput={{fontFamily:'SairaSemiCondensed-Regular'}}
                   defaultButtonText={"Select"}
                   // placeholder={"Select"}
                   rowTextForSelection={""}
 	                data={gender}
 	                onSelect={(selectedItem, index) => {
-	        	         console.log(selectedItem, index)
+
+	        	        this.setState({
+                      Gender:selectedItem
+                    })
+                   
 	                }}
 	                buttonTextAfterSelection={(selectedItem, index) => {
 		                  // text represented after item is selected
@@ -159,9 +247,18 @@ import { KeyboardAvoidingView } from 'react-native';
                  
         
                  <DateField 
-                 styleInput={{backgroundColor:'#98a988'}}
+                 styleInput={{backgroundColor:'#98a988',fontFamily:'SairaSemiCondensed-Regular',
+                height:47}}
                  containerStyle={{backgroundColor:'#98a988', width:210, 
                  borderRadius:15,height:40,overflow: 'hidden'}}
+                onSubmit={value=>{
+                
+                  this.setState({
+                    BDay: value.getDate(),
+                    BMonth: value.getMonth()+1,
+                    BYear: value.getFullYear(),
+                  })
+                }}
                  
                   />
                 </View>
@@ -192,7 +289,7 @@ import { KeyboardAvoidingView } from 'react-native';
                      
                      onSelect={  (index) => {
                         this.setState({Country: index.name});
-                        console.log(index.name);
+                      
                       }}
                       placeholder={this.state.Country}
                       containerStyle={{width:180, textAlign:'center',paddingHorizontal:30}}
@@ -227,16 +324,26 @@ import { KeyboardAvoidingView } from 'react-native';
                 {/* <KeyboardAvoidingView> */}
                   <PhoneInput 
                      layout="second"
-                     defaultCode="DM"         
+                     defaultCode="PS"         
                      keyboardType="phone-pad"
-                     
+                     ref={this.phoneinput}
+                     onChangeText={text=>{
+                        this.setState({phonevalue:text});
+                     }}
+                     onChangeFormattedText={(text)=>{
+                      
+                       this.setState({PhoneNumber:text});
+                       
+                     }
+
+                     }
                      
                     //  withShadow
                      placeholder='Enter'
                      containerStyle={{backgroundColor:'#98a988',height:40, overflow: 'hidden',borderRadius:15, width:210, paddingHorizontal:0}}
-                     textContainerStyle={{height:40, backgroundColor:'#98a988',width:200,borderRadius:15}}
-                     codeTextStyle={{fontSize: 15, height:30, backgroundColor:'#98a988' }}
-                     textInputStyle={{color:'black', fontSize: 15, backgroundColor: '#98a988', height:40}}
+                     textContainerStyle={{height:47, backgroundColor:'#98a988',width:200,borderRadius:15}}
+                     codeTextStyle={{fontSize: 15,fontFamily:'SairaSemiCondensed-Regular' ,height:30, backgroundColor:'#98a988' }}
+                     textInputStyle={{color:'black', fontSize: 15,fontFamily:'SairaSemiCondensed-Regular', backgroundColor: '#98a988', height:47}}
                   />
                   {/* </KeyboardAvoidingView> */}
 
@@ -259,6 +366,7 @@ import { KeyboardAvoidingView } from 'react-native';
                  keyboardType='email-address'
                  placeholder='Email Address'
                 textContentType='emailAddress'
+                onChangeText={(text)=>this.validate(text)}
                  style={styles.textinputstyle} />
                 </View>
                 </View>
@@ -277,12 +385,12 @@ import { KeyboardAvoidingView } from 'react-native';
                   />
                  <TextInput
                     setFocus={this.state.focus}
-                    onChangeText={text => this.setState({passwordValue: text})}
+                    onChangeText={text => this.setState({PasswordValue: text})}
                     onFocus={() => this.setState({focus: true})}
                     onBlur={() => this.setState({focus: false})}
                     secureTextEntry={this.state.secure} //we just added this
                     style=
-                      {styles.textInputStyle,{paddingRight:50}}
+                      {styles.textinputstyle}
                     placeholder={"Enter Password"} />
                     {
                       // <View style={{alignItems:'flex-start'}}>
@@ -297,7 +405,7 @@ import { KeyboardAvoidingView } from 'react-native';
                 {/* confirm password */}
                 <View style={styles.RegisterRows}>
                   <Text style={styles.textstyle1}>
-                    Confirm Password
+                    Confirm 
                   </Text>
                   <View style={{display:'flex', flex:2,flexDirection:'row', width:180}}>
                   <View style={styles.inputView}>
@@ -309,12 +417,12 @@ import { KeyboardAvoidingView } from 'react-native';
                   />
                  <TextInput
                     setFocus={this.state.confirmfocus}
-                    onChangeText={text => this.setState({confirmpasswordValue: text})}
+                    onChangeText={text => this.setState({ConfirmpasswordValue: text})}
                     onFocus={() => this.setState({confirmfocus: true})}
                     onBlur={() => this.setState({confirmfocus: false})}
                     secureTextEntry={this.state.confirmsecure} //we just added this
                     style=
-                      {styles.textInputStyle,{paddingRight:50}}
+                      {styles.textinputstyle}
                     placeholder={"Enter Password"} />
                     <Icon style={{ marginLeft:180, position:'absolute'}}
                          name={this.state.confirmsecure ? "eye" : 'eye-slash'}
@@ -339,7 +447,48 @@ import { KeyboardAvoidingView } from 'react-native';
 
         <View style={{marginTop:0, marginBottom: 20,paddingTop:0}}>
         <TouchableOpacity style={styles.buttonstyle} onPress={
-              ()=>this.props.navigation.navigate('register')
+              ()=>{this.props.navigation.navigate('register');
+              this.state.phonevalid= this.phoneinput.current?.isValidNumber(this.state.phonevalue);
+              
+              
+              if(this.state.FirstName==""){
+                 this.showAlert("Empty Field","Make sure First Name field is full ");
+              }
+              else if(this.state.LastName==""){
+                this.showAlert("Empty Field","Make sure Last Name field is full ");
+              }
+              else if(this.state.Gender==""){
+                this.showAlert("Gender","Make sure Gender is selected");
+              }
+              else if(this.state.BDay==0||this.state.BMonth==0||this.state.BYear==0){
+                this.showAlert("BirthDate","Make sure Birth Date field is full");
+              }
+              else  if(!this.state.phonevalid)
+              {
+                this.showAlert("Phone Number","Make sure Phone Number field is valid");
+              }
+              //  else if (this.state.Email==""){
+              //   this.showAlert("Email","Make sure Email field is full");
+              //  }
+             else if(!this.state.emailvalid){
+                this.showAlert("Email","Make sure Email field is valid");
+              }
+              else if(this.state.PasswordValue==""){
+                this.showAlert("Email","Make sure Password field is full");
+              }
+              else if(this.state.ConfirmpasswordValue==""){
+                this.showAlert("Email","Make sure Confirm Password field is full");
+              }
+              else if(this.state.PasswordValue!=this.state.ConfirmpasswordValue){
+                this.showAlert("Email","Make sure Password and Confirm password match");
+              }
+              else{
+                this.addUser();
+              }
+              
+             
+            
+        }
             }>
             
            <Text style={styles.buttontext} >Register</Text>
@@ -445,7 +594,7 @@ import { KeyboardAvoidingView } from 'react-native';
   textinputstyle: {
     width: 180,
     paddingHorizontal:4,
-    height: 40,
+    height: 47,
     fontFamily: 'SairaSemiCondensed-Regular',
     fontSize: 15,
     textDecorationLine: 'none',

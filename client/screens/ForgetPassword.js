@@ -59,10 +59,10 @@
                android: () => -60
             })()
           }
-          style={styles.MainView, {marginTop: 250, width: '100%', height: 390}}>
+          style={styles.MainView, {marginTop: 270, width: '100%', height: 390}}>
         
          <View style={styles.scrollView1}>
-         <View style={{marginTop: 40}}>
+         <View style={{marginTop:10}}>
             <Text style={styles.textstyle}>Change Password</Text>
             </View>
             <ScrollView showsVerticalScrollIndicator={false} style={{marginTop: 40,marginBottom:0}}>
@@ -154,7 +154,7 @@
                     onBlur={() => this.setState({focus: false})}
                     secureTextEntry={this.state.secure} //we just added this
                     style=
-                      {styles.textInputStyle,{paddingRight:50}}
+                      {styles.textinputstyle}
                     placeholder={"Enter Password"} />
                     {
                       // <View style={{alignItems:'flex-start'}}>
@@ -186,7 +186,7 @@
                     onBlur={() => this.setState({confirmfocus: false})}
                     secureTextEntry={this.state.confirmsecure} //we just added this
                     style=
-                      {styles.textInputStyle,{paddingRight:50}}
+                      {styles.textinputstyle}
                     placeholder={"Enter Password"} />
                     <Icon style={{ marginLeft:180, position:'absolute'}}
                          name={this.state.confirmsecure ? "eye" : 'eye-slash'}
@@ -371,7 +371,7 @@
  textinputstyle: {
    width: 180,
    paddingHorizontal:4,
-   height: 40,
+   height: 47,
    fontFamily: 'SairaSemiCondensed-Regular',
    fontSize: 15,
    textDecorationLine: 'none',

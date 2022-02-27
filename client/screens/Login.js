@@ -98,7 +98,7 @@
                     onBlur={() => this.setState({focus: false})}
                     secureTextEntry={this.state.secure} //we just added this
                     style=
-                      {styles.textInputStyle,{paddingRight:50}}
+                      {styles.textinputstyle}
                     placeholder={"Enter Password"} />
                     {
                       <Icon style={{ marginLeft:180,position:'absolute' }}
@@ -253,7 +253,7 @@
  textinputstyle: {
    width: 180,
    paddingHorizontal:4,
-   height: 40,
+   height: 47,
    fontFamily: 'SairaSemiCondensed-Regular',
    fontSize: 15,
    textDecorationLine: 'none',
