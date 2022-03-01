@@ -19,6 +19,7 @@
    TouchableOpacity,
    TextInput,
  } from 'react-native';
+ import { Base64 } from 'js-base64';
 
  
  class Login extends Component{
@@ -30,6 +31,37 @@
     secure: true,
     passwordValue:"",
     focus: false,
+    Email:"",
+    PasswordEncoded:"",
+    PasswordDecoded:"",
+    usersList: {},
+  }
+
+  async getUser(){
+    const response = await fetch("http://192.168.1.110:3001/getUser", {
+      method: "POST",
+      headers: {
+       "Content-Type": "application/json"
+       },
+      body: JSON.stringify(
+        {               
+                "Email": this.state.Email,
+        }
+      )
+     });   
+   const body = await response.json();
+  //  console.log(body);
+   this.setState({PasswordEncoded: body});
+   this.decrypt_password();
+  }
+
+  decrypt_password = () => {
+
+    var temp2 = Base64.decode(this.state.PasswordEncoded);
+
+    // console.log(temp2);
+    this.setState({ PasswordDecoded: temp2 });
+    // console.log(this.state.PasswordDecoded);
   }
 
  
@@ -72,6 +104,7 @@
                     size={20}
                   />
                  <TextInput 
+                 onChangeText={text=>this.setState({Email:text})}
                  keyboardType='email-address'
                  placeholder='Email Address'
                 textContentType='emailAddress'
@@ -135,7 +168,11 @@
 
         <View style={{marginTop:0, marginBottom: 20,paddingTop:0}}>
         <TouchableOpacity style={styles.buttonstyle} onPress={
-              ()=>this.props.navigation.navigate('login')
+              ()=>{
+                this.props.navigation.navigate('login');
+                this.getUser();
+
+              }
             }>
             
            <Text style={styles.buttontext} >Login</Text>

@@ -15,6 +15,8 @@
   getAllCountries
 } from 'react-native-country-picker-modal';
 
+import { Base64 } from 'js-base64';
+
 import Lottie from '../Components/Lottie';
 
 // import CountrySelectDropdown from "react-native-searchable-country-dropdown";
@@ -31,7 +33,6 @@ import Lottie from '../Components/Lottie';
    TouchableOpacity,
    TextInput,
    Alert,
-   Modal,
  } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native';
 
@@ -43,8 +44,32 @@ import { KeyboardAvoidingView } from 'react-native';
     this.phoneinput = React.createRef();
 
   }
+  state = {
+    secure: true,
+    focus: false,
+    confirmsecure: true,
+    confirmfocus: false,
+    FirstName:"",
+    LastName: "",
+    Gender: "",
+    BDay:0,
+    BMonth:0,
+    BYear:0,
+    Country:"Palestine",
+    PhoneNumber:"",
+    phonevalid:true,
+    phonevalue: "",
+    Email:"",
+    emailvalid:false,
+    PasswordValue:"",
+    ConfirmpasswordValue:"",
+    PasswordEncoded:"",
+    PasswordDecoded:"",
+    usersList: [],
+
+  }
   async addUser(){
-    const response = await fetch("http://172.19.37.153:3001/addUser", {
+    const response = await fetch("http://192.168.1.110:3001/addUser", {
       method: "POST",
       headers: {
        "Content-Type": "application/json"
@@ -58,37 +83,17 @@ import { KeyboardAvoidingView } from 'react-native';
                 "Country": this.state.Country,
                 "PhoneNumber": this.state.PhoneNumber,
                 "Email": this.state.Email,
-                "Password":this.state.PasswordValue,
+                "Password":this.state.PasswordEncoded,
         }
       )
      });   
    const body = await response.json();
    console.log(body);
+   if(body==='existed'){
+    this.showAlert("Email","There is already an account with this email address");
+   }
   }
 
- 
-   state = {
-     secure: true,
-     focus: false,
-     confirmsecure: true,
-     confirmfocus: false,
-     FirstName:"",
-     LastName: "",
-     Gender: "",
-     BDay:0,
-     BMonth:0,
-     BYear:0,
-     Country:"Palestine",
-     PhoneNumber:"",
-     phonevalid:true,
-     phonevalue: "",
-     Email:"",
-     emailvalid:false,
-     PasswordValue:"",
-     ConfirmpasswordValue:"",
-  
-
-   }
    validate = (text) => {
     
     let reg = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w\w+)+$/;
@@ -120,8 +125,15 @@ import { KeyboardAvoidingView } from 'react-native';
       
     }
   );
-   render(){
+  encrypt_password = () => {
+ 
+    var temp = Base64.encode(this.state.PasswordValue);
+ 
+    this.setState({ PasswordEncoded: temp });
+  }
   
+
+   render(){
      return (
 
        <View style={styles.MainView}>
@@ -386,6 +398,7 @@ import { KeyboardAvoidingView } from 'react-native';
                  <TextInput
                     setFocus={this.state.focus}
                     onChangeText={text => this.setState({PasswordValue: text})}
+                    onSubmitEditing={this.encrypt_password}
                     onFocus={() => this.setState({focus: true})}
                     onBlur={() => this.setState({focus: false})}
                     secureTextEntry={this.state.secure} //we just added this
@@ -447,9 +460,9 @@ import { KeyboardAvoidingView } from 'react-native';
 
         <View style={{marginTop:0, marginBottom: 20,paddingTop:0}}>
         <TouchableOpacity style={styles.buttonstyle} onPress={
-              ()=>{this.props.navigation.navigate('register');
-              this.state.phonevalid= this.phoneinput.current?.isValidNumber(this.state.phonevalue);
-              
+          ()=>{
+              this.props.navigation.navigate('register');
+              this.state.phonevalid= this.phoneinput.current?.isValidNumber(this.state.phonevalue);              
               
               if(this.state.FirstName==""){
                  this.showAlert("Empty Field","Make sure First Name field is full ");
@@ -470,9 +483,12 @@ import { KeyboardAvoidingView } from 'react-native';
               //  else if (this.state.Email==""){
               //   this.showAlert("Email","Make sure Email field is full");
               //  }
-             else if(!this.state.emailvalid){
+              else if(!this.state.emailvalid){
                 this.showAlert("Email","Make sure Email field is valid");
               }
+              // else if(this.state.emailExisted){
+              //   this.showAlert("Email","There is already an account with this email address");
+              // }
               else if(this.state.PasswordValue==""){
                 this.showAlert("Email","Make sure Password field is full");
               }
@@ -482,12 +498,14 @@ import { KeyboardAvoidingView } from 'react-native';
               else if(this.state.PasswordValue!=this.state.ConfirmpasswordValue){
                 this.showAlert("Email","Make sure Password and Confirm password match");
               }
-              else{
+              else{                
                 this.addUser();
+                // console.log(this.state.PasswordDecoded)
               }
-              
-             
-            
+
+              //create and enter the profile
+              //......................................................
+
         }
             }>
             

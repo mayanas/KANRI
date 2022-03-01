@@ -10,7 +10,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 const uri =
-  "mongodb+srv://maya:Xoxc2KXtm1FjIW71@kanri1.adawo.mongodb.net/KANRI?retryWrites=true&w=majority";
+  "mongodb+srv://maya:122001@kanri1.adawo.mongodb.net/KANRI?retryWrites=true&w=majority";
 const client = new MongoClient(uri);
 
 async function run() {
@@ -19,24 +19,30 @@ async function run() {
 
   }
   run().catch(console.dir);
-app.get("/get", (req, res) => {
+  app.post("/getUser", (req, res) => {
     const database = client.db('KANRI');
-    const employees = database.collection('users');
-      // Query for a movie that has the title 'Back to the Future'
-    //   const query = { title: req.body.name };
-      employees.find({ title: "Back to the Future" },{ projection: { _id: 1, title: 1}}).toArray(function(err, result) {
-        if (err) throw err;
-        console.log(result);
-        res.send(JSON.stringify(result));
-      });
-      
-      
-      
-      
-  res.send(JSON.stringify(`Here is what you sent me: ${req.body.name}`));
-    
-    
-});
+      const users = database.collection('users');
+        // Query for a movie that has the title 'Back to the Future'
+        const query = {"Email": req.body.Email,};
+        users.find({ Email: req.body.Email },{ projection: { _id: 1, Password: 1}}).toArray(function(err, result) {
+          if (err) throw err;
+          console.log(result[0].Password);
+          res.send(JSON.stringify(result[0].Password));
+        });
+  });
+  app.post("/getEmail", (req, res) => {
+    const database = client.db('KANRI');
+      const users = database.collection('users');
+        // Query for a movie that has the title 'Back to the Future'
+        // const query = {"Email": req.body.Email,};
+        users.find({ Email: req.body.Email },{ projection: { _id: 1}}).toArray(function(err, result) {
+          if (err) throw err;
+          // console.log(result[0].Password);
+          // if(result.length==0)
+          res.send(JSON.stringify(result.length));
+          // else res.send(JSON.stringify("1"));
+        });
+  });
 app.post("/addUser", (req, res) => {
   const database = client.db('KANRI');
     const users = database.collection('users');
@@ -51,9 +57,21 @@ app.post("/addUser", (req, res) => {
                 Email: req.body.Email,
                 Password:req.body.Password,
       };
-      const user = users.insertOne(query);
-    //   console.log(movie);
-  res.send(JSON.stringify(`Here is what you sent me: ${req.body.FirstName}`));
+      users.find({ Email: req.body.Email },{ projection: { _id: 1}}).toArray(function(err, result) {
+        if (err) throw err;
+        // console.log(result[0].Password);
+        if(result.length==0)
+        {
+          const user = users.insertOne(query);
+          res.send(JSON.stringify(`Here is what you sent me: ${req.body.FirstName}`));
+        }
+        else{
+          res.send(JSON.stringify('existed'));
+        }
+        // res.send(JSON.stringify(result.length));
+        // else res.send(JSON.stringify("1"));
+      });
+      
 });
 
 
