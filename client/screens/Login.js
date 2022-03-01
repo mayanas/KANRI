@@ -50,18 +50,42 @@
       )
      });   
    const body = await response.json();
-  //  console.log(body);
    this.setState({PasswordEncoded: body});
    this.decrypt_password();
+
+   if(passwordValue === ""){
+     this.showAlert("Warning","Make sure to enter the password")
+   }
+   else if(passwordValue !== PasswordDecoded){
+    this.showAlert("Warning","Make sure to enter the correct password")
+   }
+   else{
+     //.............correct password....................
+   }
   }
 
+  showAlert = (title,field) =>
+  Alert.alert(
+    title,
+    field,
+    [
+      {
+        text: "Cancel",
+      
+        style: "cancel",
+      },
+    ],
+    {
+      cancelable: true,
+      
+      
+    }
+  );
   decrypt_password = () => {
 
     var temp2 = Base64.decode(this.state.PasswordEncoded);
 
-    // console.log(temp2);
     this.setState({ PasswordDecoded: temp2 });
-    // console.log(this.state.PasswordDecoded);
   }
 
  
@@ -160,8 +184,6 @@
                 
             </ScrollView>
             
-         {/* </View> */}
-
         </View>
         </KeyboardAvoidingView>
         

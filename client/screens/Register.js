@@ -88,7 +88,6 @@ import { KeyboardAvoidingView } from 'react-native';
       )
      });   
    const body = await response.json();
-   console.log(body);
    if(body==='existed'){
     this.showAlert("Email","There is already an account with this email address");
    }
@@ -224,7 +223,6 @@ import { KeyboardAvoidingView } from 'react-native';
                   buttonStyle={styles.textinputstyle}
                   styleInput={{fontFamily:'SairaSemiCondensed-Regular'}}
                   defaultButtonText={"Select"}
-                  // placeholder={"Select"}
                   rowTextForSelection={""}
 	                data={gender}
 	                onSelect={(selectedItem, index) => {
@@ -235,13 +233,9 @@ import { KeyboardAvoidingView } from 'react-native';
                    
 	                }}
 	                buttonTextAfterSelection={(selectedItem, index) => {
-		                  // text represented after item is selected
-		                  // if data array is an array of objects then return selectedItem.property to render after item is selected
 	                    return selectedItem
 	                }}
 	                rowTextForSelection={(item, index) => {
-	              	// text represented for each item in dropdown
-	               	// if data array is an array of objects then return item.property to represent item in dropdown
 	                    return item
 	              }}
                 />
@@ -283,12 +277,6 @@ import { KeyboardAvoidingView } from 'react-native';
                   Counrty
                   </Text>
                   <View style={styles.inputView}>
-                  {/* <CountrySelectDropdown
-                    //  countrySelect={setCountryCode}
-                    //  error={errorMsg}
-                     fontFamily={"Nunito-Regular"}
-                     textColor={"#f3f3f3"}
-                  /> */}
                  
      
                   <CountryPicker
@@ -307,8 +295,6 @@ import { KeyboardAvoidingView } from 'react-native';
                       containerStyle={{width:180, textAlign:'center',paddingHorizontal:30}}
                       textContainerStyle={{width:180, textAlign:'center', paddingHorizontal:30}}
                       style={{width:180, textAlign:'center', alignContent:'center'}}
-         // selectedCountryTextStyle={}
-         // countryNameTextStyle={}
                      
         />
        
@@ -480,15 +466,9 @@ import { KeyboardAvoidingView } from 'react-native';
               {
                 this.showAlert("Phone Number","Make sure Phone Number field is valid");
               }
-              //  else if (this.state.Email==""){
-              //   this.showAlert("Email","Make sure Email field is full");
-              //  }
               else if(!this.state.emailvalid){
                 this.showAlert("Email","Make sure Email field is valid");
               }
-              // else if(this.state.emailExisted){
-              //   this.showAlert("Email","There is already an account with this email address");
-              // }
               else if(this.state.PasswordValue==""){
                 this.showAlert("Email","Make sure Password field is full");
               }
@@ -500,7 +480,6 @@ import { KeyboardAvoidingView } from 'react-native';
               }
               else{                
                 this.addUser();
-                // console.log(this.state.PasswordDecoded)
               }
 
               //create and enter the profile

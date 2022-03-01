@@ -19,10 +19,11 @@ async function run() {
 
   }
   run().catch(console.dir);
+
+  
   app.post("/getUser", (req, res) => {
     const database = client.db('KANRI');
       const users = database.collection('users');
-        // Query for a movie that has the title 'Back to the Future'
         const query = {"Email": req.body.Email,};
         users.find({ Email: req.body.Email },{ projection: { _id: 1, Password: 1}}).toArray(function(err, result) {
           if (err) throw err;
@@ -30,23 +31,11 @@ async function run() {
           res.send(JSON.stringify(result[0].Password));
         });
   });
-  app.post("/getEmail", (req, res) => {
-    const database = client.db('KANRI');
-      const users = database.collection('users');
-        // Query for a movie that has the title 'Back to the Future'
-        // const query = {"Email": req.body.Email,};
-        users.find({ Email: req.body.Email },{ projection: { _id: 1}}).toArray(function(err, result) {
-          if (err) throw err;
-          // console.log(result[0].Password);
-          // if(result.length==0)
-          res.send(JSON.stringify(result.length));
-          // else res.send(JSON.stringify("1"));
-        });
-  });
+
+
 app.post("/addUser", (req, res) => {
   const database = client.db('KANRI');
     const users = database.collection('users');
-      // Query for a movie that has the title 'Back to the Future'
       const query = { 
         FirstName: req.body.FirstName,
         LastName:req.body.LastName,
@@ -59,7 +48,6 @@ app.post("/addUser", (req, res) => {
       };
       users.find({ Email: req.body.Email },{ projection: { _id: 1}}).toArray(function(err, result) {
         if (err) throw err;
-        // console.log(result[0].Password);
         if(result.length==0)
         {
           const user = users.insertOne(query);
@@ -68,8 +56,6 @@ app.post("/addUser", (req, res) => {
         else{
           res.send(JSON.stringify('existed'));
         }
-        // res.send(JSON.stringify(result.length));
-        // else res.send(JSON.stringify("1"));
       });
       
 });
