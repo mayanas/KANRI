@@ -24,6 +24,7 @@
    ScrollView,
    TouchableOpacity,
    TextInput,
+   Alert,
  } from 'react-native';
  
  class ForgetPassword extends Component{
@@ -38,9 +39,51 @@
      confirmfocus: false,
      confirmpasswordValue:"",
     dialogVisible:false,
+    Email:"",
 
   }
 
+  showAlert = (title,field) =>
+  Alert.alert(
+    title,
+    field,
+    [
+      {
+        text: "Cancel",
+      
+        style: "cancel",
+      },
+    ],
+    {
+      cancelable: true,
+      
+      
+    }
+  );
+
+  async sendCode(){
+    const response = await fetch("http://192.168.1.110:3001/sendCode", {
+      method: "POST",
+
+      headers: {
+       "Content-Type": "application/json"
+       },
+      body: JSON.stringify(
+        {               
+          "Email": this.state.Email,
+        }
+      )
+     });   
+   const body = await response.json();
+   if(body==="Email does not exist"){
+    this.showAlert("Warning", body);
+    console.log("no email")
+   }
+   else{
+    console.log(body);
+    this.setState({Code:body});
+   }
+  }
  
    render(){
      
@@ -80,6 +123,7 @@
                     size={20}
                   />
                  <TextInput 
+                 onChangeText={text=>this.setState({Email:text})}
                  keyboardType='email-address'
                  placeholder='Email Address'
                 textContentType='emailAddress'
@@ -93,7 +137,11 @@
                   <View  style={styles.codebutton}>
                   <TouchableOpacity style={styles.buttonstyle} onPress={
                     //send code via email
-                       ()=>this.props.navigation.navigate('forgetPassword')
+                       ()=>
+                       {
+                         this.sendCode();
+                         this.props.navigation.navigate('forgetPassword')
+                       }
                   }>
             
                   <Text style={styles.buttontext} >Send Code</Text>
@@ -115,10 +163,22 @@
                     
                   </Text>
                   <View  style={styles.codebutton}>
-                  <TouchableOpacity style={styles.buttonstyle} onPress={() => 
-                  {
-                          this.setState({ dialogVisible: true });
-                  }}>
+                  <TouchableOpacity style={styles.buttonstyle} 
+                  onPress={() => 
+                    {
+                      if(this.state.Code===this.state.EnterCode){
+                     
+                        this.setState({ dialogVisible: true });
+                      }
+                        else{
+                          console.log(this.state.EnterCode);
+                          console.log(this.state.Code);
+                          this.showAlert("Warning"," The verification code you entered does not match ")
+                        }
+                      
+                    }}
+                          
+                  >
             
                   <Text style={styles.buttontext} >Verify Code</Text>
                  </TouchableOpacity>
@@ -382,4 +442,3 @@
 
  
  export default ForgetPassword;
- 
