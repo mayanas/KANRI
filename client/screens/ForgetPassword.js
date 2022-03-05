@@ -13,6 +13,8 @@
  import Lottie from '../Components/Lottie';
  import { LogBox } from 'react-native';
 
+ import {Base64} from 'js-base64';
+
  LogBox.ignoreLogs(['Require cycle:']);
 
 
@@ -40,6 +42,9 @@
      confirmpasswordValue:"",
     dialogVisible:false,
     Email:"",
+    PasswordEncoded:"",
+    EnterCode:"",
+    Code:"",
 
   }
 
@@ -77,12 +82,39 @@
    const body = await response.json();
    if(body==="Email does not exist"){
     this.showAlert("Warning", body);
-    console.log("no email")
+    // console.log("no email")
    }
    else{
-    console.log(body);
+    // console.log(body);
+    this.showAlert("Email", "Email sent!")
     this.setState({Code:body});
    }
+  }
+
+  async encrypt_password() {
+    var temp = await Base64.encode(this.state.passwordValue);
+ 
+    this.setState({ PasswordEncoded: temp });
+    this.changePassword();
+  }
+
+  async changePassword() {
+    const response = await fetch("http://192.168.1.110:3001/changePassword", {
+      method: "POST",
+
+      headers: {
+       "Content-Type": "application/json"
+       },
+      body: JSON.stringify(
+        {               
+          "Email": this.state.Email,
+          "Password":this.state.PasswordEncoded,
+        }
+      )
+     });   
+   const body = await response.json();
+   this.showAlert("^_^", "Password Updated")
+    // console.log(body);
   }
  
    render(){
@@ -102,7 +134,7 @@
                android: () => -60
             })()
           }
-          style={styles.MainView, {marginTop: 270, width: '100%', height: 390}}>
+          style={ {marginTop: 270, width: '100%', height: 390}}>
         
          <View style={styles.scrollView1}>
          <View style={{marginTop:10}}>
@@ -140,7 +172,9 @@
                        ()=>
                        {
                          this.sendCode();
-                         this.props.navigation.navigate('forgetPassword')
+                         
+                         
+                         this.props.navigation.navigate('forgetPassword');
                        }
                   }>
             
@@ -155,7 +189,10 @@
                   </Text>
                   <View style={styles.inputView}>
                   
-                 <TextInput placeholder="Enter Code" keyboardType='numeric' style={styles.textinputstyle} />
+                 <TextInput 
+                 onChangeText={text=>this.setState({EnterCode:text})}
+                 placeholder="Enter Code"
+                 style={styles.textinputstyle} />
                 </View>
                 </View>
                 <View style={styles.RegisterRows}>
@@ -166,14 +203,15 @@
                   <TouchableOpacity style={styles.buttonstyle} 
                   onPress={() => 
                     {
-                      if(this.state.Code===this.state.EnterCode){
+                      if(this.state.Code===this.state.EnterCode&& this.state.Code!=""){
                      
                         this.setState({ dialogVisible: true });
                       }
                         else{
-                          console.log(this.state.EnterCode);
-                          console.log(this.state.Code);
-                          this.showAlert("Warning"," The verification code you entered does not match ")
+                          this.setState({ dialogVisible: false });
+                          // console.log(this.state.EnterCode);
+                          // console.log(this.state.Code);
+                          this.showAlert("Warning","The verification code you entered does not match ")
                         }
                       
                     }}
@@ -229,7 +267,7 @@
                 {/* confirm password */}
                 <View style={styles.RegisterRows}>
                   <Text style={styles.textstyle1}>
-                    Confirm Password
+                    Confirm
                   </Text>
                   <View style={{display:'flex', flex:2,flexDirection:'row', width:180}}>
                   <View style={styles.inputView}>
@@ -268,7 +306,17 @@
                   <TouchableOpacity style={styles.buttonstyle} onPress={
                        ()=>{
                          //make sure the password is the same
-                         this.setState({dialogVisible: false});
+                         if(this.state.passwordValue === this.state.confirmpasswordValue){
+                          
+                          this.encrypt_password();
+                          // this.changePassword();
+                          this.setState({dialogVisible: false});
+
+                         }else{
+                          this.showAlert("Warning", "Make sure Password and Confirmed password match");
+                          this.setState({dialogVisible: true});
+                         }
+                         
                          this.props.navigation.navigate('forgetPassword')
                         }
                   }>
@@ -368,7 +416,7 @@
    display:'flex',
    allignItems:'center',
    alignContent: 'center', 
-   paddingVertical:4,
+   paddingVertical:5,
    backgroundColor:'#bc9855',
    borderRadius: 100 ,
    elevation:2,

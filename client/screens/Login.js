@@ -18,6 +18,7 @@
    ScrollView,
    TouchableOpacity,
    TextInput,
+   Alert,
  } from 'react-native';
  import { Base64 } from 'js-base64';
 
@@ -50,18 +51,13 @@
       )
      });   
    const body = await response.json();
-   this.setState({PasswordEncoded: body});
-   this.decrypt_password();
-
-   if(passwordValue === ""){
-     this.showAlert("Warning","Make sure to enter the password")
+   if(body=="null"){
+     this.showAlert("Warning", "Email does not exist!")
+   }else{
+    this.setState({PasswordEncoded: body});
+    this.decrypt_password();
    }
-   else if(passwordValue !== PasswordDecoded){
-    this.showAlert("Warning","Make sure to enter the correct password")
-   }
-   else{
-     //.............correct password....................
-   }
+   
   }
 
   showAlert = (title,field) =>
@@ -81,11 +77,21 @@
       
     }
   );
-  decrypt_password = () => {
+  async decrypt_password () {
 
     var temp2 = Base64.decode(this.state.PasswordEncoded);
 
     this.setState({ PasswordDecoded: temp2 });
+    if(this.state.passwordValue === ""){
+      this.showAlert("Warning","Make sure to enter the password")
+    }
+    else if(this.state.passwordValue !== this.state.PasswordDecoded){
+     this.showAlert("Warning","Make sure to enter the correct password")
+    }
+    else{
+      //.............correct password....................
+      this.props.navigation.navigate('profile');
+    }
   }
 
  
@@ -104,10 +110,10 @@
           keyboardVerticalOffset={
             Platform.select({
                ios: () => 0,
-               android: () => -60
+               android: () => -135
             })()
           }
-          style={styles.MainView, {marginTop: 270, width: '100%', height: 390}}>
+          style={ {marginTop: 270, width: '100%', height: 390}}>
         
          <View style={styles.scrollView1}>
          <View style={{marginTop: 40}}>
@@ -220,11 +226,7 @@
     justifyContent: 'center',
     backgroundColor: '#bfcfb2',
   },
-  gifView:{
-    flex: 1,
-    marginBottom: 100
-  },
-  
+
   textstyle: {
     marginTop: 0,
     fontFamily:"ArimaMadurai-Regular",
@@ -250,6 +252,8 @@
    },
   scrollView1: {
    //  padding:0,
+   width:'100%',
+  //  height:100,
     marginTop:5,
     marginBottom:0,
     display:'flex',

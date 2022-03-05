@@ -3,7 +3,10 @@ package com.client;
 import android.app.Application;
 import android.content.Context;
 import com.facebook.react.PackageList;
+
 import com.facebook.react.ReactApplication;
+import com.swmansion.reanimated.ReanimatedPackage;
+// import com.swmansion.gesturehandler.react.RNGestureHandlerPackage;
 import com.facebook.react.ReactInstanceManager;
 import com.facebook.react.ReactNativeHost;
 import com.facebook.react.ReactPackage;
@@ -28,8 +31,11 @@ public class MainApplication extends Application implements ReactApplication {
           // Packages that cannot be autolinked yet can be added manually here, for example:
           // packages.add(new MyReactNativePackage());
           packages.add(new LottiePackage());
+          // packages.add( new RNGestureHandlerPackage());
           return packages;
         }
+
+        
 
         @Override
         protected String getJSMainModuleName() {

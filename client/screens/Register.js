@@ -148,7 +148,7 @@ import { KeyboardAvoidingView } from 'react-native';
                android: () => -60
             })()
           }
-          style={styles.MainView, {marginTop: 270, width: '100%', height: 390}}>
+          style={{marginTop: 270, width: '100%', height: 390}}>
         
          <View style={styles.scrollView1}>
          <View style={{marginTop: 40}}>
@@ -235,9 +235,10 @@ import { KeyboardAvoidingView } from 'react-native';
 	                buttonTextAfterSelection={(selectedItem, index) => {
 	                    return selectedItem
 	                }}
-	                rowTextForSelection={(item, index) => {
-	                    return item
-	              }}
+	              //   rowTextForSelection={(item, index) => {
+	              //       return item
+	              // }
+              // }
                 />
 
                 </View>
@@ -249,7 +250,7 @@ import { KeyboardAvoidingView } from 'react-native';
                   <Text style={styles.textstyle1}>
                     Birth Date
                   </Text>
-                  <View style={styles.inputView,{width:180}}>
+                  <View style={styles.inputView}>
                  
         
                  <DateField 
@@ -470,13 +471,13 @@ import { KeyboardAvoidingView } from 'react-native';
                 this.showAlert("Email","Make sure Email field is valid");
               }
               else if(this.state.PasswordValue==""){
-                this.showAlert("Email","Make sure Password field is full");
+                this.showAlert("Password","Make sure Password field is full");
               }
               else if(this.state.ConfirmpasswordValue==""){
-                this.showAlert("Email","Make sure Confirm Password field is full");
+                this.showAlert("Confirm Password","Make sure Confirm Password field is full");
               }
               else if(this.state.PasswordValue!=this.state.ConfirmpasswordValue){
-                this.showAlert("Email","Make sure Password and Confirm password match");
+                this.showAlert("Warning","Make sure Password and Confirmed password match");
               }
               else{                
                 this.addUser();
@@ -484,6 +485,7 @@ import { KeyboardAvoidingView } from 'react-native';
 
               //create and enter the profile
               //......................................................
+              this.props.navigation.navigate("profile");
 
         }
             }>

@@ -51,11 +51,6 @@
      justifyContent: 'center',
      backgroundColor: '#bfcfb2',
    },
-   gifView:{
-     flex: 1,
-     marginBottom: 100
-   },
-   
    textstyle: {
      // marginTop: 50,
      fontFamily:"ArimaMadurai-Regular",
