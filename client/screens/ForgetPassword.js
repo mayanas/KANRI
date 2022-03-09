@@ -29,6 +29,8 @@
    Alert,
  } from 'react-native';
  
+ const serverLink="http://172.19.15.206:3001";
+
  class ForgetPassword extends Component{
   constructor(props){
     super(props);
@@ -67,7 +69,7 @@
   );
 
   async sendCode(){
-    const response = await fetch("http://192.168.1.110:3001/sendCode", {
+    const response = await fetch(serverLink+"/sendCode", {
       method: "POST",
 
       headers: {
@@ -99,7 +101,7 @@
   }
 
   async changePassword() {
-    const response = await fetch("http://192.168.1.110:3001/changePassword", {
+    const response = await fetch(serverLink+"/changePassword", {
       method: "POST",
 
       headers: {

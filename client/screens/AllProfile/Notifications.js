@@ -14,7 +14,7 @@
    View,
  } from 'react-native';
  
- class Profile extends Component{
+ class Notifications extends Component{
   constructor(props){
     super(props);
   }
@@ -49,5 +49,5 @@
 });
 
  
- export default Profile;
+ export default Notifications;
  

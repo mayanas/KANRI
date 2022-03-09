@@ -14,6 +14,8 @@
  import CountryPicker, {
   getAllCountries
 } from 'react-native-country-picker-modal';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 
 import { Base64 } from 'js-base64';
 
@@ -37,7 +39,7 @@ import Lottie from '../Components/Lottie';
 import { KeyboardAvoidingView } from 'react-native';
 
 
- 
+ const serverLink="http://172.19.15.206:3001";
  class Register extends Component{
   constructor(props){
     super(props);
@@ -69,7 +71,8 @@ import { KeyboardAvoidingView } from 'react-native';
 
   }
   async addUser(){
-    const response = await fetch("http://192.168.1.110:3001/addUser", {
+    
+    const response = await fetch(serverLink+"/addUser", {
       method: "POST",
       headers: {
        "Content-Type": "application/json"
@@ -90,6 +93,20 @@ import { KeyboardAvoidingView } from 'react-native';
    const body = await response.json();
    if(body==='existed'){
     this.showAlert("Email","There is already an account with this email address");
+   }
+   else{
+     //create and enter the profile
+              //......................................................
+              try{
+                await AsyncStorage.setItem('Email',this.state.Email);
+                // await AsyncStorage.setItem('Password',this.state.PasswordValue);
+              }
+              catch(error){
+                console.log(error);
+              }
+              this.props.navigation.navigate("home",{
+                Email: this.state.Email,
+              });
    }
   }
 
@@ -124,11 +141,13 @@ import { KeyboardAvoidingView } from 'react-native';
       
     }
   );
-  encrypt_password = () => {
+ async encrypt_password (){
  
-    var temp = Base64.encode(this.state.PasswordValue);
+    var temp = await Base64.encode(this.state.PasswordValue);
  
     this.setState({ PasswordEncoded: temp });
+    console.log(this.state.PasswordEncoded);
+    this.addUser();
   }
   
 
@@ -385,7 +404,7 @@ import { KeyboardAvoidingView } from 'react-native';
                  <TextInput
                     setFocus={this.state.focus}
                     onChangeText={text => this.setState({PasswordValue: text})}
-                    onSubmitEditing={this.encrypt_password}
+                    // onSubmitEditing={this.encrypt_password}
                     onFocus={() => this.setState({focus: true})}
                     onBlur={() => this.setState({focus: false})}
                     secureTextEntry={this.state.secure} //we just added this
@@ -480,12 +499,10 @@ import { KeyboardAvoidingView } from 'react-native';
                 this.showAlert("Warning","Make sure Password and Confirmed password match");
               }
               else{                
-                this.addUser();
+                this.encrypt_password();
               }
 
-              //create and enter the profile
-              //......................................................
-              this.props.navigation.navigate("profile");
+              
 
         }
             }>

@@ -7,7 +7,7 @@
  */
 
  import React, {Component} from 'react';
- 
+
  import {
    StyleSheet,
    Text,
@@ -20,6 +20,7 @@ import Lottie from '../Components/Lottie';
   constructor(props){
     super(props);
   }
+
 
  
    render(){

@@ -16,6 +16,8 @@ target 'client' do
 
   pod 'RNReanimated', :path => '../node_modules/react-native-reanimated'
 
+  pod 'react-native-splash-screen', :path => '../node_modules/react-native-splash-screen'
+
   target 'clientTests' do
     inherit! :complete
     # Pods for testing

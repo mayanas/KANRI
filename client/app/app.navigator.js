@@ -6,19 +6,21 @@ import Login from "../screens/Login";
 import About from "../screens/About";
 import Register from "../screens/Register";
 import ForgetPassword from "../screens/ForgetPassword";
-import Profile from "../screens/AllProfile/Profile";
+import Home from "../screens/AllProfile/Home";
+import Start from "../screens/Start";
 
 const {Navigator, Screen} = createStackNavigator();
 
 const AppNavigator =()=>(
     <NavigationContainer>
-        <Navigator initialRouteName="kanri" screenOptions={{headerShown:false}}>
+        <Navigator initialRouteName="start" screenOptions={{headerShown:false}}>
+            <Screen name="start" component={Start}></Screen>
             <Screen name="kanri" component={Kanri}></Screen>
             <Screen name="about" component={About}></Screen>
             <Screen name="login" component={Login}></Screen>
             <Screen name="register" component={Register}></Screen>
             <Screen name="forgetPassword" component={ForgetPassword}></Screen>
-            <Screen name="profile" component={Profile}></Screen>
+            <Screen name="home" component={Home}></Screen>
         </Navigator>
     </NavigationContainer>
 )

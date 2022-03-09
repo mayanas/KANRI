@@ -10,13 +10,15 @@
     "lint": "eslint ."
   },
   "dependencies": {
-    "@react-native-community/masked-view": "^0.1.11",
+    "@react-native-async-storage/async-storage": "^1.16.1",
     "@react-navigation/bottom-tabs": "^6.2.0",
     "@react-navigation/native": "^6.0.8",
     "@react-navigation/native-stack": "^6.5.0",
     "@react-navigation/stack": "^6.1.1",
+    "i": "^0.3.7",
     "js-base64": "^3.7.2",
     "lottie-react-native": "^5.0.1",
+    "npm": "^8.5.3",
     "react": "17.0.2",
     "react-native": "0.67.2",
     "react-native-country-picker-modal": "^2.0.0",
@@ -29,7 +31,7 @@
     "react-native-safe-area-context": "^3.4.1",
     "react-native-screens": "^3.13.1",
     "react-native-select-dropdown": "^1.8.0",
-    "react-native-swiper": "^1.6.0",
+    "react-native-splash-screen": "^3.3.0",
     "react-native-vector-icons": "^9.1.0"
   },
   "devDependencies": {

@@ -10,6 +10,8 @@
  import Icon from 'react-native-vector-icons/dist/FontAwesome';
  import { KeyboardAvoidingView } from 'react-native';
  import Lottie from '../Components/Lottie';
+ import AsyncStorage from '@react-native-async-storage/async-storage';
+
  
  import {
    StyleSheet,
@@ -22,7 +24,8 @@
  } from 'react-native';
  import { Base64 } from 'js-base64';
 
- 
+ const serverLink="http://172.19.15.206:3001";
+
  class Login extends Component{
   constructor(props){
     super(props);
@@ -38,8 +41,9 @@
     usersList: {},
   }
 
+  
   async getUser(){
-    const response = await fetch("http://192.168.1.110:3001/getUser", {
+    const response = await fetch(serverLink+"/getUser", {
       method: "POST",
       headers: {
        "Content-Type": "application/json"
@@ -90,7 +94,17 @@
     }
     else{
       //.............correct password....................
-      this.props.navigation.navigate('profile');
+
+      try{
+        await AsyncStorage.setItem('Email',this.state.Email);
+        // await AsyncStorage.setItem('Password',this.state.PasswordEncoded);
+      }
+      catch(error){
+        console.log(error);
+      }
+      this.props.navigation.navigate('home',{
+        Email: this.state.Email,
+      });
     }
   }
 
@@ -110,7 +124,7 @@
           keyboardVerticalOffset={
             Platform.select({
                ios: () => 0,
-               android: () => -135
+               android: () => -140
             })()
           }
           style={ {marginTop: 270, width: '100%', height: 390}}>
