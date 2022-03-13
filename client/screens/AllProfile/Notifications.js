@@ -23,7 +23,8 @@
     
   }
 
- 
+  Email = this.props.route.params.Email;
+
    render(){
      
      return (

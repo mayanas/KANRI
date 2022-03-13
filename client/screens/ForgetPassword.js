@@ -29,7 +29,8 @@
    Alert,
  } from 'react-native';
  
- const serverLink="http://172.19.15.206:3001";
+ const serverLink="http://192.168.1.110:3001";
+//  const serverLink="http://172.19.15.206:3001";
 
  class ForgetPassword extends Component{
   constructor(props){

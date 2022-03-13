@@ -49,8 +49,23 @@ async function run() {
     });
   });
 
+  app.post("/getInformation", (req, res) => {
+    const database = client.db('KANRI');
+    const users = database.collection('users');
+    users.findOne({ Email: req.body.Email },function(err, result) {
+      if (err) throw err;
+      if(result==null)res.send(JSON.stringify("null"));
+      else{
+        // console.log(result.Password);
+        res.send(JSON.stringify(result));
+      }
+      
+    });
+  });
+
 
 app.post("/addUser", (req, res) => {
+  console.log(req.body.FirstName);
   const database = client.db('KANRI');
     const users = database.collection('users');
       const query = { 

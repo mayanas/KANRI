@@ -11,6 +11,8 @@
  import { KeyboardAvoidingView } from 'react-native';
  import Lottie from '../Components/Lottie';
  import AsyncStorage from '@react-native-async-storage/async-storage';
+ import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
+
 
  
  import {
@@ -24,7 +26,8 @@
  } from 'react-native';
  import { Base64 } from 'js-base64';
 
- const serverLink="http://172.19.15.206:3001";
+ const serverLink="http://192.168.1.110:3001";
+//  const serverLink="http://172.19.15.206:3001";
 
  class Login extends Component{
   constructor(props){
@@ -212,7 +215,13 @@
         <TouchableOpacity style={styles.buttonstyle} onPress={
               ()=>{
                 this.props.navigation.navigate('login');
-                this.getUser();
+                if(this.state.Email === "" || this.state.passwordValue === ""){
+                  this.showAlert("Warning", "Make sure all fields are full!");
+                }
+                else{
+                  this.getUser();
+                }
+                
 
               }
             }>

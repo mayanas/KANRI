@@ -14,7 +14,7 @@
    View,
  } from 'react-native';
  
- class Messages extends Component{
+ class MyTasks extends Component{
   constructor(props){
     super(props);
   }
@@ -25,6 +25,8 @@
 
   Email = this.props.route.params.Email;
 
+
+ 
    render(){
      
      return (
@@ -50,5 +52,5 @@
 });
 
  
- export default Messages;
+ export default MyTasks;
  

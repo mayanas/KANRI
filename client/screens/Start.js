@@ -8,7 +8,7 @@
 
  import React, {Component, useRef, useEffect } from 'react';
  import AsyncStorage from '@react-native-async-storage/async-storage';
- import SplashScreen from 'react-native-splash-screen';
+//  import SplashScreen from 'react-native-splash-screen';
 
  import {
    StyleSheet,
@@ -52,7 +52,7 @@
     const value1=await AsyncStorage.getItem('Email');
     // const value2=await AsyncStorage.getItem('Password');
     if(value1!==null){
-      this.props.navigation.navigate('home',{
+      this.props.navigation.navigate('firstTimeRegister',{///////////////////////////////////////////////////
         Email: value1,
       });
     }

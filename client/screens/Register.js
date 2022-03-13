@@ -38,8 +38,8 @@ import Lottie from '../Components/Lottie';
  } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native';
 
-
- const serverLink="http://172.19.15.206:3001";
+ const serverLink="http://192.168.1.110:3001";
+//  const serverLink="http://172.19.15.206:3001";
  class Register extends Component{
   constructor(props){
     super(props);
@@ -99,14 +99,16 @@ import { KeyboardAvoidingView } from 'react-native';
               //......................................................
               try{
                 await AsyncStorage.setItem('Email',this.state.Email);
+                this.props.navigation.navigate("firstTimeRegister",{
+                  Email: this.state.Email, FirstName: this.state.FirstName, LastName: this.state.LastName,
+                });
                 // await AsyncStorage.setItem('Password',this.state.PasswordValue);
               }
               catch(error){
                 console.log(error);
               }
-              this.props.navigation.navigate("home",{
-                Email: this.state.Email,
-              });
+              
+              
    }
   }
 

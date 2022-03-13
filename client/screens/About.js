@@ -28,7 +28,7 @@
 
          <Lottie/>
 
-        <View style={styles.MainView, {marginTop: -100}}>
+        <View style={{marginTop: -100}}>
          <View style={{marginTop: 40}}>
            <Text style={styles.textstyle}>ABOUT US</Text>
          </View>
