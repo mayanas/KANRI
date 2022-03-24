@@ -27,6 +27,7 @@
    TouchableOpacity,
    TextInput,
    Alert,
+   SafeAreaView,
  } from 'react-native';
  
  const serverLink="http://192.168.1.110:3001";
@@ -124,7 +125,7 @@
      
      return (
 
-       <View style={styles.MainView}>
+       <SafeAreaView style={styles.MainView}>
 
          <Lottie/>
 
@@ -309,14 +310,15 @@
                   <TouchableOpacity style={styles.buttonstyle} onPress={
                        ()=>{
                          //make sure the password is the same
-                         if(this.state.passwordValue === this.state.confirmpasswordValue){
+                         if(this.state.passwordValue === this.state.confirmpasswordValue && this.state.passwordValue !=="" 
+                         && this.state.confirmpasswordValue !==""){
                           
                           this.encrypt_password();
                           // this.changePassword();
                           this.setState({dialogVisible: false});
 
                          }else{
-                          this.showAlert("Warning", "Make sure Password and Confirmed password match");
+                          this.showAlert("Warning", "Make sure Password and Confirmed password full and match");
                           this.setState({dialogVisible: true});
                          }
                          
@@ -364,7 +366,7 @@
  
         
  
-       </View>
+       </SafeAreaView>
      );
    }
  }

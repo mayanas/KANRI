@@ -12,19 +12,34 @@
  import {
    StyleSheet,
    View,
+   BackHandler,
  } from 'react-native';
  
  class Notifications extends Component{
   constructor(props){
     super(props);
+    this.state={
+      Email:"",
+    }
+    this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
   }
 
-   state = {
-    
+  UNSAFE_componentWillMount() {
+    BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
   }
 
-  Email = this.props.route.params.Email;
+  componentWillUnmount() {
+    BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
+  }
 
+  handleBackButtonClick() {
+    this.props.navigation.navigate('Home',{Email:this.props.route.params.Email});
+        return true;
+  }
+
+  componentDidMount(){
+    this.setState({Email : this.props.route.params.Email})
+  }
    render(){
      
      return (

@@ -7,142 +7,226 @@
  */
 
  import React, {Component} from 'react';
- import { KeyboardAvoidingView } from 'react-native';
  import  {launchImageLibrary} from 'react-native-image-picker';
  import LinearGradient from 'react-native-linear-gradient';
  import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
  import SelectDropdown from 'react-native-select-dropdown';
- import CheckboxList from 'rn-checkbox-list';
- import { Modal, Portal, Provider } from 'react-native-paper';
+ import Dialog, { DialogContent } from 'react-native-popup-dialog';
+ 
 
-//  import { Picker } from '@react-native-picker/picker';
  import {
    StyleSheet,
    View,
    Text,
    TouchableOpacity,
   Image, 
-
-  PermissionsAndroid, 
+  Alert,
+  BackHandler , 
+  SafeAreaView ,
+  ToastAndroid,
+  PermissionsAndroid,
  } from 'react-native';
 import { ScrollView, TextInput } from 'react-native-gesture-handler';
- 
+import CheckBoxItem from '../Components/CheckBoxItem';
+
+import { LogBox } from 'react-native';
+LogBox.ignoreLogs(['Require cycle:']);
+
  const serverLink="http://192.168.1.110:3001";
 //  const serverLink="http://172.19.15.206:3001";
 const Degrees = ["Doctoral Degree","Master's Degree","Bachelor's Degree", "Diploma's Degree","Undergraduate",  "None of the above"]
-const checkList = [
-                   { id: 1, name: 'Applied Technology' },
-                   { id: 2, name: 'Behavioral Science and Human Services' },
-                   { id: 3, name: 'Business, Entrepreneurialism, and Management' },
-                   { id: 4, name: 'Computer and Information Technology' },
-                   { id: 5, name: 'Culture and Society' },
-                   { id: 6, name: 'Education' },
-                   { id: 7, name: 'Health Sciences' },
-                   { id: 8, name: 'Science, Technology, Engineering, and Mathematics (STEM)' },
-                   { id: 9, name: 'Visual and Performing Arts' },
-                  ];
 
+const checkList = [
+  { id: 1, name: 'Applied Technology' },
+  { id: 2, name: 'Behavioral Science and Human Services'},
+  { id: 3, name: 'Business, Entrepreneurialism, and Management' },
+  { id: 4, name: 'Computer and Information Technology' },
+  { id: 5, name: 'Culture and Society' },
+  { id: 6, name: 'Education'},
+  { id: 7, name: 'Health Sciences' },
+  { id: 8, name: 'Science, Technology, Engineering, and Mathematics (STEM)'},
+  { id: 9, name: 'Visual and Performing Arts' },
+ ];
  class FirstTimeRegister extends Component{
   constructor(props){
     super(props);
-    // const Email = this.props.route.params.Email;
-    // this.getInformation();
-  }
-
-   state = {
-    profileImage: '',
-    NickName: '',
-    bio: "",
-    QualificationDegree:"",
-    // University:"",
-    InterestedIn:"",
-
-    // firstName: '',
-    // lastName: '',
-  }
-  
-  // async getInformation(){
-  //   const response = await fetch(serverLink+"/getInformation", {
-  //     method: "POST",
-  //     headers: {
-  //      "Content-Type": "application/json"
-  //      },
-  //     body: JSON.stringify(
-  //       {               
-  //               "Email": this.props.route.params.Email,
-  //       }
-  //     )
-  //    });   
-  //  const body = await response.json();
-  //  if(body=="null"){
-  //   console.log('not existed')
-  //  }else{
-  //   this.setState({
-  //     firstName: body.FirstName,
-  //     lastName:body.LastName,
-  // });
-  //  }
-   
-  // }
-
-  
-
-  _requestAcessPermission = async () => {
-     try {
-       const granted = await PermissionsAndroid.request(
-         PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
-         {
-           title: "App Gellery Permission",
-           message: "App needs access to your Gellery ",
-           buttonNeutral: "Ask Me Later",
-           buttonNegative: "Cancel",
-           buttonPositive: "OK"
-         }
-       );
-       if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-         this._galleryLaunch();
-       } else {
-         console.log("Gellery permission denied");
-       }
-     } catch (err) {
-       console.warn(err);
-     }
+    this.state = {
+      profileImage: '',
+      NickName: '',
+      bio: "",
+      QualificationDegree:"",
+      InterestedIn:[],
+      dialogVisible:false,
+      // checked:false,
     }
-  _galleryLaunch = () => {
 
-     let options = {
-       storageOptions: {
-         skipBackup: true,
-         path: 'images',
-       },
-     };
-
-     launchImageLibrary(options, (res) => {
-
-       if (res.didCancel) {
-         console.log('User cancelled image picker');
-       } else if (res.error) {
-         console.log('ImagePicker Error: ', res.error);
-       } else if (res.customButton) {
-         console.log('User tapped custom button: ', res.customButton);
-         alert(res.customButton);
-       } else {
-         this.setState({
-           profileImage: res.assets[0].uri,
-         });
-       }
-     });
-   };
-
-  uploadProfileImage=()=>{
-    console.log(this.state.profileImage)
+    this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
+    // this.handleChange = this.handleChange.bind(this);
   }
+  UNSAFE_componentWillMount() {
+    BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
+}
+
+componentWillUnmount() {
+    BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
+}
+handleBackButtonClick() {
+  if(!this.state.dialogVisible)
+  BackHandler.exitApp();
+  else{
+    this.setState({dialogVisible:false})
+  }
+      return true;
+}
+componentDidMount(){
+  this.setState({
+    profileImage: '',
+      NickName: '',
+      bio: "",
+      QualificationDegree:"",
+      InterestedIn:[],
+      dialogVisible:false,
+      // checked:false,
+  });
+  
+}
+  
+async saveProfileInfo(){
+  const response = await fetch(serverLink+"/saveProfileInfo", {
+    method: "POST",
+    headers: {
+     "Content-Type": "application/json"
+     },
+    body: JSON.stringify(
+      {               
+              "Email": this.props.route.params.Email,
+              "NickName": this.state.NickName,
+              "QualificationDegree": this.state.QualificationDegree,
+              "Bio": this.state.bio,
+              "ProfileImage": this.state.profileImage,
+              "InterestedIn": this.state.InterestedIn,
+      }
+    )
+   });   
+ const body = await response.json();
+ if(body=="null"){
+  console.log('not existed')
+ }else{
+  console.log("saved");
+  this.props.navigation.navigate('home',{
+    Email: this.state.Email,
+    FirstName: this.props.route.params.FirstName,
+    LastName: this.props.route.params.LastName,
+  });
+ }
+ 
+}
+
+
+handleChange=(pItems)=>{
+  
+  if(JSON.stringify(this.state.InterestedIn)!==JSON.stringify(pItems))
+  this.setState({InterestedIn:pItems})
+  console.log('pItems =>', this.state.InterestedIn);
+}
+onUpdate = (name) => {
+  this.setState(previous => {
+    let InterestedIn = previous.InterestedIn;
+    let index = InterestedIn.indexOf(name) // check to see if the name is already stored in the array
+    if (index === -1) {
+      InterestedIn.push(name) // if it isn't stored add it to the array
+    } else {
+      InterestedIn.splice(index, 1) // if it is stored then remove it from the array
+    }
+    return { InterestedIn }; // save the new selectedBoxes value in state
+  }, () => console.log(this.state.InterestedIn)); // check that it has been saved correctly by using the callback function of state
+}
+
+   
+
+  setToastMessage = (message) => {
+
+    ToastAndroid.showWithGravity(
+      message,
+      ToastAndroid.SHORT,
+      ToastAndroid.CENTER,
+    );
+
+  };
+
+
+  showAlert = (title,field) =>
+  Alert.alert(
+    title,
+    field,
+    [
+      {
+        text: "Cancel",     
+        style: "cancel",
+      },
+    ],
+    {
+      cancelable: true,      
+    }
+  );
+  
+  requestAcessPermission = async () => {
+    try {
+      const granted = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
+        {
+          title: "App Gellery Permission",
+          message: "App needs access to your Gellery ",
+          buttonNeutral: "Ask Me Later",
+          buttonNegative: "Cancel",
+          buttonPositive: "OK"
+        }
+      );
+      if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+        this.uploadImage();
+      } else {
+        console.log("Gellery permission denied");
+      }
+    } catch (err) {
+      console.warn(err);
+    }
+   }
+  uploadImage = () => {
+
+    let options = {
+      mediaType: 'photo',
+      quality: 1,
+      includeBase64: true,
+    };
+
+    launchImageLibrary(options, response => {
+
+      if (response.didCancel) {
+        this.setToastMessage('Cancelled image selection');
+      } else if (response.errorCode == 'permission') {
+        this.setToastMessage('Permission not satisfied');
+      } else if (response.errorCode == 'others') {
+        this.setToastMessage(response.errorMessage);
+      } else if (response.assets[0].fileSize > 2097152) {
+        this.showAlert(
+          'Maximum image size exceeded',
+          'Please choose a file under 2 MB',
+        );
+      } else {
+        this.setState({profileImage: response.assets[0].base64});
+      }
+
+    });
+
+  };
+
+  
    render(){
-     
+    
      return (
 
       <KeyboardAwareScrollView style={{backgroundColor: '#bfcfb2',}}>
-       <View style={styles.MainView}>
+       <SafeAreaView ew style={styles.MainView}>
          {/* <Text>{this.Email}</Text> */}
          
          <View style={styles.TopView}>
@@ -177,12 +261,14 @@ const checkList = [
         <View style={styles.container}>
           {/*image view*/}
         <View style={styles.imageView}>
-          <TouchableOpacity 
-          onPress={this._requestAcessPermission}
-          style={styles.button}>
-            {this.state.profileImage ? <Image source={{uri: this.state.profileImage}} style={{width:'100%',height:'100%'}}/>:
+        <TouchableOpacity
+        style={styles.button}
+        onPress={() => this.requestAcessPermission()}
+        underlayColor="rgba(0,0,0,0)">
+          {this.state.profileImage ? <Image source={{uri: 'data:image/png;base64,' + this.state.profileImage}} 
+          style={{width:'100%',height:'100%'}}/>:
               <Text style={styles.buttonText}>Upload Profile Image</Text>}
-          </TouchableOpacity>
+        </TouchableOpacity>
           
         </View> 
         {/*other info view*/}
@@ -233,35 +319,6 @@ const checkList = [
             </View>
 
             
-            <View style={[styles.RowStyle,{height:180,}]}>
-              <Text style={styles.textstyle1}>Interested in</Text>
-              <View style={{width:'60%'}}>
-              <CheckboxList
-                headerStyle={{
-                  padding: 10,
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  backgroundColor: '#98a988',
-                  text: {
-                    color: 'black',
-                    // fontWeight: 'bold',
-                    fontFamily:'SairaSemiCondensed-Bold',
-                    fontSize: 16,
-                  }
-                }}
-                headerName="Select all"
-                theme="#bc9855"
-                listItems={checkList}
-                onChange={({ ids, items }) => console.log('My updated list :: ', ids)}
-                listItemStyle={{ borderBottomColor: '#bc9855', borderBottomWidth: 1,}}
-                
-                checkboxProp={{ boxType: 'square' }} 
-                onLoading={() => <LoaderComponent />}
-              />
-              </View>
-              
-            </View>
-            
             
             <View style={[styles.RowStyle,{marginBottom:60}]}>
               <Text style={styles.textstyle1}>Bio </Text>
@@ -286,7 +343,7 @@ const checkList = [
                  onChangeText={(text)=>
                   // console.log(text)
                    this.setState({
-                     InterestedIn:text
+                     bio:text
                    })
                  }
                  placeholder="Enter your Bio here" />
@@ -294,20 +351,102 @@ const checkList = [
 
                 </View>
             </View>
+            
             <View style={styles.RowStyle}>
-              <Text style={styles.textstyle1}></Text>
+              <Text style={styles.textstyle1}>Interested In</Text>
               <View style={[styles.inputView, {backgroundColor:null, borderRadius:0}]}>
                 <TouchableOpacity
                 style={styles.buttoninputstyle}
+                onPress={()=>{
+                  this.setState({ dialogVisible: true, InterestedIn:[] })
+                }}
                 >
                  <Text style={{fontFamily: 'SairaSemiCondensed-Bold',
                                fontSize: 15,
                               textDecorationLine: 'none',
                               textAlign:'center',
-                             }}>Save</Text>  
+                             }} >Click here to choose</Text>  
                 </TouchableOpacity>
                 </View>
             </View>
+
+            <View style={styles.RowStyle}>
+              <Text style={styles.textstyle1}></Text>
+              <View style={[styles.inputView, {backgroundColor:null, borderRadius:0}]}>
+                <TouchableOpacity
+                style={styles.buttoninputstyle}
+                onPress={()=>{
+                  if(this.state.NickName==="" || this.state.QualificationDegree==="" ||
+                     this.state.bio==="" || this.state.profileImage==""){
+                    this.showAlert("Warning", "Make sure all fields are full.")
+                  }
+                  else if(this.state.InterestedIn.length==0){
+                    this.showAlert("Warning", "Make sure to choose at least one interest")
+                  }
+                  else{
+                    this.saveProfileInfo() 
+                  }
+                }
+                }
+                >
+                 <Text style={{fontFamily: 'SairaSemiCondensed-Bold',
+                               fontSize: 15,
+                              textDecorationLine: 'none',
+                              textAlign:'center',
+                             }} >Save</Text>  
+                </TouchableOpacity>
+                </View>
+            </View>
+            <Dialog
+            style={{ width:400, backgroundColor:'#bfcfb2',}}
+                   visible={this.state.dialogVisible}
+                    // onTouchOutside={() => {
+                    // this.setState({ dialogVisible: false });
+                    // }}
+            >
+              <DialogContent style={{height:'100%', width:400, backgroundColor:'#bfcfb2',}}>
+                <KeyboardAwareScrollView showsVerticalScrollIndicator={false}>
+                <SafeAreaView  style={{width:'100%', height:'100%'}}>
+              <View style={styles.TopView}>
+                <View style={styles.infoStyle}>
+                 <Text></Text>
+               </View>
+               <Image 
+               source={require('../assets/logo/logo1.jpeg')}
+               style={{width:60, height:60, borderRadius:0}}
+               
+               />
+              </View>
+              <View style={{marginBottom:15}}>
+              <Text style={[styles.textStyle1, {fontFamily:'SairaSemiCondensed-Bold', fontSize:17,margin: 20}]}>Choose the fields you are interested in:</Text>
+                {checkList.map(item => <CheckBoxItem  key={item.id} label={item.name} onUpdate={this.onUpdate.bind(this,item.name)}/>)}
+              
+              </View>
+                
+              
+              
+              <TouchableOpacity style={styles.buttoninputstyle}
+                onPress={()=>{
+                  if(this.state.InterestedIn.length===0){
+                    this.showAlert("Warning","Make sure to choose at least one interest \n\nThank you")
+                  }
+                  else{
+                    this.setState({dialogVisible:false})
+                  }
+                }
+                }
+                >
+                 <Text style={{fontFamily: 'SairaSemiCondensed-Bold',
+                               fontSize: 15,
+                              textDecorationLine: 'none',
+                              textAlign:'center',
+                             }} >Save</Text> 
+              </TouchableOpacity>
+              </SafeAreaView >      
+                </KeyboardAwareScrollView>
+                          
+              </DialogContent>
+            </Dialog>
            
             
             {/* </ScrollView> */}
@@ -327,7 +466,7 @@ const checkList = [
           }
         </View> */}
       </View>
-       </View>
+       </SafeAreaView >
        </KeyboardAwareScrollView > 
      );
    }
@@ -500,22 +639,19 @@ const checkList = [
       height: 50,
       backgroundColor: "#bc9855",
       justifyContent:'center'
-    }
+    },
 
     
 
-    
-  
-    // skipbtn: {
-    //   textAlign:'center',
-    //   fontSize:10,
-    //   padding:10,
-    //   fontWeight:'bold',
-    //   textTransform:'uppercase',
-    //   letterSpacing:2,
-    //   opacity:0.5
-    
-    // }
+    textstyle: {
+      marginTop: 15,
+      marginBottom:20,
+      fontFamily:"ArimaMadurai-Regular",
+      fontSize: 18,
+      color: 'black',
+      textAlign: 'center',
+      // fontWeight: 'bold',
+    },
 });
 
  

@@ -16,7 +16,7 @@
    StyleSheet,
    View,
    Text,
-   Button,
+   BackHandler,
    Image,
  } from 'react-native';
 //  import FontAwesomeIcon from 'react-native-vector-icons/dist/FontAwesome';
@@ -24,13 +24,28 @@
  class HomeScreen extends Component{
   constructor(props){
     super(props);
+    this.state = {
+      search:"",
+      Email:"",
+    }
+    // this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
   }
-
-   state = {
-    search:"",
+  componentDidMount(){
+    this.setState({Email : this.props.route.params.Email})
   }
+   
+  // UNSAFE_componentWillMount() {
+  //   BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
+  // }
 
-  Email = this.props.route.params.Email;
+  // componentWillUnmount() {
+  //   BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
+  // }
+
+  // handleBackButtonClick() {
+  //   BackHandler.exitApp(); 
+  //       return true;
+  // }
 
    render(){
      

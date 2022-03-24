@@ -5,8 +5,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
 import {
   StyleSheet,
-  View,
-  Text,
+  BackHandler,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import HomeScreen from './HomeScreen';
@@ -20,11 +19,12 @@ const Tab = createBottomTabNavigator();
 class Home extends Component{
  constructor(props){
    super(props);
+   this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
  }
-
-  state = {
-
- }
+ handleBackButtonClick() {
+  BackHandler.exitApp(); 
+      return true;
+}
 
 
    render(){
@@ -75,7 +75,11 @@ class Home extends Component{
      
        <Tab.Screen name="Profile" component={Profile} initialParams={{Email: this.props.route.params.Email}}/>
        <Tab.Screen name="My Tasks" component={MyTasks} initialParams={{Email: this.props.route.params.Email}} />
-       <Tab.Screen name="Home" component={HomeScreen} initialParams={{Email: this.props.route.params.Email}}/>
+       <Tab.Screen name="Home" component={HomeScreen} initialParams={{Email: this.props.route.params.Email}}
+       listeners={{ 
+         focus: () => BackHandler.addEventListener('hardwareBackPress',this.handleBackButtonClick)
+         ,blur: () => BackHandler.removeEventListener('hardwareBackPress',this.handleBackButtonClick)
+       }}/>
        <Tab.Screen name="Notifications" component={Notifications} options={{tabBarBadge: 3}} initialParams={{Email: this.props.route.params.Email}}/>
        <Tab.Screen name="Messages" component={Messages} options={{tabBarBadge: 3}} initialParams={{Email: this.props.route.params.Email}}/>
       

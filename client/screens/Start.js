@@ -16,7 +16,8 @@
    View,
    Animated,
  } from 'react-native';
-
+ const serverLink="http://192.168.1.110:3001";
+//  const serverLink="http://172.19.15.206:3001";
  const FadeInView = (props) => {
     const fadeAnim = useRef(new Animated.Value(0)).current  // Initial value for opacity: 1
   
@@ -25,7 +26,7 @@
         fadeAnim,
         {
           toValue: 1,
-          duration: 2000,
+          duration: 3000,
           useNativeDriver:true,
         }
       ).start();
@@ -46,15 +47,53 @@
   constructor(props){
     super(props);
     // this.getData();
+    this.state={
+      Email:"",
+      First:false,
+    }
+  }
+
+  async checkFirstTime(){
+    await fetch(serverLink+"/checkFirstTime", {
+      method: "POST",
+      headers: {
+       "Content-Type": "application/json"
+       },
+      body: JSON.stringify(
+        {               
+                "Email": this.state.Email,
+        }
+      )
+     }).then(resp => {
+       return resp.json();
+     }).then(jsonresponse => {
+        
+       if(jsonresponse=="null"){
+        console.log(jsonresponse);
+        this.setState({First:true})
+       }else{
+        this.setState({First:false})
+       }
+     }).catch(error => {
+       console.log(error);
+     });  
+       
+   
   }
   async getData(){
     try{
     const value1=await AsyncStorage.getItem('Email');
     // const value2=await AsyncStorage.getItem('Password');
+    
     if(value1!==null){
-      this.props.navigation.navigate('firstTimeRegister',{///////////////////////////////////////////////////
-        Email: value1,
-      });
+      this.setState({Email:value1});
+      await this.checkFirstTime();
+      if(this.state.First){
+        this.props.navigation.navigate('firstTimeRegister',{Email: value1,});
+      }else{
+        this.props.navigation.navigate('home',{Email: value1,});
+      }
+      
     }
     else{
         this.props.navigation.navigate('kanri');
@@ -67,7 +106,7 @@
 componentDidMount(){
     setTimeout(()=>{
         this.getData();
-    },2000)
+    },3000)
 }
 
 

@@ -11,7 +11,6 @@
  import { KeyboardAvoidingView } from 'react-native';
  import Lottie from '../Components/Lottie';
  import AsyncStorage from '@react-native-async-storage/async-storage';
- import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 
 
  
@@ -41,12 +40,11 @@
     Email:"",
     PasswordEncoded:"",
     PasswordDecoded:"",
-    usersList: {},
   }
 
   
   async getUser(){
-    const response = await fetch(serverLink+"/getUser", {
+    await fetch(serverLink+"/getUser", {
       method: "POST",
       headers: {
        "Content-Type": "application/json"
@@ -56,14 +54,19 @@
                 "Email": this.state.Email,
         }
       )
-     });   
-   const body = await response.json();
-   if(body=="null"){
-     this.showAlert("Warning", "Email does not exist!")
-   }else{
-    this.setState({PasswordEncoded: body});
-    this.decrypt_password();
-   }
+     }).then(resp => {
+       return resp.json();
+     }).then(jsonresponse => {
+        // console.log(jsonresponse);
+       if(jsonresponse=="null"){
+         this.showAlert("Warning", "Email does not exist!")
+       }else{
+        this.setState({PasswordEncoded: jsonresponse});
+        this.decrypt_password();
+       }
+     }).catch(error => {
+       console.log(error);
+     });    
    
   }
 

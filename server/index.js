@@ -33,8 +33,69 @@ async function run() {
 
   }
   run().catch(console.dir);
+//register
+  app.post("/addUser", (req, res) => {
+    console.log(req.body.FirstName);
+    const database = client.db('KANRI');
+      const users = database.collection('users');
+        const query = { 
+          FirstName: req.body.FirstName,
+          LastName:req.body.LastName,
+                  Gender: req.body.Gender,
+                  BirthDate: new Date(req.body.BirthDate),
+                  Country:req.body.Country,
+                  PhoneNumber: req.body.PhoneNumber,
+                  Email: req.body.Email,
+                  Password:req.body.Password,
+        };
+        users.find({ Email: req.body.Email },{ projection: { _id: 1}}).toArray(function(err, result) {
+          if (err) throw err;
+          if(result.length==0)
+          {
+            const user = users.insertOne(query);
+            res.send(JSON.stringify(`Here is what you sent me: ${req.body.FirstName}`));
+          }
+          else{
+            res.send(JSON.stringify('existed'));
+          }
+        });
+        
+  });
+  app.post("/checkFirstTime", (req, res) => {
+    console.log(req.body.Email)
+    const database = client.db('KANRI');
+    const users = database.collection('ProfileInfo');
+    users.findOne({ Email: req.body.Email },function(err, result) {
+      if (err) throw err;
+      if(result==null)res.send(JSON.stringify("null"));
+      else{
+        // console.log(result.Password);
+        res.send(JSON.stringify("found"));
+      }
+      
+    });
+  });
 
-  
+  app.post("/saveProfileInfo", (req, res) => {
+    console.log(req.body.Email)
+    const database = client.db('KANRI');
+    const users = database.collection('ProfileInfo');
+    const query = { 
+      Email: req.body.Email,
+      NickName: req.body.NickName,
+      QualificationDegree : req.body.QualificationDegree,
+      Bio: req.body.Bio,
+      ProfileImage: req.body.ProfileImage,
+      InterestedIn: req.body.InterestedIn,
+    };
+    const user = users.insertOne(query, function(err, result) {
+      if (err) throw err;
+      console.log("saved");
+      res.send(JSON.stringify("saved"));
+    });
+  });
+
+  //login
   app.post("/getUser", (req, res) => {
     const database = client.db('KANRI');
     const users = database.collection('users');
@@ -48,94 +109,71 @@ async function run() {
       
     });
   });
-
-  app.post("/getInformation", (req, res) => {
+  
+  app.post("/sendCode", (req, res) => {
+        const database = client.db('KANRI');
+        const users = database.collection('users');  
+        users.find({ Email: req.body.Email },{ projection: {_id: 1}}).toArray(function(err, result) {
+          if (err) throw err;
+          if(result.length==0){
+            res.send(JSON.stringify("Email does not exist"));
+          }
+        else{
+          // console.log(result.length)
+          const code=Math.random().toString(36).substring(2,7);
+          var mailOptions = {
+          from: 'kanriprogram@gmail.com',
+          to: req.body.Email,
+        
+          subject: 'Sending Email using Node.js',
+          text: `Hi Smartherd, thank you for your nice Node.js tutorials.
+              I will donate 50$ for this course. Please send me payment options.`+code
+          // html: '<h1>Hi Smartherd</h1><p>Your Messsage</p>'        
+        };
+        transporter.sendMail(mailOptions, function(error, info){
+          if (error) {
+            console.log(error);
+          } else {
+            // console.log('Email sent');
+            // console.log(info.response);
+            res.send(JSON.stringify(code));
+          }
+        });
+      }
+        });
+  });
+  
+  app.post("/changePassword",(req,res) => {
     const database = client.db('KANRI');
     const users = database.collection('users');
+    var myquery = { Email: req.body.Email };
+    var newvalues = { $set: {Password: req.body.Password} };
+    users.updateOne(myquery, newvalues, function(err, result) {
+      if (err) throw err;
+      // console.log(req.body.Password);
+      res.send(JSON.stringify(req.body.Password))
+      // db.close();
+    });
+  });
+
+  ////profile
+  app.post("/getInfo",(req,res)=>{
+    const database = client.db('KANRI');
+    const users = database.collection('ProfileInfo');
+
     users.findOne({ Email: req.body.Email },function(err, result) {
       if (err) throw err;
       if(result==null)res.send(JSON.stringify("null"));
       else{
-        // console.log(result.Password);
         res.send(JSON.stringify(result));
       }
       
     });
-  });
+  })
+  
 
 
-app.post("/addUser", (req, res) => {
-  console.log(req.body.FirstName);
-  const database = client.db('KANRI');
-    const users = database.collection('users');
-      const query = { 
-        FirstName: req.body.FirstName,
-        LastName:req.body.LastName,
-                Gender: req.body.Gender,
-                BirthDate: new Date(req.body.BirthDate),
-                Country:req.body.Country,
-                PhoneNumber: req.body.PhoneNumber,
-                Email: req.body.Email,
-                Password:req.body.Password,
-      };
-      users.find({ Email: req.body.Email },{ projection: { _id: 1}}).toArray(function(err, result) {
-        if (err) throw err;
-        if(result.length==0)
-        {
-          const user = users.insertOne(query);
-          res.send(JSON.stringify(`Here is what you sent me: ${req.body.FirstName}`));
-        }
-        else{
-          res.send(JSON.stringify('existed'));
-        }
-      });
-      
-});
 
-app.post("/sendCode", (req, res) => {
-      const database = client.db('KANRI');
-      const users = database.collection('users');  
-      users.find({ Email: req.body.Email },{ projection: {_id: 1}}).toArray(function(err, result) {
-        if (err) throw err;
-        if(result.length==0){
-          res.send(JSON.stringify("Email does not exist"));
-        }
-      else{
-        // console.log(result.length)
-        const code=Math.random().toString(36).substring(2,7);
-        var mailOptions = {
-        from: 'kanriprogram@gmail.com',
-        to: req.body.Email,
-      
-        subject: 'Sending Email using Node.js',
-        text: `Hi Smartherd, thank you for your nice Node.js tutorials.
-            I will donate 50$ for this course. Please send me payment options.`+code
-        // html: '<h1>Hi Smartherd</h1><p>Your Messsage</p>'        
-      };
-      transporter.sendMail(mailOptions, function(error, info){
-        if (error) {
-          console.log(error);
-        } else {
-          // console.log('Email sent');
-          // console.log(info.response);
-          res.send(JSON.stringify(code));
-        }
-      });
-    }
-      });
-});
 
-app.post("/changePassword",(req,res) => {
-  const database = client.db('KANRI');
-  const users = database.collection('users');
-  var myquery = { Email: req.body.Email };
-  var newvalues = { $set: {Password: req.body.Password} };
-  users.updateOne(myquery, newvalues, function(err, result) {
-    if (err) throw err;
-    // console.log(req.body.Password);
-    res.send(JSON.stringify(req.body.Password))
-    // db.close();
-  });
-});
 
 app.listen(port, () => console.log(`Yes, Your server is running on port ${port}`));
