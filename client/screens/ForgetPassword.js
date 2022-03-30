@@ -8,8 +8,7 @@
 
  import React, {Component} from 'react';
  import Icon from 'react-native-vector-icons/dist/FontAwesome';
- import { KeyboardAvoidingView } from 'react-native';
- import Dialog, { DialogContent } from 'react-native-popup-dialog';
+ import { KeyboardAvoidingView,BackHandler } from 'react-native';
  import Lottie from '../Components/Lottie';
  import { LogBox } from 'react-native';
 
@@ -28,7 +27,10 @@
    TextInput,
    Alert,
    SafeAreaView,
+   Image,
  } from 'react-native';
+import { Modal } from 'react-native-paper';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
  
  const serverLink="http://192.168.1.110:3001";
 //  const serverLink="http://172.19.15.206:3001";
@@ -36,21 +38,67 @@
  class ForgetPassword extends Component{
   constructor(props){
     super(props);
+    this.state = {
+      secure: true,
+       passwordValue:"",
+       focus: false,
+       confirmsecure: true,
+       confirmfocus: false,
+       confirmpasswordValue:"",
+      dialogVisible:false,
+      Email:"",
+      PasswordEncoded:"",
+      EnterCode:"",
+      Code:"",
+  
+    }
+    this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
   }
-   state = {
-    secure: true,
-     passwordValue:"",
-     focus: false,
-     confirmsecure: true,
-     confirmfocus: false,
-     confirmpasswordValue:"",
-    dialogVisible:false,
-    Email:"",
-    PasswordEncoded:"",
-    EnterCode:"",
-    Code:"",
+  UNSAFE_componentWillMount() {
+    BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
+}
 
+componentWillUnmount() {
+    BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
+}
+handleBackButtonClick() {
+  if(!this.state.dialogVisible){
+    this.props.navigation.navigate('login')
   }
+
+  else{
+    this.setState({
+      secure: true,
+      passwordValue:"",
+      focus: false,
+      confirmsecure: true,
+      confirmfocus: false,
+      confirmpasswordValue:"",
+    PasswordEncoded:"",
+    dialogVisible:false,}); 
+   }
+      return true;
+}
+
+  componentDidMount(){
+    this.setState({
+      
+        secure: true,
+         passwordValue:"",
+         focus: false,
+         confirmsecure: true,
+         confirmfocus: false,
+         confirmpasswordValue:"",
+        dialogVisible:false,
+        Email:"",
+        PasswordEncoded:"",
+        EnterCode:"",
+        Code:"",
+    
+      
+    })
+  }
+   
 
   showAlert = (title,field) =>
   Alert.alert(
@@ -213,8 +261,8 @@
                       }
                         else{
                           this.setState({ dialogVisible: false });
-                          // console.log(this.state.EnterCode);
-                          // console.log(this.state.Code);
+                          console.log(this.state.EnterCode);
+                          console.log(this.state.Code);
                           this.showAlert("Warning","The verification code you entered does not match ")
                         }
                       
@@ -226,18 +274,77 @@
                  </TouchableOpacity>
                  </View>
                 </View>
-                 <Dialog
-                   visible={this.state.dialogVisible}
-                    onTouchOutside={() => {
-                    this.setState({ dialogVisible: false });
-                    }}
-                  >
-                  <DialogContent style={{height:300, width:400, backgroundColor:'#bfcfb2',}}>
-                  <Text style={styles.textstyle}>
-                    New Password
-                    </Text>
+                <View style={styles.RegisterRows}>
+                  <Text style={styles.textstyle1}>
+                    
+                  </Text>
+                  <View  style={styles.codebutton}>
+                  <TouchableOpacity style={styles.buttonstyle} 
+                  onPress={() => 
+                    {
+                      this.props.navigation.navigate('login')
                       
-                {/* password */}
+                    }}
+                          
+                  >
+            
+                  <Text style={styles.buttontext} >Login</Text>
+                 </TouchableOpacity>
+                 </View>
+                </View>
+                
+            </ScrollView>
+
+            
+         {/* </View> */}
+
+        </View>
+        
+
+        
+
+        <Modal 
+         animationType='slide'
+         visible={this.state.dialogVisible}
+                   onRequestClose={()=>{this.setState({dialogVisible:false})}
+                                             }
+                    style={styles.ModalView}>
+                 <View style={styles.cancelicon}>
+                     <Icon  name='close' color="black"  size={25} onPress={()=>
+                      {
+                      
+                      this.setState({
+                        dialogVisible:false,
+                        secure: true,
+       passwordValue:"",
+       focus: false,
+       confirmsecure: true,
+       confirmfocus: false,
+       confirmpasswordValue:"",
+       PasswordEncoded:"",
+                      })
+                    }
+                      } />
+                 </View>
+                 <View style={styles.modalS}>
+
+                 <View style={{flexDirection:'row',marginBottom:30}}>
+          <View style={{width:'20%', alignItems:'flex-start'}}>
+          <Image 
+               source={require('../assets/logo/logo1.jpeg')}
+               style={{width:60, height:60, borderRadius:0}}
+               
+               />
+          </View>
+          <View style={{width:'60%',alignItems:'center',justifyContent:'center'}}>
+          <Text style={styles.textAddress}>New Password</Text>
+          </View>
+          <View style={{width:'20%'}}>
+          <Text></Text>
+          </View>
+          
+  </View>
+  <KeyboardAwareScrollView style={{height:'40%',}}>
                 <View style={styles.RegisterRows}>
                   <Text style={styles.textstyle1}>
                     Password
@@ -264,11 +371,10 @@
                          name={this.state.secure ? "eye" : 'eye-slash'}
                          size={20} color='#343434' 
                          onPress={() => this.setState({secure : !this.state.secure})} />
-                      //  {/* </View> */}
                     }
                 </View>
                 </View>
-                {/* confirm password */}
+                
                 <View style={styles.RegisterRows}>
                   <Text style={styles.textstyle1}>
                     Confirm
@@ -330,38 +436,15 @@
                  </TouchableOpacity>
                 </View>
                   
+                </View> 
+                </KeyboardAwareScrollView>
                 </View>
-                
-     
-                    </DialogContent>
-                  </Dialog>
-
-                {/* </View> */}
-                {/* </View> */}
-
-                
-
-              
-
-                
-
-                
-            </ScrollView>
-            
-         {/* </View> */}
-
-        </View>
+            </Modal>
         </KeyboardAvoidingView>
         
 
-        <View style={{marginTop:0, marginBottom: 20,paddingTop:0}}>
-        <TouchableOpacity style={styles.buttonstyle} onPress={
-              ()=>this.props.navigation.navigate('login')
-            }>
-            
-           <Text style={styles.buttontext} >Login</Text>
-           </TouchableOpacity>
-         </View>
+        
+
          
  
         
@@ -373,6 +456,38 @@
  
  
  const styles = StyleSheet.create({
+  textAddress:{
+    fontSize: 20,
+    letterSpacing: 1,
+    opacity: 0.8,
+    color:"black",
+    fontFamily:'SairaSemiCondensed-Bold'
+  },
+  cancelicon:{
+    paddingTop:1,
+paddingLeft:"94%",
+backgroundColor:'#bfcfb2',
+  },
+  ModalView:{
+    flex:1,
+    // borderStyle:'dashed',
+    // borderColor:'black',
+    height:'100%',
+    justifyContent:'center',
+    // alignContent:'center',
+    alignItems:'center',
+    backgroundColor:'#bfcfb2',
+  },
+  modalS:{
+    alignItems:"center",
+      // alignSelf:"center",
+    // justifyContent:'center',
+    
+    display:'flex',
+    backgroundColor:'#bfcfb2',
+     height:'100%',
+    //  marginVertical:200
+    },
 
   MainView: {
    display:'flex',
@@ -390,7 +505,7 @@
   textstyle: {
     marginTop: 0,
     fontFamily:"ArimaMadurai-Regular",
-    fontSize: 40,
+    fontSize: 30,
     color: 'black',
     textAlign: 'center',
     // fontWeight: 'bold',
@@ -416,30 +531,30 @@
       alignSelf: 'center',
   },
   buttonstyle: {
-   width:200,
-   height: 50,
-   display:'flex',
-   allignItems:'center',
-   alignContent: 'center', 
-   paddingVertical:5,
-   backgroundColor:'#bc9855',
-   borderRadius: 100 ,
-   elevation:2,
-   shadowColor: '#0000',
-   shadowOffset: {
-     width: 2,
-     height: 2,
-   },
-   marginTop: 0,
-   marginBottom: 0
- },
- buttontext: {
-   color: 'black',
-   textAlign: 'center',
-   // fontWeight: 'bold',
-   fontSize: 20,
-   fontFamily:"SairaSemiCondensed-Regular",
- },
+    width:200,
+    height: 50,
+    display:'flex',
+    allignItems:'center',
+    alignContent: 'center', 
+    paddingVertical:5,
+    backgroundColor:'#bc9855',
+    borderRadius: 100 ,
+    elevation:2,
+    shadowColor: '#0000',
+    shadowOffset: {
+      width: 2,
+      height: 2,
+    },
+    marginTop: 0,
+    marginBottom: 0
+  },
+  buttontext: {
+    color: 'black',
+    textAlign: 'center',
+    // fontWeight: 'bold',
+    fontSize: 20,
+    fontFamily:"SairaSemiCondensed-Regular",
+  },
  inputView:{
    
    Width:180,
@@ -474,6 +589,7 @@
   },
  RegisterRows: {
    display:'flex',
+   height:40,
    flex: 2,
    flexDirection:'row',
    marginLeft: 20,

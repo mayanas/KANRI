@@ -35,6 +35,7 @@ import Lottie from '../Components/Lottie';
    TouchableOpacity,
    TextInput,
    Alert,
+   BackHandler,
  } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native';
 
@@ -44,32 +45,74 @@ import { KeyboardAvoidingView } from 'react-native';
   constructor(props){
     super(props);
     this.phoneinput = React.createRef();
+    this.state = {
+      secure: true,
+      focus: false,
+      confirmsecure: true,
+      confirmfocus: false,
+      FirstName:"",
+      LastName: "",
+      Gender: "",
+      BDay:0,
+      BMonth:0,
+      BYear:0,
+      Country:"Palestine",
+      PhoneNumber:"",
+      phonevalid:true,
+      phonevalue: "",
+      Email:"",
+      emailvalid:false,
+      PasswordValue:"",
+      ConfirmpasswordValue:"",
+      PasswordEncoded:"",
+      PasswordDecoded:"",
+      usersList: [],
+  
+    }
+    this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
+
+    
 
   }
-  state = {
-    secure: true,
-    focus: false,
-    confirmsecure: true,
-    confirmfocus: false,
-    FirstName:"",
-    LastName: "",
-    Gender: "",
-    BDay:0,
-    BMonth:0,
-    BYear:0,
-    Country:"Palestine",
-    PhoneNumber:"",
-    phonevalid:true,
-    phonevalue: "",
-    Email:"",
-    emailvalid:false,
-    PasswordValue:"",
-    ConfirmpasswordValue:"",
-    PasswordEncoded:"",
-    PasswordDecoded:"",
-    usersList: [],
-
+  UNSAFE_componentWillMount() {
+    BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
   }
+
+  componentWillUnmount() {
+    BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
+  }
+
+  handleBackButtonClick() {
+    this.props.navigation.navigate('kanri')
+        return true;
+  }
+
+  componentDidMount(){
+    this.setState({
+      secure: true,
+      focus: false,
+      confirmsecure: true,
+      confirmfocus: false,
+      FirstName:"",
+      LastName: "",
+      Gender: "",
+      BDay:0,
+      BMonth:0,
+      BYear:0,
+      Country:"Palestine",
+      PhoneNumber:"",
+      phonevalid:true,
+      phonevalue: "",
+      Email:"",
+      emailvalid:false,
+      PasswordValue:"",
+      ConfirmpasswordValue:"",
+      PasswordEncoded:"",
+      PasswordDecoded:"",
+      usersList: [],
+    })
+  }
+  
   async addUser(){
     
     const response = await fetch(serverLink+"/addUser", {

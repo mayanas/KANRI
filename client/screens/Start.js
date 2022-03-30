@@ -15,6 +15,7 @@
    Image,
    View,
    Animated,
+   BackHandler,
  } from 'react-native';
  const serverLink="http://192.168.1.110:3001";
 //  const serverLink="http://172.19.15.206:3001";
@@ -51,7 +52,19 @@
       Email:"",
       First:false,
     }
+    this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
   }
+  UNSAFE_componentWillMount() {
+    BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
+}
+
+componentWillUnmount() {
+    BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
+}
+handleBackButtonClick() {
+  BackHandler.exitApp();
+  return true;  
+}
 
   async checkFirstTime(){
     await fetch(serverLink+"/checkFirstTime", {

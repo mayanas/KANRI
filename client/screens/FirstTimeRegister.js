@@ -11,7 +11,8 @@
  import LinearGradient from 'react-native-linear-gradient';
  import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
  import SelectDropdown from 'react-native-select-dropdown';
- import Dialog, { DialogContent } from 'react-native-popup-dialog';
+ import { Icon } from 'react-native-elements';
+ import Loading from '../Components/Loading';
  
 
  import {
@@ -28,6 +29,7 @@
  } from 'react-native';
 import { ScrollView, TextInput } from 'react-native-gesture-handler';
 import CheckBoxItem from '../Components/CheckBoxItem';
+import { Modal } from 'react-native-paper';
 
 import { LogBox } from 'react-native';
 LogBox.ignoreLogs(['Require cycle:']);
@@ -37,16 +39,20 @@ LogBox.ignoreLogs(['Require cycle:']);
 const Degrees = ["Doctoral Degree","Master's Degree","Bachelor's Degree", "Diploma's Degree","Undergraduate",  "None of the above"]
 
 const checkList = [
-  { id: 1, name: 'Applied Technology' },
-  { id: 2, name: 'Behavioral Science and Human Services'},
-  { id: 3, name: 'Business, Entrepreneurialism, and Management' },
-  { id: 4, name: 'Computer and Information Technology' },
-  { id: 5, name: 'Culture and Society' },
-  { id: 6, name: 'Education'},
-  { id: 7, name: 'Health Sciences' },
-  { id: 8, name: 'Science, Technology, Engineering, and Mathematics (STEM)'},
-  { id: 9, name: 'Visual and Performing Arts' },
+  { id: 1, name: 'Business and Management' },
+  { id: 2, name: 'Computer Science and Information Technology'},
+  { id: 3, name: 'Education' },////
+  { id: 4, name: 'Environmental, Agricultural, and Physical Sciences' },////
+  { id: 5, name: 'Government and Law' },
+  { id: 6, name: 'Library and Information Science'},////
+  { id: 7, name: 'Media and Communications'},////
+  { id: 8, name: 'Medical, Healthcare, and Life Sciences' },
+  { id: 9, name: 'Science and Engineering' },
+  { id: 10, name: 'Security and Forensics' },
+  { id: 11, name: 'Social Sciences and Humanities' },
+
  ];
+
  class FirstTimeRegister extends Component{
   constructor(props){
     super(props);
@@ -56,8 +62,9 @@ const checkList = [
       bio: "",
       QualificationDegree:"",
       InterestedIn:[],
-      dialogVisible:false,
+      isModalVisible:false,
       // checked:false,
+      saved:true,
     }
 
     this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
@@ -71,10 +78,10 @@ componentWillUnmount() {
     BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
 }
 handleBackButtonClick() {
-  if(!this.state.dialogVisible)
+  if(!this.state.isModalVisible)
   BackHandler.exitApp();
   else{
-    this.setState({dialogVisible:false})
+    this.setState({isModalVisible:false})
   }
       return true;
 }
@@ -85,13 +92,15 @@ componentDidMount(){
       bio: "",
       QualificationDegree:"",
       InterestedIn:[],
-      dialogVisible:false,
+      isModalVisible:false,
       // checked:false,
+      saved:true,
   });
   
 }
   
 async saveProfileInfo(){
+  this.setState({saved:false})
   const response = await fetch(serverLink+"/saveProfileInfo", {
     method: "POST",
     headers: {
@@ -105,6 +114,10 @@ async saveProfileInfo(){
               "Bio": this.state.bio,
               "ProfileImage": this.state.profileImage,
               "InterestedIn": this.state.InterestedIn,
+              "Followers": 0,
+              "Following": 0,
+              "Projects":0,
+              "Views": 0,
       }
     )
    });   
@@ -113,28 +126,23 @@ async saveProfileInfo(){
   console.log('not existed')
  }else{
   console.log("saved");
-  this.props.navigation.navigate('home',{
+  this.setState({saved:true})
+  this.props.navigation.navigate('login',{
     Email: this.state.Email,
-    FirstName: this.props.route.params.FirstName,
-    LastName: this.props.route.params.LastName,
+    
   });
  }
  
 }
 
-
-handleChange=(pItems)=>{
-  
-  if(JSON.stringify(this.state.InterestedIn)!==JSON.stringify(pItems))
-  this.setState({InterestedIn:pItems})
-  console.log('pItems =>', this.state.InterestedIn);
-}
-onUpdate = (name) => {
+onUpdate = (item) => {
+  let name=item.name;
+  let id=item.id;
   this.setState(previous => {
     let InterestedIn = previous.InterestedIn;
-    let index = InterestedIn.indexOf(name) // check to see if the name is already stored in the array
+    let index = InterestedIn.map(object => object.name).indexOf(name); // check to see if the name is already stored in the array
     if (index === -1) {
-      InterestedIn.push(name) // if it isn't stored add it to the array
+      InterestedIn.push({id, name}) // if it isn't stored add it to the array
     } else {
       InterestedIn.splice(index, 1) // if it is stored then remove it from the array
     }
@@ -224,14 +232,15 @@ onUpdate = (name) => {
    render(){
     
      return (
-
+      <View style={styles.MainView}>
+      {!this.state.saved ? <Loading/> :
       <KeyboardAwareScrollView style={{backgroundColor: '#bfcfb2',}}>
        <SafeAreaView ew style={styles.MainView}>
          {/* <Text>{this.Email}</Text> */}
          
          <View style={styles.TopView}>
          <View style={styles.infoStyle}>
-          <Text style={styles.textStyle}>{this.props.route.params.FirstName + ' ' + this.props.route.params.LastName}</Text>
+          <Text style={styles.textStyle}></Text>
         </View>
          <Image 
                source={require('../assets/logo/logo1.jpeg')}
@@ -244,7 +253,7 @@ onUpdate = (name) => {
          style={{
           left:0,
           right:0,
-          height:'5%',
+          height:10,
           width:'100%',
           margin:0,
          }}
@@ -358,7 +367,9 @@ onUpdate = (name) => {
                 <TouchableOpacity
                 style={styles.buttoninputstyle}
                 onPress={()=>{
-                  this.setState({ dialogVisible: true, InterestedIn:[] })
+                  this.setState({ 
+                    isModalVisible:true,
+                     InterestedIn:[] })
                 }}
                 >
                  <Text style={{fontFamily: 'SairaSemiCondensed-Bold',
@@ -384,7 +395,9 @@ onUpdate = (name) => {
                     this.showAlert("Warning", "Make sure to choose at least one interest")
                   }
                   else{
-                    this.saveProfileInfo() 
+
+                     this.saveProfileInfo() 
+                    
                   }
                 }
                 }
@@ -397,83 +410,84 @@ onUpdate = (name) => {
                 </TouchableOpacity>
                 </View>
             </View>
-            <Dialog
-            style={{ width:400, backgroundColor:'#bfcfb2',}}
-                   visible={this.state.dialogVisible}
-                    // onTouchOutside={() => {
-                    // this.setState({ dialogVisible: false });
-                    // }}
-            >
-              <DialogContent style={{height:'100%', width:400, backgroundColor:'#bfcfb2',}}>
-                <KeyboardAwareScrollView showsVerticalScrollIndicator={false}>
-                <SafeAreaView  style={{width:'100%', height:'100%'}}>
-              <View style={styles.TopView}>
-                <View style={styles.infoStyle}>
-                 <Text></Text>
-               </View>
-               <Image 
-               source={require('../assets/logo/logo1.jpeg')}
-               style={{width:60, height:60, borderRadius:0}}
-               
-               />
-              </View>
-              <View style={{marginBottom:15}}>
-              <Text style={[styles.textStyle1, {fontFamily:'SairaSemiCondensed-Bold', fontSize:17,margin: 20}]}>Choose the fields you are interested in:</Text>
-                {checkList.map(item => <CheckBoxItem  key={item.id} label={item.name} onUpdate={this.onUpdate.bind(this,item.name)}/>)}
-              
-              </View>
-                
-              
-              
-              <TouchableOpacity style={styles.buttoninputstyle}
-                onPress={()=>{
-                  if(this.state.InterestedIn.length===0){
-                    this.showAlert("Warning","Make sure to choose at least one interest \n\nThank you")
-                  }
-                  else{
-                    this.setState({dialogVisible:false})
-                  }
-                }
-                }
-                >
-                 <Text style={{fontFamily: 'SairaSemiCondensed-Bold',
-                               fontSize: 15,
-                              textDecorationLine: 'none',
-                              textAlign:'center',
-                             }} >Save</Text> 
-              </TouchableOpacity>
-              </SafeAreaView >      
-                </KeyboardAwareScrollView>
-                          
-              </DialogContent>
-            </Dialog>
-           
             
-            {/* </ScrollView> */}
             </View>
         
-        
-        
-        
-        
-        {/* <View>
-        {////للاخير
-            this.state.profileImage? (
-              <Text onPress={this.uploadProfileImage} style={[styles.skipbtn,{
-                backgroundColor:'green', color:'white', borderRadius:8
-              }]}>Save Profile Image</Text>
-            ): null
-          }
-        </View> */}
+
       </View>
+      <Modal animationType='slide'
+                   visible={this.state.isModalVisible}
+                   onRequestClose={()=>{this.setState({isModalVisible:false})}
+                                             }
+                    style={styles.ModalView}>
+                 <View style={styles.cancelicon}>
+                     <Icon  name='close' color="black"  size={25} onPress={()=>
+                      {
+                      if(this.state.InterestedIn.length===0){
+                        this.showAlert("Warning","Make sure to choose at least one interest \n\nThank you")
+                      }
+                      this.setState({isModalVisible:false,})
+                    }
+                      } />
+                 </View>
+                 <View style={styles.modalS}>
+                    
+                    <SafeAreaView  style={{width:'100%', height:'100%'}}>
+                    <View style={styles.TopView}>
+                       <View style={styles.infoStyle}>
+                    <Text></Text>
+                    </View>
+                    <Image 
+                    source={require('../assets/logo/logo1.jpeg')}
+                    style={{width:60, height:60, borderRadius:0}}
+               
+                    />
+                 </View>
+                 <KeyboardAwareScrollView showsVerticalScrollIndicator={false} >
+                   <View style={{width:'100%',height:'100%', marginBottom:50, paddingHorizontal:10}}>
+                   <View style={{marginBottom:15}}>
+                    <Text style={[styles.textStyle1, {fontFamily:'SairaSemiCondensed-Bold', fontSize:17,margin: 20}]}>Choose the fields you are interested in:</Text>
+                    {checkList.map(item => <CheckBoxItem  key={item.id} label={item.name} onUpdate={this.onUpdate.bind(this,item)}/>)}
+              
+                  </View>
+
+                   </View>
+                 
+              </KeyboardAwareScrollView>
+              </SafeAreaView >      
+
+            </View>
+   </Modal>
        </SafeAreaView >
-       </KeyboardAwareScrollView > 
+       </KeyboardAwareScrollView > }
+       </View>
      );
    }
  }
  
  
  const styles = StyleSheet.create({
+  cancelicon:{
+    paddingTop:1,
+paddingLeft:"94%",
+backgroundColor:'#bfcfb2',
+  },
+  modalS:{
+    alignItems:"center",
+  
+    alignItems:"center",
+    alignSelf:"center",
+    display:'flex',
+    backgroundColor:'#bfcfb2',
+     height:"100%"},
+  ModalView:{
+    flex:1,
+    height:"100%",
+    alignContent:'center',
+    alignItems:'center',
+    backgroundColor:'#bfcfb2',
+  }
+  ,
     MainView: {
         display:'flex',
          flex: 1,

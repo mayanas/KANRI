@@ -13,12 +13,25 @@
    StyleSheet,
    Text,
    View,
+   BackHandler,
  } from 'react-native';
  
  class About extends Component{
   constructor(props){
     super(props);
+    this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
   }
+  UNSAFE_componentWillMount() {
+    BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
+}
+
+componentWillUnmount() {
+    BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
+}
+handleBackButtonClick() {
+  this.props.navigation.navigate('kanri');
+      return true;
+}
  
    render(){
      

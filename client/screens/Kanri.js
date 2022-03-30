@@ -13,15 +13,27 @@
    Text,
    View,
    TouchableOpacity,
+   BackHandler,
  } from 'react-native';
 import Lottie from '../Components/Lottie';
  
  class Kanri extends Component{
   constructor(props){
     super(props);
+    this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
   }
 
+  UNSAFE_componentWillMount() {
+    BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
+}
 
+componentWillUnmount() {
+    BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
+}
+handleBackButtonClick() {
+  BackHandler.exitApp();
+      return true;
+}
  
    render(){
      

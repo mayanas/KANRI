@@ -8,7 +8,7 @@
 
  import React, {Component} from 'react';
  import Icon from 'react-native-vector-icons/dist/FontAwesome';
- import { KeyboardAvoidingView } from 'react-native';
+ import { BackHandler, KeyboardAvoidingView } from 'react-native';
  import Lottie from '../Components/Lottie';
  import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -31,16 +31,29 @@
  class Login extends Component{
   constructor(props){
     super(props);
+    this.state = {
+      secure: true,
+      passwordValue:"",
+      focus: false,
+      Email:"",
+      PasswordEncoded:"",
+      PasswordDecoded:"",
+    }
+    this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
   }
 
-   state = {
-    secure: true,
-    passwordValue:"",
-    focus: false,
-    Email:"",
-    PasswordEncoded:"",
-    PasswordDecoded:"",
-  }
+   
+  UNSAFE_componentWillMount() {
+    BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
+}
+
+componentWillUnmount() {
+    BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
+}
+handleBackButtonClick() {
+  this.props.navigation.navigate('kanri')
+      return true;
+}
 
   
   async getUser(){
