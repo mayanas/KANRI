@@ -17,7 +17,8 @@
    Animated,
    BackHandler,
  } from 'react-native';
- const serverLink="http://192.168.1.110:3001";
+ import { serverLink } from './serverLink';
+//  const serverLink="http://192.168.1.110:3001";
 //  const serverLink="http://172.19.15.206:3001";
  const FadeInView = (props) => {
     const fadeAnim = useRef(new Animated.Value(0)).current  // Initial value for opacity: 1

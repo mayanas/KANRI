@@ -7,9 +7,10 @@
  */
 
  import React, {Component} from 'react';
- import { KeyboardAvoidingView } from 'react-native';
+ import { Alert, KeyboardAvoidingView } from 'react-native';
  import { Searchbar } from 'react-native-paper';
  import LinearGradient  from 'react-native-linear-gradient';
+ import { serverLink } from '../serverLink';
 
  
  import {
@@ -18,40 +19,186 @@
    Text,
    BackHandler,
    Image,
+   SafeAreaView,
+   FlatList,
+   TouchableOpacity,
  } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import { isEqualIcon } from 'react-native-paper/lib/typescript/components/Icon';
+import Loading from '../../Components/Loading';
+
+//
+
 //  import FontAwesomeIcon from 'react-native-vector-icons/dist/FontAwesome';
  
  class HomeScreen extends Component{
   constructor(props){
     super(props);
     this.state = {
+      Email:this.props.route.params.Email,
       search:"",
-      Email:"",
+      filteredDataSource:[],
+      masterDataSource:[],
+      enableSearch:false,
+      loadedSearch:false,
+      ProfileImages:[],
     }
-    // this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
+    this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
   }
   componentDidMount(){
-    this.setState({Email : this.props.route.params.Email})
+    this.setState({Email : this.props.route.params.Email}) 
+    // this.send()
   }
+  
+
+  UNSAFE_componentWillMount() {
+    BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
+  }
+
+  componentWillUnmount() {
+    BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
+  }
+
+  handleBackButtonClick() {
+    BackHandler.exitApp(); 
+        return true;
+  }
+  
+
+  searchFilterFunction =async  (text) => {
+    
+    // Check if searched text is not blank
+    this.setState({loadedSearch:false})
+    await this.getData();
+    if (text) {
+        
+        const newData =this.state.masterDataSource.filter(
+          function (item) {
+            const itemData = item.NickName
+            ? item.NickName.toUpperCase()
+            : ''.toUpperCase();
+          const textData = text.toUpperCase();
+          return itemData.indexOf(textData) > -1;
+        });
+        this.setState({filteredDataSource:newData,});
+        }
+        else {
+          this.setState({
+            filteredDataSource:[],
+            
+    });
+  }
+  this.setState({loadedSearch:true})
+};  
+
+ItemView = ({item}) => {
+
+  return (
+    // Flat List Item
+    <TouchableOpacity style={styles.item}
+    onPress={() => this.getItem(item)}
+   >
+   <Text
+      style={styles.textItems}
+      >
+      {item.NickName}
+      
+    </Text>
+   </TouchableOpacity>
+    
+  );
+
+ 
+};
+
+ItemSeparatorView = () => {
+  return (
+    // Flat List Item Separator
+    <View
+      style={{
+        height: 0.5,
+        width: '100%',
+        backgroundColor: '#bfcfb2',
+      }}
+    />
+  );
+};
+showAlert = (title,field) =>
+Alert.alert(
+  title,
+  field,
+  [
+    {
+      text: "Cancel",
+    
+      style: "cancel",
+    },
+  ],
+  {
+    cancelable: true,
+    
+    
+  }
+);
+getItem = (item) => {
+ 
+this.props.navigation.navigate('profileForOthers',{Email:item.Email,GuestEmail:this.state.Email})
+}
+// async getProfileImage(){
+//   await fetch(serverLink+"/getProfileImage", {
+//     method: "POST",
+//     headers: {
+//      "Content-Type": "application/json"
+//      },
+//     body: JSON.stringify(
+//       {               
+//               "Email": this.state.Email,
+//       }
+//     )
+//    }).then(resp => {
+//      return resp.json();
+//    }).then(jsonresponse => {
+//     //  console.log(jsonresponse)
+//       this.setState({
+//         ProfileImage: jsonresponse,
+//      })
+//    }).catch(error => {
+//      console.log(error);
+//    });  
    
-  // UNSAFE_componentWillMount() {
-  //   BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
-  // }
-
-  // componentWillUnmount() {
-  //   BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
-  // }
-
-  // handleBackButtonClick() {
-  //   BackHandler.exitApp(); 
-  //       return true;
-  // }
+// }
+getData=async () =>  {
+  const response = await fetch(serverLink+"/getData", {
+    method: "POST",
+    headers: {
+     "Content-Type": "application/json",
+    
+     },
+     body: JSON.stringify(
+      {               
+            
+      }
+     )
+   });   
+   const body = await response.json();
+   if(body=="null"){
+     this.showAlert("Warning", "Email does not exist!")
+   }else{
+console.log(body);
+this.setState({masterDataSource:body})
+ 
+}
+}
 
    render(){
-     
+    
      return (
 
+      
        <View style={styles.MainView}>
+        
+         
+           <SafeAreaView ew style={styles.MainView}>
          <View style={styles.TopView}>
            
            <Searchbar
@@ -67,14 +214,21 @@
               borderRadius:50,
               width:'85%',
               height:'90%',
-              fontFamily:'SairaSemiCondensed-Regular',
               
-            }}            
+              
+            }}  
+            inputStyle={{
+              fontFamily:'SairaSemiCondensed-Regular',
+              fontSize:15
+            }}          
 
   
-            onChangeText={text=>{
-            this.setState({search:text});
-            }}
+            onChangeText={(text) => {
+              if(text=='')this.setState({enableSearch:false})
+              else this.setState({enableSearch:true})
+              this.setState({search:text})
+              this.searchFilterFunction(text)}}
+            
             value={this.state.search}
           />
           {/* {console.log(this.state.search)} */}
@@ -87,25 +241,36 @@
 
           
          </View>
-         <LinearGradient
-         colors={['#98a988', '#bfcfb2', '#bfcfb2']}
-         style={{
-           left:0,
-           right:0,
-           height:50,
-           width:'100%',
-           margin:0,
-         }}
-         >
-           <Text></Text>
-         </LinearGradient>
-         <Text>hello</Text>
          
-          
+         {this.state.enableSearch? 
+           this.state.loadedSearch?
+            <SafeAreaView style={{width:'100%', height:'100%',flex:1}}>
+           <FlatList
+         scrollEnabled
+         vertical
+         showsVerticalScrollIndicator={false}
+         width={'100%'}
+         height={'100%'}
+      data={this.state.filteredDataSource}
+      keyExtractor={(item, index) => index.toString()}
+      ItemSeparatorComponent={this.ItemSeparatorView}
+      renderItem={this.ItemView}
+    />
+         </SafeAreaView>:<Loading/>
+         :
+    <KeyboardAwareScrollView style={{backgroundColor:'#bfcfb2'}}>
+    <Text>hello</Text>
+    
+    </KeyboardAwareScrollView>
+    }
+         
+         
+        
           {/* <Text>{this.props.route.params.Email}</Text> */}
+          </SafeAreaView>
           
-         
        </View>
+       
      );
    }
  }
@@ -122,7 +287,7 @@
     },
     TopView: {
       width:'100%',
-      height:'8%',
+      height:60,
       flexDirection:'row',
       backgroundColor:'#bfcfb2',
       borderBottomLeftRadius:20,
@@ -140,7 +305,22 @@
       alignItems:'center',
       marginTop: 25,
       width:'100%',
-    }
+    },
+    item:{
+      borderBottomWidth:1,
+      borderBottomColor:"#bc9855",
+      alignItems:'flex-start',
+      // justifyContent:'flex-start',
+      width:300,
+      // height:'100%'
+      marginTop:15
+        },
+        textItems:{
+          fontSize:15,
+          color:'black',
+          fontFamily:'SairaSemiCondensed-Regular',
+        },
+        
     
     
 });

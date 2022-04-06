@@ -8,7 +8,8 @@
 
  import React, {Component} from 'react';
  import { KeyboardAvoidingView } from 'react-native';
- 
+ import { serverLink } from '../serverLink';
+
  import {
    StyleSheet,
    View,

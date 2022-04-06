@@ -32,7 +32,8 @@
 import { Modal } from 'react-native-paper';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
  
- const serverLink="http://192.168.1.110:3001";
+import { serverLink } from './serverLink';
+//  const serverLink="http://192.168.1.110:3001";
 //  const serverLink="http://172.19.15.206:3001";
 
  class ForgetPassword extends Component{
@@ -50,6 +51,8 @@ import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view
       PasswordEncoded:"",
       EnterCode:"",
       Code:"",
+
+      where:this.props.route.params.where,
   
     }
     this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
@@ -63,7 +66,10 @@ componentWillUnmount() {
 }
 handleBackButtonClick() {
   if(!this.state.dialogVisible){
+    // if(this.state.where==='login')
     this.props.navigation.navigate('login')
+    // else if(this.state.where==='profile')
+    // this.props.navigation.navigate('Profile',{Email:this.state.Email})
   }
 
   else{
@@ -143,14 +149,15 @@ handleBackButtonClick() {
    }
   }
 
-  async encrypt_password() {
+   encrypt_password=async()=> {
     var temp = await Base64.encode(this.state.passwordValue);
  
     this.setState({ PasswordEncoded: temp });
-    this.changePassword();
+    
+    await this.changePassword();
   }
 
-  async changePassword() {
+  changePassword=async()=> {
     const response = await fetch(serverLink+"/changePassword", {
       method: "POST",
 
@@ -166,6 +173,7 @@ handleBackButtonClick() {
      });   
    const body = await response.json();
    this.showAlert("^_^", "Password Updated")
+   this.setState({dialogVisible:false})
     // console.log(body);
   }
  
@@ -282,7 +290,7 @@ handleBackButtonClick() {
                   <TouchableOpacity style={styles.buttonstyle} 
                   onPress={() => 
                     {
-                      this.props.navigation.navigate('login')
+                      this.props.navigation.push('login')
                       
                     }}
                           
@@ -421,7 +429,7 @@ handleBackButtonClick() {
                           
                           this.encrypt_password();
                           // this.changePassword();
-                          this.setState({dialogVisible: false});
+                          
 
                          }else{
                           this.showAlert("Warning", "Make sure Password and Confirmed password full and match");

@@ -39,7 +39,7 @@ import Lottie from '../Components/Lottie';
  } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native';
 
- const serverLink="http://192.168.1.110:3001";
+import { serverLink } from './serverLink';
 //  const serverLink="http://172.19.15.206:3001";
  class Register extends Component{
   constructor(props){

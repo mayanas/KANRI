@@ -19,6 +19,9 @@
  class About extends Component{
   constructor(props){
     super(props);
+    this.state={
+      where:this.props.route.params.where,
+    }
     this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
   }
   UNSAFE_componentWillMount() {
@@ -29,7 +32,12 @@ componentWillUnmount() {
     BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
 }
 handleBackButtonClick() {
-  this.props.navigation.navigate('kanri');
+  if(this.state.where==='kanri'){
+    this.props.navigation.navigate('kanri');
+  }
+  else if(this.state.where==='profile'){
+    this.props.navigation.navigate('Profile');
+  }
       return true;
 }
  

@@ -51,14 +51,14 @@ handleBackButtonClick() {
  
          <View style={{marginTop:30}}>
            <TouchableOpacity style={styles.buttonstyle} onPress={
-              ()=>this.props.navigation.navigate('login')
+              ()=>this.props.navigation.push('login')
             }>
              
              <Text style={styles.buttontext}>Login</Text>
  
            </TouchableOpacity>
            <TouchableOpacity style={styles.buttonstyle} onPress={
-              ()=>this.props.navigation.navigate('register')
+              ()=>this.props.navigation.push('register')
             }>
             
            <Text style={styles.buttontext} >Register</Text>
@@ -67,7 +67,7 @@ handleBackButtonClick() {
  
          <View style={{marginTop:0}}>
            <Text style={styles.textstyle1} onPress={
-              ()=>this.props.navigation.navigate('about')
+              ()=>this.props.navigation.push('about')
             }>ABOUT US</Text>
          </View>
        </View>

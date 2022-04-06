@@ -33,8 +33,8 @@ import { Modal } from 'react-native-paper';
 
 import { LogBox } from 'react-native';
 LogBox.ignoreLogs(['Require cycle:']);
-
- const serverLink="http://192.168.1.110:3001";
+import { serverLink } from './serverLink';
+//  const serverLink="http://192.168.1.110:3001";
 //  const serverLink="http://172.19.15.206:3001";
 const Degrees = ["Doctoral Degree","Master's Degree","Bachelor's Degree", "Diploma's Degree","Undergraduate",  "None of the above"]
 
@@ -127,7 +127,7 @@ async saveProfileInfo(){
  }else{
   console.log("saved");
   this.setState({saved:true})
-  this.props.navigation.navigate('login',{
+  this.props.navigation.push('login',{
     Email: this.state.Email,
     
   });

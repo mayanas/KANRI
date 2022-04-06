@@ -11,7 +11,8 @@
  import { BackHandler, KeyboardAvoidingView } from 'react-native';
  import Lottie from '../Components/Lottie';
  import AsyncStorage from '@react-native-async-storage/async-storage';
-
+import ForegroundHandler from '../Notifications/ForegroundHandler';
+import { getFcmToken, NotificationsListener } from '../Notifications/Notifications';
 
  
  import {
@@ -24,8 +25,8 @@
    Alert,
  } from 'react-native';
  import { Base64 } from 'js-base64';
-
- const serverLink="http://192.168.1.110:3001";
+import { serverLink } from './serverLink';
+//  const serverLink="http://192.168.1.110:3001";
 //  const serverLink="http://172.19.15.206:3001";
 
  class Login extends Component{
@@ -38,6 +39,7 @@
       Email:"",
       PasswordEncoded:"",
       PasswordDecoded:"",
+      Token:""
     }
     this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
   }
@@ -45,6 +47,24 @@
    
   UNSAFE_componentWillMount() {
     BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
+    this.setState({
+      secure: true,
+      passwordValue:"",
+      focus: false,
+      Email:"",
+      PasswordEncoded:"",
+      PasswordDecoded:"",
+    })
+}
+componentDidMount(){
+  this.setState({
+    secure: true,
+    passwordValue:"",
+    focus: false,
+    Email:"",
+    PasswordEncoded:"",
+    PasswordDecoded:"",
+  })
 }
 
 componentWillUnmount() {
@@ -100,6 +120,75 @@ handleBackButtonClick() {
       
     }
   );
+  sendToken = async()=>{
+    const t = await AsyncStorage.getItem('fcmToken')
+    console.log(t)
+    await fetch(serverLink+'/sendToken', {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(
+        {
+          "Token": t,
+          "Email": this.state.Email,
+        }
+      )
+    }).then(resp => {
+      return resp.json();
+    }).then(async (jsonresponse) => {
+      console.log(jsonresponse)
+      // await this.send();
+    }).catch(error => {
+      console.log(error);
+    })///fetch
+   }
+  //  getToken = async()=>{
+  //   // const t = await AsyncStorage.getItem('fcmToken')
+  //   // console.log(t)
+  //   await fetch(serverLink+'/getToken', {
+  //     method: "POST",
+  //     headers: {
+  //       "Content-Type": "application/json"
+  //     },
+  //     body: JSON.stringify(
+  //       {
+  //         // "Token": t,
+  //         "Email": this.state.Email,
+  //       }
+  //     )
+  //   }).then(resp => {
+  //     return resp.json();
+  //   }).then(async (jsonresponse) => {
+  //     console.log(jsonresponse)
+  //     this.setState({Token:jsonresponse.Token})
+  //     // await this.send();
+  //   }).catch(error => {
+  //     console.log(error);
+  //   })///fetch
+  //  }
+  //  send = async()=>{
+  //   await this.getToken();
+   
+  //   await fetch(serverLink+'/sendNotification', {
+  //       method: "POST",
+  //       headers: {
+  //         "Content-Type": "application/json"
+  //       },
+  //       body: JSON.stringify(
+  //         {
+  //           "Token": this.state.Token,
+  //         }
+  //       )
+  //     }).then(resp => {
+  //       return resp.json();
+  //     }).then(jsonresponse => {
+  //       console.log(jsonresponse)
+      
+  //     }).catch(error => {
+  //       console.log(error);
+  //     })///fetch
+  // }
   async decrypt_password () {
 
     var temp2 = Base64.decode(this.state.PasswordEncoded);
@@ -116,12 +205,18 @@ handleBackButtonClick() {
 
       try{
         await AsyncStorage.setItem('Email',this.state.Email);
+        // await firebase.auth().createUserWithEmailAndPassword(this.state.Email, this.state.passwordValue);
         // await AsyncStorage.setItem('Password',this.state.PasswordEncoded);
+        getFcmToken()
+        NotificationsListener()
+      await  this.sendToken()
+      // await this.send()
+        
       }
       catch(error){
         console.log(error);
       }
-      this.props.navigation.navigate('home',{
+      this.props.navigation.push('home',{
         Email: this.state.Email,
       });
     }
@@ -171,7 +266,8 @@ handleBackButtonClick() {
                  keyboardType='email-address'
                  placeholder='Email Address'
                 textContentType='emailAddress'
-                 style={styles.textinputstyle} />
+                 style={styles.textinputstyle} 
+                 value={this.state.Email}/>
                 </View>
                 </View>
 
@@ -190,6 +286,7 @@ handleBackButtonClick() {
                  <TextInput
                     setFocus={this.state.focus}
                     onChangeText={text => this.setState({passwordValue: text})}
+                    value={this.state.passwordValue}
                     onFocus={() => this.setState({focus: true})}
                     onBlur={() => this.setState({focus: false})}
                     secureTextEntry={this.state.secure} //we just added this
