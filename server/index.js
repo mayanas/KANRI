@@ -296,7 +296,7 @@ app.post("/getData", (req, res) => {
 
   const database = client.db('KANRI');
   const users = database.collection('ProfileInfo');
-  users.find({}, { projection: { _id: 1, NickName: 1, Email: 1 } }).toArray(function (err, result) {
+  users.find({}, { projection: { _id: 1, NickName: 1, Email: 1 ,InterestedIn:1} }).toArray(function (err, result) {
     if (err) throw err;
     if (result.length == 0) {
       console.log("no Data")
