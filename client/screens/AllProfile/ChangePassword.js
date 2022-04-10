@@ -66,7 +66,7 @@ componentWillUnmount() {
 handleBackButtonClick() {
   if(!this.state.dialogVisible){
     // if(this.state.where==='login')
-    this.props.navigation.push('Profile',{Email:this.state.Email})
+    this.props.navigation.navigate('Profile',{Email:this.state.Email})
     // else if(this.state.where==='profile')
     // this.props.navigation.navigate('Profile',{Email:this.state.Email})
   }

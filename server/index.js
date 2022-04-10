@@ -449,9 +449,135 @@ app.post("/deleteTeamMember", (req, res) => {
 
 });
 
+app.post("/getTeamMembers", (req, res) => {
+  const database = client.db('KANRI');
+  const users = database.collection('ProjectTeamMembers');
+  users.find({ ProjectID: req.body.ProjectID,Accepted:true }, { projection: { _id: 1, ProjectID: 1, MemberID: 1, Accepted: 1 } }).toArray(function (err, result) {
+    if (err) throw err;
+    if (result.length == 0) {
+      console.log("gg")
+      res.send(JSON.stringify("null"));
+    }
+    else {
+      // console.log(result);
+      res.send(JSON.stringify(result));
+    }
+  });
+});
 
+app.post("/loadMembers", (req, res) => {
+  const database = client.db('KANRI');
+  const users = database.collection('ProfileInfo');
+  users.find({_id: ObjectId(req.body.MemberID) }, { projection: { _id: 1, NickName: 1, QualificationDegree: 1,
+     Email: 1 } }).toArray(function (err, result) {
+    if (err) throw err;
+    if (result.length == 0) {
+      console.log("gg")
+      res.send(JSON.stringify("null"));
+    }
+    else {
+      // console.log(result);
+      res.send(JSON.stringify(result));
+    }
+  });
+});
 
+app.post("/getPhoneNumber", (req, res) => {
+  const database = client.db('KANRI');
+  const users = database.collection('users');
+  users.findOne({ Email: req.body.Email },  { projection: { _id:0, PhoneNumber:1}},function (err, result) {
+    if (err) throw err;
+    if (result == null) res.send(JSON.stringify("null"));
+    else {
+      // console.log(result.Password);
+      res.send(JSON.stringify(result.PhoneNumber));
+    }
 
+  });
+});
+
+app.post("/AddTask", (req, res) => {
+  const database = client.db('KANRI');
+  const users = database.collection('ProjectTasks');
+  const query = {
+    ProjectID: req.body.ProjectID,
+    MemberEmail: req.body.MemberEmail,
+    Title:req.body.Title,
+    StartDate:req.body.StartDate,
+    DeadLine:req.body.DeadLine,
+    Content:req.body.Content,
+    Priority:req.body.Priority,
+    Approved:false,
+    Status:"Not started yet",
+  };
+  const user = users.insertOne(query, function (err, result) {
+    if (err) throw err;
+    // console.log(result.ops._id);
+    res.send(JSON.stringify(result));
+  });
+});
+app.post("/loadTasks", (req, res) => {
+  const database = client.db('KANRI');
+  const users = database.collection('ProjectTasks');
+  console.log(req.body.ProjectID)
+  users.find({ProjectID: req.body.ProjectID}).toArray(function (err, result) {
+    if (err) throw err;
+    if (result.length == 0) {
+      // console.log("gg")
+      res.send(JSON.stringify("null"));
+    }
+    else {
+      console.log(result);
+      res.send(JSON.stringify(result));
+    }
+  });
+});
+app.post("/updateApproved", (req, res) => {
+  const database = client.db('KANRI');
+  const users = database.collection('ProjectTasks');
+  // console.log(req.body.Mission)
+  var myquery = { _id: ObjectId(req.body.id) };
+  var newvalues = { $set: { Approved: true} };
+  users.updateOne(myquery, newvalues, function (err, result) {
+    if (err) throw err;
+    res.send(JSON.stringify("Approved updated"))
+  });
+});
+app.post("/updateTask", (req, res) => {
+  const database = client.db('KANRI');
+  const users = database.collection('ProjectTasks');
+  // console.log(req.body.Mission)
+  var myquery = { _id: ObjectId(req.body.TaskId) };
+  var newvalues = { $set: { 
+    MemberEmail:req.body.MemberEmail,
+          Title:req.body.Title,
+          StartDate: req.body.StartDate,
+          DeadLine:req.body.DeadLine,
+          Content: req.body.Content,
+          Priority:req.body.Priority,
+    
+    Approved: false} };
+  users.updateOne(myquery, newvalues, function (err, result) {
+    if (err) throw err;
+    res.send(JSON.stringify("Approved updated"))
+  });
+});
+app.post("/DeleteTask", (req, res) => {
+  // console.log(req.body.Email)
+  const database = client.db('KANRI');
+  const users = database.collection('ProjectTasks');
+  const query = {
+    _id: ObjectId (req.body.id),
+
+  };
+  console.log(req.body.id)
+  const user = users.deleteOne(query, function (err, obj) {
+    if (err) throw err;
+    console.log("task document deleted");
+    res.send(JSON.stringify(obj));
+  });
+
+});
 
 
 app.post("/sendToken", (req, res) => {
@@ -490,13 +616,13 @@ app.post("/sendNotification", (req, res) => {
   var message = {
     to: req.body.Token,
     notification: {
-      title: 'NotifcatioTestAPP',
-      body: '{"Message from node js app"}',
+      title: req.body.title1,
+      body: req.body.body1,
     },
 
     data: { //you can send only notification or only data(or include both)
-      title: 'ok cdfsdsdfsd',
-      body: '{"name" : "okg ooggle ogrlrl","product_id" : "123","final_price" : "0.00035"}'
+      title: req.body.title2,
+      body: req.body.body2,
     }
 
   };

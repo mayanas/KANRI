@@ -107,12 +107,7 @@ class Project extends Component {
             ProjectDescription: jsonresponse.ProjectDescription,
             ProjectBudget: jsonresponse.ProjectBudget,
             ProjectDeadLine: jsonresponse.DeadLine,
-            // Details:[
-            //   {id:0,title:"Mission",content:jsonresponse.ProjectMission},
-            //   {id:1,title:"Description",content:jsonresponse.ProjectDescription},
-            //   {id:2,title:"Budget",content:jsonresponse.ProjectBudget},
-            //   {id:3,title:"DeadLine",content:jsonresponse.DeadLine}
-            // ]
+
          }) 
         //  console.log(jsonresponse)
         
@@ -146,14 +141,8 @@ class Project extends Component {
             ProjectDescription: jsonresponse.ProjectDescription,
             ProjectBudget: jsonresponse.ProjectBudget,
             ProjectDeadLine: jsonresponse.DeadLine,
-            // Details:[
-            //   {id:0,title:"Mission",content:jsonresponse.ProjectMission},
-            //   {id:1,title:"Description",content:jsonresponse.ProjectDescription},
-            //   {id:2,title:"Budget",content:jsonresponse.ProjectBudget},
-            //   {id:3,title:"DeadLine",content:jsonresponse.DeadLine}
-            // ]
+
          }) 
-        //  console.log(jsonresponse)
         
          }
          

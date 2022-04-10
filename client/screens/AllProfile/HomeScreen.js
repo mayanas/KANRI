@@ -141,32 +141,10 @@ Alert.alert(
   }
 );
 getItem = (item) => {
- 
+ this.setState({search:'',filteredDataSource:[]})
 this.props.navigation.navigate('profileForOthers',{Email:item.Email,GuestEmail:this.state.Email})
 }
-// async getProfileImage(){
-//   await fetch(serverLink+"/getProfileImage", {
-//     method: "POST",
-//     headers: {
-//      "Content-Type": "application/json"
-//      },
-//     body: JSON.stringify(
-//       {               
-//               "Email": this.state.Email,
-//       }
-//     )
-//    }).then(resp => {
-//      return resp.json();
-//    }).then(jsonresponse => {
-//     //  console.log(jsonresponse)
-//       this.setState({
-//         ProfileImage: jsonresponse,
-//      })
-//    }).catch(error => {
-//      console.log(error);
-//    });  
-   
-// }
+
 getData=async () =>  {
   const response = await fetch(serverLink+"/getData", {
     method: "POST",

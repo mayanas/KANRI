@@ -7,7 +7,7 @@ export default function Add(props) {
     <View style={styles.listTile}>
       
       <Text style={styles.title}
-      onPress={() => props.OpenProfile(props.todo._id,props.todo.Email)}
+      // onPress={() => props.OpenProfile(props.todo._id,props.todo.Email)}
       >{props.todo.NickName}</Text>
       <View style={{width:'25%', alignItems:'flex-end'}}>
       <Icon 

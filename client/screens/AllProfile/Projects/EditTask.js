@@ -28,45 +28,45 @@ import { Appbar } from "react-native-paper";
 import SelectDropdown from 'react-native-select-dropdown';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { serverLink } from '../../serverLink';
-class AddTask extends Component {
+class EditTask extends Component {
   constructor(props) {
     super(props);
 
   }
   state = {
-    ProjectID: this.props.ProjectID,
-    MemberID: "",
+    TaskID: this.props.Task._id,
     showPicker: false,
     showPicker1: false,
     showDialog: false,
-    newTaskTitle: "",
+    newTaskTitle: this.props.Task.Title,
     dialogVisible: true,
     TeamMembers: this.props.TeamMembers,
     // emails:[],
     emails: [],
-    content: "",
+    content: this.props.Task.Content,
     isVisible: false,
-    date: "",
-    startDate: "",
-    email: "",
+    date: this.props.Task.DeadLine,
+    startDate: this.props.Task.StartDate,
+    email:this.props.Task.MemberEmail,
     Priorities: [
       "Urgent",
       "Importatnt",
       "Medium",
       "Low"
     ],
-    Priority: ""
+    Priority: this.props.Task.Priority
   }
   //for backend code 
   handleAddTask = async () => {
-    await fetch(serverLink + '/AddTask', {
+    await fetch(serverLink + '/updateTask', {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
       },
       body: JSON.stringify(
         {
-          "ProjectID": this.state.ProjectID,
+            "TaskId":this.state.TaskID,
+    
           "MemberEmail":this.state.email,
           "Title":this.state.newTaskTitle,
           "StartDate": this.state.startDate,
@@ -132,7 +132,7 @@ class AddTask extends Component {
         <Provider>
           <Appbar.Header style={{ backgroundColor: "#bc9855" }}>
 
-            <Appbar.Content title="Add Task" titleStyle={{ fontFamily: 'SairaSemiCondensed-Bold' }} />
+            <Appbar.Content title="Edit Task" titleStyle={{ fontFamily: 'SairaSemiCondensed-Bold' }} />
             <Appbar.Action icon="alarm" onPress={this.showPicker} />
             <Appbar.Action icon="account-multiple-plus" onPress={() => {
               this.showDialog()
@@ -196,6 +196,7 @@ class AddTask extends Component {
                 multiline={true}
                 style={styles.titleInput}
                 placeholder="Title"
+                value={this.state.newTaskTitle}
                 onChangeText={(text) => this.setState({ newTaskTitle: text })}
               />
               <View style={{ flexDirection: 'row' }}>
@@ -225,13 +226,14 @@ class AddTask extends Component {
                 placeholder="Content"
                 multiline={true}
                 numberOfLines={3}
+                value={this.state.content}
               />
               <View style={{ paddingTop: 50 }}>
                 <SelectDropdown
                   dropdownBackgroundColor={"#98a988"}
                   buttonStyle={[styles.textinputstyle, { width: '41%', height: 37 }]}
                   styleInput={{ fontFamily: 'SairaSemiCondensed-Regular' }}
-                  defaultButtonText={"Priority"}
+                  defaultButtonText={this.state.Priority}
                   rowTextForSelection={""}
                   data={this.state.Priorities}
                   onSelect={(selectedItem, index) => {
@@ -244,6 +246,7 @@ class AddTask extends Component {
 
                   }}
                   buttonTextAfterSelection={(selectedItem, index) => {
+            
                     return selectedItem
                   }}
 
@@ -383,4 +386,4 @@ const styles = StyleSheet.create({
 
 });
 
-export default AddTask;
+export default EditTask;

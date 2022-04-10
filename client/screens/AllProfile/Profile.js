@@ -21,17 +21,20 @@ import {
   ToastAndroid,
   ScrollView,
   TouchableOpacity,
-  SafeAreaView
+  SafeAreaView,
+  Linking
 } from 'react-native';
 
 import Loading from '../../Components/Loading';
+import AddPersonToPreject from './Projects/AddPersonToProject';
 import LinearGradient from 'react-native-linear-gradient';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { TextInput } from 'react-native-gesture-handler';
 import PhoneInput from 'react-native-phone-number-input';
 import SelectDropdown from 'react-native-select-dropdown';
 import { launchImageLibrary } from 'react-native-image-picker';
-import Icon from 'react-native-vector-icons/dist/FontAwesome';
+import Icon from 'react-native-vector-icons/dist/MaterialCommunityIcons';
+import Ionicons from 'react-native-vector-icons/dist/Ionicons';
 // import { FlatList } from 'react-native-gesture-handler';
 import Feather from 'react-native-vector-icons/Feather';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -43,8 +46,13 @@ import { ProgressSteps, ProgressStep } from 'react-native-progress-steps';
 import 'react-native-gesture-handler';
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import moment from "moment";
+import email from 'react-native-email'
+
 
 import { serverLink } from '../serverLink';
+import AddTask from './Projects/AddTask';
+import AddTask1 from './AddTask1';
+import EditTask from './Projects/EditTask';
 // const serverLink="http://192.168.1.110:3001";
 //  const serverLink="http://172.19.15.206:3001";
 
@@ -118,7 +126,8 @@ class Profile extends Component {
       BioModal: false,
       InterestedInModal: false,
       SettingsModal: false,
-      AddProjectModal:false,
+      AddProjectModal: false,
+      ProjectModal: false,
 
       profileImageUpdated: '',
       NickNameUpdated: '',
@@ -143,6 +152,45 @@ class Profile extends Component {
       Budget: "",
       savedInfo: true,
       emailvalid: true,
+
+      ProjectID: "",
+      ProjectName1: "",
+      CustomerEmail1: "",
+      ProjectMission1: "",
+      ProjectDescription1: "",
+      ProjectBudget1: "",
+      ProjectDeadLine1: "",
+
+      MissionUpdated: "",
+      DescriptionUpdated: "",
+      BudgetUpdated: "",
+      DeadLineUpdated: "",
+
+      MissionUpdateModal: false,
+      DescriptionUpdatedModal: false,
+      DescriptionShowModal: false,
+      BudgetUpdatedModal: false,
+      DeadLineUpdatedModal: false,
+      TeamMembersUpdateModal: false,
+      TaskUpdateModal: false,
+      AddTaskModal: false,
+      EditTaskModal: false,
+      TaskItem: null,
+      TeamMembers: [],
+      TeamMembersEmail: [],
+      Tasks: null,
+      Tasks1: [],
+
+      projectLoaded: false,
+      MissionSaved: true,
+      DescriptionSaved: true,
+      BudgetSaved: true,
+      DeadLineSaved: true,
+      loadTasks: false,
+      // TeamMembersSaved: true,
+      // TasksSaved: true,
+
+      PhoneNumber_Whatsapp: '',
 
     }
     this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
@@ -177,26 +225,34 @@ class Profile extends Component {
 
     })
   }
-  async componentDidMount() {
-    console.log('hhjkkll')
+  async loadProfile() {
     await this.setState({
       Email: this.props.route.params.Email,
       loaded: false
     })
     await this.getInfo();
     await this.getUserInfo();
-    // await this.getProfileImage();
     await this.getProjectsInfo();
     if (this.state.InterestedIn.length != 0)
       this.setState({
         loaded: true,
         phonevalid: false,
         phonevalue: "",
+        isValid: false,
+        errors: false,
+        datetimevisible: false,
+        date: "",
+        ProjectName: "",
+        ProjectMission: "",
+        ProjectDescription: "",
+        CustomerEmail: "",
+        Budget: "",
         savedInfo: true,
         emailvalid: true,
       })
-    // console.log(this.state.BioUpdated)
-
+  }
+  async componentDidMount() {
+    await this.loadProfile();
   }
   saveProjectInfo = async () => {
 
@@ -218,7 +274,6 @@ class Profile extends Component {
       )
     }).then(response => { return response.json() }).then(resp => {
       this.setState({ ProjectID: resp.insertedId })
-      console.log(this.state.ProjectID)
     })
 
 
@@ -229,10 +284,10 @@ class Profile extends Component {
     const dateFormat = moment(date).format("YYYY-MM-DD");
     this.setState({
       date: dateFormat,
+      DeadLineUpdated: dateFormat,
       //  time:time,
       datetimevisible: false,
     })
-    console.log(this.state.date)
   };
   onNextStep = () => {
     if (!this.state.isValid) {
@@ -279,7 +334,6 @@ class Profile extends Component {
     }).then(resp => {
       return resp.json();
     }).then(jsonresponse => {
-      //  console.log(jsonresponse)
       if (jsonresponse !== "null") {
         this.setState({
           profileImage: jsonresponse.ProfileImage,
@@ -321,7 +375,6 @@ class Profile extends Component {
     }).then(resp => {
       return resp.json();
     }).then(jsonresponse => {
-      //  console.log(jsonresponse)
       if (jsonresponse !== "null") {
         this.setState({
           FullName: jsonresponse.FirstName + ' ' + jsonresponse.LastName,
@@ -352,12 +405,10 @@ class Profile extends Component {
     }).then(resp => {
       return resp.json();
     }).then(jsonresponse => {
-      //  console.log(jsonresponse)
       if (jsonresponse !== "null") {
         this.setState({
           Projects: jsonresponse
         })
-        // console.log(this.state.Projects)
 
       }
 
@@ -367,7 +418,6 @@ class Profile extends Component {
 
   }
   async saveImage() {
-    // console.log(this.state.profileImageUpdated)
 
     await fetch(serverLink + "/updateImage", {
       method: "POST",
@@ -388,7 +438,6 @@ class Profile extends Component {
     return;
   }
   async saveNickName() {
-    // console.log(this.state.profileImageUpdated)
 
     await fetch(serverLink + "/updateNickName", {
       method: "POST",
@@ -409,7 +458,6 @@ class Profile extends Component {
     return;
   }
   async saveQualificationDegree() {
-    // console.log(this.state.profileImageUpdated)
 
     await fetch(serverLink + "/updateQualificationDegree", {
       method: "POST",
@@ -430,7 +478,6 @@ class Profile extends Component {
     return;
   }
   async saveBio() {
-    // console.log(this.state.profileImageUpdated)
 
     await fetch(serverLink + "/updateBio", {
       method: "POST",
@@ -451,7 +498,6 @@ class Profile extends Component {
     return;
   }
   async saveCountry() {
-    // console.log(this.state.profileImageUpdated)
 
     await fetch(serverLink + "/updateCountry", {
       method: "POST",
@@ -472,7 +518,6 @@ class Profile extends Component {
     return;
   }
   async saveInterestedIn() {
-    // console.log(this.state.profileImageUpdated)
 
     await fetch(serverLink + "/updateInterestedIn", {
       method: "POST",
@@ -493,7 +538,6 @@ class Profile extends Component {
     return;
   }
   async savePhoneNumber() {
-    // console.log(this.state.profileImageUpdated)
 
     await fetch(serverLink + "/updatePhoneNumber", {
       method: "POST",
@@ -697,7 +741,7 @@ class Profile extends Component {
       <View style={{
         height: '90%',
         width: 250,
-        backgroundColor: '#bc9855',
+        backgroundColor: '#98a988',
         margin: 15,
         // paddingHorizontal:15,
         borderRadius: 15,
@@ -719,17 +763,38 @@ class Profile extends Component {
         </View>
 
         <View style={{
-          width: '100%', height: '30%', paddingHorizontal: 5,
-          flexDirection: 'row', alignItems: 'center', marginBottom: 10, justifyContent: 'center'
+          width: '100%', height: '30%', paddingHorizontal: 0,
+          flexDirection: 'row', alignItems: 'flex-end', marginBottom: 2,
         }}>
           <TouchableOpacity style={{
-            backgroundColor: '#98a988', width: '50%', height: '50%',
-            alignItems: 'center', justifyContent: 'center', borderRadius: 15,
+            backgroundColor: '#bc9855', width: '50%', height: '60%',
+            alignItems: 'center', justifyContent: 'center', borderBottomLeftRadius: 15, marginHorizontal: 0,
+            borderWidth: 0.5
           }}
-            onPress={() => {
-              this.props.navigation.navigate('Project', { Email: this.state.Email, ProjectID: item._id.toString() })
+            onPress={async () => {
+              this.setState({
+                // ProjectID:item._id,
+                ProjectModal: true,
+              })
+              // console.log(item._id)
+              await this.getProjectInfo(item._id);
+              this.setState({ loadProject: true })
+              // this.props.navigation.navigate('Project', { Email: this.state.Email, ProjectID: item._id.toString() })
             }}>
             <Text style={styles.text}>Details</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={{
+            backgroundColor: '#bc9855', width: '50%', height: '60%',
+            alignItems: 'center', justifyContent: 'center', borderBottomRightRadius: 15, marginHorizontal: 0,
+            borderWidth: 0.5
+          }}
+            onPress={async () => {
+              this.setState({ projectdeleted: false })
+              await this.deteteProject(item._id);
+              this.setState({ projectdeleted: true })
+              // this.props.navigation.navigate('Project', { Email: this.state.Email, ProjectID: item._id.toString() })
+            }}>
+            <Text style={styles.text}>Delete</Text>
           </TouchableOpacity>
         </View>
 
@@ -759,8 +824,8 @@ class Profile extends Component {
   }
   AddProjectButtonPressed = () => {
     console.log('add')
-    this.props.navigation.push('addProject', { Email: this.state.Email })
-    // this.setState({AddProjectModal:true})
+    // this.props.navigation.push('addProject', { Email: this.state.Email })
+    this.setState({ AddProjectModal: true })
   }
   AskForProjectButtonPressed = () => {
     console.log('ask')
@@ -864,7 +929,415 @@ class Profile extends Component {
 
 
   }
+  UpdateMission = async () => {
+    this.setState({ ProjectMission1: this.state.MissionUpdated })
+    await fetch(serverLink + '/UpdateProjectMission', {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(
+        {
+          "Email": this.state.Email,
+          "ProjectID": this.state.ProjectID,
+          "Mission": this.state.MissionUpdated,
+        }
+      )
+    }).then(response => { return response.json() }).then(resp => {
+      console.log(resp);
 
+    })
+  }
+  UpdateDescription = async () => {
+    this.setState({ ProjectDescription1: this.state.DescriptionUpdated })
+    await fetch(serverLink + '/UpdateProjectDescription', {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(
+        {
+          "Email": this.state.Email,
+          "ProjectID": this.state.ProjectID,
+          "Description": this.state.DescriptionUpdated,
+        }
+      )
+    }).then(response => { return response.json() }).then(resp => {
+      console.log(resp);
+
+    })
+  }
+  UpdateBudget = async () => {
+    this.setState({ ProjectBudget1: this.state.BudgetUpdated })
+    await fetch(serverLink + '/UpdateProjectBudget', {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(
+        {
+          "Email": this.state.Email,
+          "ProjectID": this.state.ProjectID,
+          "Budget": this.state.BudgetUpdated,
+        }
+      )
+    }).then(response => { return response.json() }).then(resp => {
+      console.log(resp);
+
+    })
+  }
+  UpdateDeadLine = async () => {
+    this.setState({ ProjectDeadLine1: this.state.DeadLineUpdated })
+    await fetch(serverLink + '/UpdateProjectDeadLine', {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(
+        {
+          "Email": this.state.Email,
+          "ProjectID": this.state.ProjectID,
+          "DeadLine": this.state.DeadLineUpdated,
+        }
+      )
+    }).then(response => { return response.json() }).then(resp => {
+      console.log(resp);
+
+    })
+  }
+  EditMission = async () => {
+    this.setState({ MissionUpdateModal: true });
+  }
+  showDescription = () => {
+    this.setState({ DescriptionShowModal: true });
+  }
+  EditDescription = async () => {
+    this.setState({ DescriptionUpdated: this.state.ProjectDescription1, DescriptionUpdatedModal: true });
+  }
+  EditBudget = async () => {
+    this.setState({ BudgetUpdatedModal: true });
+  }
+  EditDeadLine = async () => {
+    this.setState({ DeadLineUpdatedModal: true });
+  }
+  EditTeamMembers = async () => {
+    this.setState({ TeamMembersUpdateModal: true})
+  }
+  EditTasks = async () => {
+    this.setState({loadTasks: false })
+    await this.loadTasks()
+    this.setState({ loadTasks: true ,TaskUpdateModal:true})
+  }
+  handleEmail = (to) => {
+    email(to, {
+      subject: 'From Kanri',
+      body: ''
+    }).catch(console.error)
+  }
+  getPhoneNumber = async (Email) => {
+    await fetch(serverLink + '/getPhoneNumber', {
+
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(
+        {
+          "Email": Email,
+        }
+      )
+    }).then(response => { return response.json() }).then(resp => {
+      this.setState({ PhoneNumber_Whatsapp: resp })
+    })
+  }
+  initiateWhatsApp = () => {
+    //  console.log(this.state.PhoneNumber_Whatsapp)
+    let url =
+      'whatsapp://send?text=' +
+      '' +
+      '&phone=' + this.state.PhoneNumber_Whatsapp;
+    Linking.openURL(url)
+      .then((data) => {
+        console.log('WhatsApp Opened');
+      })
+      .catch(() => {
+        alert('Make sure Whatsapp installed on your device');
+      });
+  };
+  funcProject = ({ item, index }) => {
+
+    return (
+      <View style={{
+        height: '90%',
+        width: 380,
+        backgroundColor: '#98a988',
+        margin: 15,
+        // paddingHorizontal:15,
+        borderRadius: 15,
+        overflow: 'hidden',
+        // justifyContent:'center',
+        alignItems: 'flex-start',
+        // overflow:'scroll'
+
+      }}>
+
+        <View style={{ flexDirection: 'row', paddingLeft: 10, width: '100%', height: '25%' }}>
+          <Text style={[styles.textinterest, { fontFamily: 'SairaSemiCondensed-Bold' }]}>Nick Name: </Text>
+          <Text style={styles.textinterest}>{item.NickName}</Text>
+        </View>
+        <View style={{ flexDirection: 'row', paddingLeft: 10, width: '100%', height: '25%' }}>
+          <Text style={[styles.textinterest, { fontFamily: 'SairaSemiCondensed-Bold' }]}>Email: </Text>
+          <Text style={styles.textinterest}>{item.Email}</Text>
+        </View>
+        <View style={{ flexDirection: 'row', paddingLeft: 10, width: '100%', height: '25%' }}>
+          <Text style={[styles.textinterest, { fontFamily: 'SairaSemiCondensed-Bold' }]}>Qualification Degree: </Text>
+          <Text style={styles.textinterest}>{item.QualificationDegree}</Text>
+
+        </View>
+        <View style={{ flexDirection: 'row', paddingLeft: 10, width: '100%', height: '25%' }}>
+          <Text style={[styles.textinterest, { fontFamily: 'SairaSemiCondensed-Bold' }]}>Communications through: </Text>
+          <View style={{ marginTop: 10, flexDirection: 'row', paddingHorizontal: 2 }}>
+            <TouchableOpacity style={{ marginHorizontal: 4 }}
+              onPress={async () => {
+                await this.getPhoneNumber(item.Email)
+                this.initiateWhatsApp()
+              }}
+            >
+              <Icon
+                name='whatsapp'
+                color='black'
+                size={22}
+              // onPress={()=>this.chat()}
+              />
+            </TouchableOpacity>
+            <TouchableOpacity style={{ marginHorizontal: 4 }}
+              onPress={() => this.handleEmail(item.Email)}
+            >
+              <Icon
+                name='email-outline'
+                color='black'
+                size={22}
+              // onPress={()=>this.chat()}
+              />
+            </TouchableOpacity>
+            <TouchableOpacity style={{ marginHorizontal: 4 }}
+              onPress={async () => {
+                // this.setState({PhoneNumber_Whatsapp:'+970599228622'})
+                await this.getPhoneNumber(item.Email)
+                this.initiateWhatsApp()
+              }}
+            >
+              <Icon
+                name='chat-outline'
+                color='black'
+                size={22}
+              // onPress={()=>this.chat()}
+              />
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+
+    )
+
+
+  }
+  getProjectInfo = async (ProjectID) => {
+    this.setState({ loadProject: false, TeamMembers: [] })
+    await this.getTeamMembers(ProjectID)
+    await this.loadTasks1(ProjectID)
+    // await this.getTeamMembersEmails();
+    await fetch(serverLink + "/getProjectInfo", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(
+        {
+          "Email": this.state.Email,
+          "ProjectID": ProjectID,
+        }
+      )
+    }).then(resp => {
+      return resp.json();
+    }).then(jsonresponse => {
+      console.log(jsonresponse.ProjectName)
+      if (jsonresponse !== "null") {
+        this.setState({
+          ProjectID: ProjectID,
+          ProjectName1: jsonresponse.ProjectName,
+          CustomerEmail1: jsonresponse.CustomerEmail,
+          ProjectMission1: jsonresponse.ProjectMission,
+          ProjectDescription1: jsonresponse.ProjectDescription,
+          ProjectBudget1: jsonresponse.ProjectBudget,
+          ProjectDeadLine1: jsonresponse.DeadLine,
+        })
+        //  console.log(this.state.ProjectID)
+
+      }
+
+    }).catch(error => {
+      console.log(error);
+    });
+
+  }
+  loadMembers = async (MemberID) => {
+
+    await fetch(serverLink + "/loadMembers", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(
+        {
+          "MemberID": MemberID,
+        }
+      )
+    }).then(resp => {
+      return resp.json();
+    }).then(async (jsonresponse) => {
+      console.log(jsonresponse.ProjectName)
+      if (jsonresponse !== "null") {
+        this.setState({ TeamMembers: [...this.state.TeamMembers, jsonresponse[0]] })
+        console.log(this.state.TeamMembers)
+      }
+
+    }).catch(error => {
+      console.log(error);
+    });
+
+  }
+  getTeamMembers = async (ProjectID) => {
+
+    this.setState({ TeamMembers: [] })
+    await fetch(serverLink + "/getTeamMembers", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(
+        {
+          "ProjectID": ProjectID,
+        }
+      )
+    }).then(resp => {
+      return resp.json();
+    }).then(async (jsonresponse) => {
+      console.log(jsonresponse.ProjectName)
+      if (jsonresponse !== "null") {
+        // this.setState({
+        //   TeamMembers: jsonresponse
+        // })
+        jsonresponse.map(async item => {
+          await this.loadMembers(item.MemberID);
+        })
+
+      }
+
+    }).catch(error => {
+      console.log(error);
+    });
+  }
+
+  loadTasks = async (ProjectID) => {
+    this.setState({ Tasks: null })
+    await fetch(serverLink + "/loadTasks", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(
+        {
+          "ProjectID": this.state.ProjectID,
+        }
+      )
+    }).then(resp => {
+      return resp.json();
+    }).then(async (jsonresponse) => {
+      if (jsonresponse !== "null") {
+        this.setState({ Tasks: jsonresponse })
+        console.log(jsonresponse)
+      }
+
+    }).catch(error => {
+      console.log(error);
+    });
+  }
+  loadTasks1 = async (ProjectID) => {
+    this.setState({ Tasks1: null })
+    await fetch(serverLink + "/loadTasks", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(
+        {
+          "ProjectID": ProjectID,
+        }
+      )
+    }).then(resp => {
+      return resp.json();
+    }).then(async (jsonresponse) => {
+      if (jsonresponse !== "null") {
+        this.setState({ Tasks1: jsonresponse })
+        console.log(jsonresponse)
+      }
+
+    }).catch(error => {
+      console.log(error);
+    });
+  }
+
+  funcProjectTasks = ({ item, index }) => {
+
+    return (
+      <View style={{
+        height: '90%',
+        width: 380,
+        backgroundColor: '#98a988',
+        margin: 15,
+        // paddingHorizontal:15,
+        borderRadius: 15,
+        overflow: 'hidden',
+        // justifyContent:'center',
+        alignItems: 'flex-start',
+        // overflow:'scroll'
+
+      }}>
+
+        <View style={{ flexDirection: 'row', paddingLeft: 10, width: '100%', height: '25%' }}>
+          <Text style={[styles.textinterest, { fontFamily: 'SairaSemiCondensed-Bold' }]}>Nick Name: </Text>
+          <Text style={styles.textinterest}>{item.Title}</Text>
+        </View>
+        <View style={{ flexDirection: 'row', paddingLeft: 10, width: '100%', height: '25%' }}>
+          <Text style={[styles.textinterest, { fontFamily: 'SairaSemiCondensed-Bold' }]}>Email: </Text>
+          {/* <Text style={styles.textinterest}>{item.Email}</Text> */}
+        </View>
+        <View style={{ flexDirection: 'row', paddingLeft: 10, width: '100%', height: '25%' }}>
+          <Text style={[styles.textinterest, { fontFamily: 'SairaSemiCondensed-Bold' }]}>Qualification Degree: </Text>
+          {/* <Text style={styles.textinterest}>{item.QualificationDegree}</Text> */}
+
+        </View>
+        
+      </View>
+
+    )
+
+
+  }
+  EditTask = async (item) => {
+    this.setState({ TaskItem: item, EditTaskModal: true });
+
+  }
+  deleteProject = async () => {
+
+  }
+
+
+
+  // GoToProfileForOthers = (Email, GuestEmail, where) => {
+  //   this.props.navigation.navigate('profileForOthers',{Email:Email,GuestEmail:GuestEmail,where:where})
+  // }
 
   render() {
 
@@ -1028,7 +1501,7 @@ class Profile extends Component {
                     onPress={() => this.EditButtonPressed()}
                     style={{
                       width: '33%',
-                      paddingHorizontal: 1,
+                      paddingHorizontal: 4,
                     }}>
                     <View
                       style={styles.sview}>
@@ -1043,7 +1516,7 @@ class Profile extends Component {
                     onPress={() => this.AddProjectButtonPressed()}
                     style={{
                       width: '34%',
-                      paddingHorizontal: 1,
+                      paddingHorizontal: 4,
                     }}>
                     <View
                       style={styles.sview}>
@@ -1058,7 +1531,7 @@ class Profile extends Component {
                     onPress={() => this.AskForProjectButtonPressed()}
                     style={{
                       width: '33%',
-                      paddingHorizontal: 1,
+                      paddingHorizontal: 4,
                     }}>
                     <View
                       style={styles.sview}>
@@ -1088,7 +1561,7 @@ class Profile extends Component {
 
             </View>
 
-            <SafeAreaView style={{ height: '100%', flex: 1 }}>
+            <SafeAreaView style={{ height: '100%', width: '100%', flex: 1 }}>
               <ScrollView vertical showsVerticalScrollIndicator={false} style={{ height: '100%' }}>
                 {/* InterestedIn Cards */}
                 <View style={{ width: '100%', height: 320, }}>
@@ -1104,18 +1577,18 @@ class Profile extends Component {
                     renderItem={this.func}
 
                   />
-                  <LinearGradient
-                    colors={['#bfcfb2', '#98a988', '#bfcfb2']}
-                    style={{
-                      left: 0,
-                      right: 0,
-                      height: 10,
-                      width: '100%',
-                      marginTop: 5,
-                    }}
-                  ></LinearGradient>
-                </View>
 
+                </View>
+                <LinearGradient
+                  colors={['#bfcfb2', '#98a988', '#bfcfb2']}
+                  style={{
+                    left: 0,
+                    right: 0,
+                    height: 10,
+                    width: '100%',
+                    marginTop: 5,
+                  }}
+                ></LinearGradient>
                 <View style={{ width: '100%', height: 320, }}>
                   <Text style={[styles.text, { paddingHorizontal: 20 }]}>Projects created</Text>
                   <FlatList
@@ -1129,17 +1602,18 @@ class Profile extends Component {
                     renderItem={this.funcProjects}
 
                   />
-                  <LinearGradient
-                    colors={['#bfcfb2', '#98a988', '#bfcfb2']}
-                    style={{
-                      left: 0,
-                      right: 0,
-                      height: 10,
-                      width: '100%',
-                      marginTop: 5,
-                    }}
-                  ></LinearGradient>
+
                 </View>
+                <LinearGradient
+                  colors={['#bfcfb2', '#98a988', '#bfcfb2']}
+                  style={{
+                    left: 0,
+                    right: 0,
+                    height: 10,
+                    width: '100%',
+                    marginTop: 5,
+                  }}
+                ></LinearGradient>
               </ScrollView>
             </SafeAreaView>
 
@@ -1754,7 +2228,7 @@ class Profile extends Component {
         <Modal animationType='slide'
           visible={this.state.SettingsModal}
           onRequestClose={() => { this.setState({ SettingsModal: false }) }}
-          style={styles.SettingsModal}>
+          style={styles.ModalView}>
           <View style={styles.cancelicon}>
             <Icon name='close' color="black" size={25} onPress={() => {
               // this.closeEditModal();
@@ -1804,6 +2278,1081 @@ class Profile extends Component {
           </View>
         </Modal>
 
+        {/* Add project Modal */}
+        <Modal animationType='slide'
+          visible={this.state.AddProjectModal}
+          onRequestClose={() => {
+            this.setState({
+              AddProjectModal: false,
+              isValid: false,
+              errors: false,
+              datetimevisible: false,
+              date: "",
+              ProjectName: "",
+              ProjectMission: "",
+              ProjectDescription: "",
+              CustomerEmail: "",
+              Budget: "",
+              savedInfo: true,
+              emailvalid: true,
+            })
+          }}
+          style={styles.ModalView}>
+          <View style={styles.cancelicon}>
+            <Icon name='close' color="black" size={25} onPress={() => {
+              // this.closeEditModal();
+              this.setState({ AddProjectModal: false, })
+              // this.loadProfile();
+            }} />
+          </View>
+          <View style={styles.modalS}>
+            <View style={{ flexDirection: 'row', marginBottom: 30 }}>
+              <View style={{ width: '20%', alignItems: 'flex-start' }}>
+                <Image
+                  source={require('../../assets/logo/logo1.jpeg')}
+                  style={{ width: 60, height: 60, borderRadius: 0 }}
+
+                />
+              </View>
+              <View style={{ width: '60%', alignItems: 'center', justifyContent: 'center' }}>
+                <Text style={styles.textAddress}>Add Project</Text>
+              </View>
+              <View style={{ width: '20%', alignItems: 'center', justifyContent: 'center' }}>
+
+              </View>
+
+            </View>
+
+            <SafeAreaView style={{ width: '100%', height: '100%', flex: 1 }}>
+              {this.state.savedInfo ?
+                <KeyboardAwareScrollView>
+                  <View style={{ width: '100%', height: 600 }}>
+                    <ProgressSteps progressBarColor="#98a988" completedProgressBarColor="#bc9855"
+                      activeStepIconColor="#bfcfb2" completedStepIconColor="#bc9855"
+                      activeStepIconBorderColor="#98a988"
+                      labelFontFamily="SairaSemiCondensed-Regular" labelColor="black"
+                      activeLabelColor="black" completedLabelColor="black"
+                      disabledStepIconColor="#98a988" disabledStepNumColor="black" >
+                      {/* onNext={this.onNextStep} errors={this.state.errors} */}
+
+                      <ProgressStep label="First Step"
+                        nextBtnStyle={{ backgroundColor: '#bc9855', borderRadius: 15, width: 100, alignItems: 'center' }}
+                        nextBtnTextStyle={{ fontFamily: 'SairaSemiCondensed-Bold', fontSize: 15, color: "black" }}
+                      >
+                        <View style={styles.RegisterRows}>
+                          <Text style={[styles.textstyle1, { width: '40%', paddingHorizontal: 4 }]}>
+                            Project Name
+                          </Text>
+                          <View style={{ display: 'flex', flex: 2, flexDirection: 'row', width: 180 }}>
+                            <View style={[styles.inputView, { width: '60%' }]}>
+
+                              <TextInput
+                                style=
+                                {styles.textinputstyle}
+                                placeholder='Project Name'
+                                onChangeText={(text) => this.setState({ ProjectName: text })}
+                                value={this.state.ProjectName}
+                              />
+
+
+                            </View>
+
+                          </View>
+
+                        </View>
+
+                        <View style={[styles.RegisterRows, { height: 100 }]}>
+                          <Text style={[styles.textstyle1, { width: '40%', paddingHorizontal: 4 }]}>
+                            Project Mission
+                          </Text>
+                          <View style={{ display: 'flex', flex: 2, flexDirection: 'row', width: 180 }}>
+                            <View style={[styles.inputView, { height: 100, width: '60%' }]}>
+
+                              <TextInput
+                                multiline={true}
+                                numberOfLines={5}
+                                onChangeText={(text) => this.setState({ ProjectMission: text })}
+                                style=
+                                {[styles.textinputstyle, { height: 100 }]}
+                                placeholder={'Project Mission'}
+                                value={this.state.ProjectMission}
+                              />
+
+                            </View>
+                          </View>
+
+
+                        </View>
+
+                        <View style={[styles.RegisterRows, { height: 150 }]}>
+                          <Text style={[styles.textstyle1, { width: '40%', paddingHorizontal: 4 }]}>
+                            Project Description
+                          </Text>
+                          <View style={{ display: 'flex', flex: 2, flexDirection: 'row', width: 180 }}>
+                            <View style={[styles.inputView, { height: 150, width: '60%' }]}>
+
+                              <TextInput
+                                multiline={true}
+                                numberOfLines={10}
+                                onChangeText={(text) => { this.setState({ ProjectDescription: text }) }}
+                                style=
+                                {[styles.textinputstyle, { height: 150 }]}
+                                placeholder={'Project Description'}
+                                value={this.state.ProjectDescription} />
+
+                            </View>
+                          </View>
+
+
+                        </View>
+                      </ProgressStep>
+
+                      <ProgressStep label="Second Step" onSubmit={async () => {
+                        if (this.state.CustomerEmail === "" ||
+                          this.state.date === "" ||
+                          this.state.Budget === "" ||
+                          this.state.ProjectName === "" ||
+                          this.state.ProjectMission === "" ||
+                          this.state.ProjectDescription === "") this.showAlert('Second Step', "Make sure all fields are full")
+                        else {
+
+                          if (this.state.emailvalid) {
+                            this.setState({ savedInfo: false })
+                            await this.saveProjectInfo();
+                            this.setState({
+                              savedInfo: true,
+                              isValid: false,
+                              errors: false,
+                              datetimevisible: false,
+                              date: "",
+                              ProjectName: "",
+                              ProjectMission: "",
+                              ProjectDescription: "",
+                              CustomerEmail: "",
+                              Budget: "",
+                              emailvalid: true,
+                              AddProjectModal: false,
+                            })
+                            await this.loadProfile()
+                            // this.props.navigation.push('Project', { Email: this.state.Email, ProjectID: this.state.ProjectID })
+                          }
+                          else {
+                            this.setState({ emailvalid: true })
+                            this.showAlert('Customer Email', 'Make sure customer email is a valid email')
+                          }
+                        }
+                      }}
+                        previousBtnStyle={{ backgroundColor: '#bc9855', borderRadius: 15, width: 100, alignItems: 'center' }}
+                        previousBtnTextStyle={{ fontFamily: 'SairaSemiCondensed-Bold', fontSize: 15, color: "black" }}
+                        nextBtnStyle={{ backgroundColor: '#bc9855', borderRadius: 15, width: 100, alignItems: 'center' }}
+                        nextBtnTextStyle={{ fontFamily: 'SairaSemiCondensed-Bold', fontSize: 15, color: "black" }}
+                      >
+                        <View style={styles.RegisterRows}>
+                          <Text style={[styles.textstyle1, { width: '40%', paddingHorizontal: 4 }]}>
+                            Customer Email
+                          </Text>
+                          <View style={{ display: 'flex', flex: 2, flexDirection: 'row', width: 180 }}>
+                            <View style={[styles.inputView, { width: '60%' }]}>
+
+                              <TextInput
+                                style=
+                                {styles.textinputstyle}
+                                placeholder='Customer Email'
+                                onChangeText={(text) => this.validate(text)}
+                                value={this.state.CustomerEmail}
+                                keyboardType='email-address'
+                                textContentType='emailAddress'
+                              />
+
+
+                            </View>
+
+                          </View>
+
+                        </View>
+
+                        <View style={[styles.RegisterRows]}>
+                          <Text style={[styles.textstyle1, { width: '40%', paddingHorizontal: 4 }]}>
+                            Project Budget ($)
+                          </Text>
+                          <View style={{ display: 'flex', flex: 2, flexDirection: 'row', width: 180 }}>
+                            <View style={[styles.inputView, { width: '60%' }]}>
+
+                              <TextInput
+                                keyboardType='number-pad'
+                                onChangeText={(text) => this.setState({ Budget: text })}
+                                style=
+                                {[styles.textinputstyle]}
+                                placeholder={'Project Budget'}
+                                value={this.state.Budget}
+                              />
+
+                            </View>
+                          </View>
+
+
+                        </View>
+
+                        <View style={[styles.RegisterRows]}>
+                          <Text style={[styles.textstyle1, { width: '40%', paddingHorizontal: 4 }]}>
+                            Project Deadline
+                          </Text>
+                          <View style={{ display: 'flex', flex: 2, flexDirection: 'row', width: 180 }}>
+                            <View style={[styles.inputView, { width: '60%' }]}>
+
+                              < TouchableOpacity style={[styles.inputView, { width: '60%' }]}
+                                onPress={this.showPicker}
+                              >
+                                <Text>
+
+                                  {this.state.date !== ""
+                                    ? moment(this.state.date).calendar()
+                                    : "Click to choose Date"}
+                                </Text>
+                              </TouchableOpacity>
+
+
+                              <DateTimePickerModal
+                                isVisible={this.state.datetimevisible}
+                                onConfirm={this.handlePicker}
+                                onCancel={this.hidePicker}
+                                mode="date"
+                                is24Hour={false}
+                              />
+
+                            </View>
+                          </View>
+
+
+                        </View>
+                      </ProgressStep>
+                    </ProgressSteps>
+                  </View>
+                </KeyboardAwareScrollView>
+                :
+                <Loading />
+              }
+            </SafeAreaView >
+
+          </View>
+        </Modal>
+
+        {/* Project Modal */}
+        <Modal animationType='slide'
+          visible={this.state.ProjectModal}
+          onRequestClose={() => { this.setState({ ProjectModal: false }) }}
+          style={[styles.ModalView]}>
+          {/* <View style={styles.cancelicon}>
+            <Icon name='close' color="black" size={25} onPress={() => {
+              // this.closeEditModal();
+              this.setState({ ProjectModal: false, })
+            }} />
+          </View> */}
+          <View style={[styles.MainView, { width: '100%', marginHorizontal: 0, paddingTop: 20 }]}>
+            {!this.state.loadProject ? <Loading /> :
+
+              <View style={[styles.MainView1, { padding: 0 }]}>
+                <View style={{ flexDirection: 'row', marginBottom: 30 }}>
+                  <View style={{ width: '20%', alignItems: 'flex-start' }}>
+                  </View>
+                  <View style={{ width: '60%', alignItems: 'center', justifyContent: 'center' }}>
+                    <Text style={styles.textAddress}>{this.state.ProjectName1}</Text>
+                  </View>
+                  <View style={{ width: '20%', alignItems: 'center', justifyContent: 'center' }}>
+
+                  </View>
+
+                </View>
+                <KeyboardAwareScrollView style={[styles.MainView1,]}>
+                  <SafeAreaView style={{ width: '100%', height: '100%', flex: 1 }}>
+                    <View style={{ width: '100%', height: '100%' }}>
+                      <LinearGradient
+                        colors={['#bfcfb2', '#98a988', '#bfcfb2']}
+                        style={{
+                          left: 0,
+                          right: 0,
+                          height: 10,
+                          width: '100%',
+                          marginTop: 5,
+                        }}
+                      ></LinearGradient>
+                      {/* Mission */}
+                      <View style={{ width: '100%' }}>
+                        <View style={{ flexDirection: 'row' }}>
+                          <View style={{ width: '20%' }}></View>
+                          <View style={{ width: '60%', justifyContent: 'center' }}>
+                            <Text style={[styles.text, { textAlign: 'center', fontSize: 16, }]}>Mission</Text>
+
+                          </View>
+                          <View style={{ width: '20%', justifyContent: 'flex-start', alignItems: 'flex-end', paddingRight: 10 }}>
+                            <Icon
+                              name="square-edit-outline"
+                              style={styles.trailing}
+                              size={20}
+                              color="#666666"
+                              onPress={() => { this.EditMission() }}
+                            /></View>
+                        </View>
+                        <Text style={[styles.textinterest, { paddingHorizontal: 10 }]}>{this.state.ProjectMission1}</Text>
+                        <LinearGradient
+                          colors={['#bfcfb2', '#98a988', '#bfcfb2']}
+                          style={{
+                            left: 0,
+                            right: 0,
+                            height: 10,
+                            width: '100%',
+                            marginTop: 5,
+                          }}
+                        ></LinearGradient>
+                      </View>
+
+                      {/* Desc */}
+                      <View style={{ width: '100%' }}>
+                        <View style={{ flexDirection: 'row' }}>
+                          <View style={{
+                            width: '20%', flexDirection: 'row',
+                            justifyContent: 'flex-start', alignItems: 'flex-end', paddingLeft: 10
+                          }}>
+                            <Icon
+                              name="arrow-expand"
+                              style={styles.trailing}
+                              size={20}
+                              color="#666666"
+                              onPress={() => { this.showDescription() }}
+                            />
+
+                          </View>
+                          <View style={{ width: '60%', justifyContent: 'center' }}>
+                            <Text style={[styles.text, { textAlign: 'center', fontSize: 16, }]}>Description</Text>
+
+                          </View>
+                          <View style={{
+                            width: '20%', flexDirection: 'row',
+                            justifyContent: 'flex-end', alignItems: 'flex-end', paddingRight: 10
+                          }}>
+                            <Icon
+                              name="square-edit-outline"
+                              style={styles.trailing}
+                              size={20}
+                              color="#666666"
+                              onPress={() => { this.EditDescription() }}
+                            />
+
+                          </View>
+                        </View>
+                        {/* <Text style={styles.textinterest}>{this.state.ProjectMission}</Text> */}
+                        <LinearGradient
+                          colors={['#bfcfb2', '#98a988', '#bfcfb2']}
+                          style={{
+                            left: 0,
+                            right: 0,
+                            height: 10,
+                            width: '100%',
+                            marginTop: 5,
+                          }}
+                        ></LinearGradient>
+                      </View>
+                      {/* Budget */}
+                      <View style={{ width: '100%', }}>
+                        <View style={{ flexDirection: 'row' }}>
+                          <View style={{ width: '20%' }}></View>
+                          <View style={{ width: '60%', justifyContent: 'center' }}>
+                            <Text style={[styles.text, { textAlign: 'center', fontSize: 16, }]}>Budget</Text>
+
+                          </View>
+                          <View style={{ width: '20%', justifyContent: 'flex-start', alignItems: 'flex-end', paddingRight: 10 }}>
+                            <Icon
+                              name="square-edit-outline"
+                              style={styles.trailing}
+                              size={20}
+                              color="#666666"
+                              onPress={() => { this.EditBudget() }}
+                            /></View>
+                        </View>
+                        <Text style={[styles.textinterest, { textAlign: 'center' }]}>{this.state.ProjectBudget1} $</Text>
+                        <LinearGradient
+                          colors={['#bfcfb2', '#98a988', '#bfcfb2']}
+                          style={{
+                            left: 0,
+                            right: 0,
+                            height: 10,
+                            width: '100%',
+                            marginTop: 5,
+                          }}
+                        ></LinearGradient>
+                      </View>
+                      {/* deadline */}
+                      <View style={{ width: '100%', }}>
+                        <View style={{ flexDirection: 'row' }}>
+                          <View style={{ width: '20%' }}></View>
+                          <View style={{ width: '60%', justifyContent: 'center' }}>
+                            <Text style={[styles.text, { textAlign: 'center', fontSize: 16, }]}>DeadLine</Text>
+
+                          </View>
+                          <View style={{ width: '20%', justifyContent: 'flex-start', alignItems: 'flex-end', paddingRight: 10 }}>
+                            <Icon
+                              name="square-edit-outline"
+                              style={styles.trailing}
+                              size={20}
+                              color="#666666"
+                              onPress={() => { this.EditDeadLine() }}
+                            /></View>
+                        </View>
+                        <Text style={[styles.textinterest, { textAlign: 'center' }]}>{this.state.ProjectDeadLine1} </Text>
+                        <LinearGradient
+                          colors={['#bfcfb2', '#98a988', '#bfcfb2']}
+                          style={{
+                            left: 0,
+                            right: 0,
+                            height: 10,
+                            width: '100%',
+                            marginTop: 5,
+                          }}
+                        ></LinearGradient>
+                      </View>
+                      {/* team members */}
+                      <View style={{ width: '100%', }}>
+                        <View style={{ flexDirection: 'row' }}>
+                          <View style={{ width: '20%' }}></View>
+                          <View style={{ width: '60%', justifyContent: 'center' }}>
+                            <Text style={[styles.text, { textAlign: 'center', fontSize: 16, }]}>Team Members</Text>
+
+                          </View>
+                          <View style={{ width: '20%', justifyContent: 'flex-start', alignItems: 'flex-end', paddingRight: 10 }}>
+                            <Icon
+                              name="square-edit-outline"
+                              style={styles.trailing}
+                              size={20}
+                              color="#666666"
+                              onPress={() => this.EditTeamMembers()}
+                            // onPress={() => { this.props.navigation.navigate('AddPersonToProject', { Email: this.state.Email, ProjectID: this.state.ProjectID }) }}
+                            /></View>
+                        </View>
+                        <View style={{ width: '100%', height: 250, flex: 1 }}>
+                          <FlatList
+
+                            showsHorizontalScrollIndicator={false}
+                            horizontal
+                            width={'100%'}
+                            height={'100%'}
+                            keyExtractor={(item) => item._id.toString()}
+                            data={this.state.TeamMembers}
+                            renderItem={this.funcProject}
+
+                          />
+                        </View>
+                        <LinearGradient
+                          colors={['#bfcfb2', '#98a988', '#bfcfb2']}
+                          style={{
+                            left: 0,
+                            right: 0,
+                            height: 10,
+                            width: '100%',
+                            marginTop: 5,
+                          }}
+                        ></LinearGradient>
+                      </View>
+
+
+                      {/* Tasks */}
+                      <View style={{ width: '100%', }}>
+                        <View style={{ flexDirection: 'row' }}>
+                          <View style={{ width: '20%' }}></View>
+                          <View style={{ width: '60%', justifyContent: 'center' }}>
+                            <Text style={[styles.text, { textAlign: 'center', fontSize: 16, }]}>Tasks</Text>
+
+                          </View>
+                          <View style={{ width: '20%', justifyContent: 'flex-start', alignItems: 'flex-end', paddingRight: 10 }}>
+                            <Icon
+                              name="square-edit-outline"
+                              style={styles.trailing}
+                              size={20}
+                              color="#666666"
+                              onPress={() => { this.EditTasks() }}
+                            /></View>
+                        </View>
+                        <View style={{ width: '100%', height: 250, flex: 1 }}>
+                          <FlatList
+
+                            showsHorizontalScrollIndicator={false}
+                            horizontal
+                            width={'100%'}
+                            height={'100%'}
+                            keyExtractor={(item) => item._id.toString()}
+                            data={this.state.Tasks1}
+                            renderItem={this.funcProjectTasks}
+
+                          />
+                        </View>
+                        <LinearGradient
+                          colors={['#bfcfb2', '#98a988', '#bfcfb2']}
+                          style={{
+                            left: 0,
+                            right: 0,
+                            height: 10,
+                            width: '100%',
+                            marginTop: 5,
+                          }}
+                        ></LinearGradient>
+                      </View>
+
+                    </View>
+                  </SafeAreaView >
+                </KeyboardAwareScrollView>
+
+              </View>
+
+            }
+
+          </View>
+        </Modal>
+
+        {/*Mission Modal*/}
+        <Modal animationType='slide'
+          visible={this.state.MissionUpdateModal}
+          onRequestClose={() => { this.setState({ MissionUpdateModal: false }) }
+          }
+          style={styles.ModalView}>
+          <View style={styles.cancelicon}>
+            <Icon name='close' color="black" size={25} onPress={() => {
+              this.setState({ MissionUpdateModal: false })
+            }} />
+          </View>
+          <View style={styles.MainView}>
+            {this.state.MissionSaved ? <View style={styles.MainView}>
+              <View style={{ flexDirection: 'row', marginBottom: 10 }}>
+                <View style={{ width: '20%', alignItems: 'flex-start' }}>
+
+                </View>
+                <View style={{ width: '60%', alignItems: 'center', justifyContent: 'center' }}>
+                  <Text style={styles.textAddress}>Edit Mission</Text>
+                </View>
+                <View style={{ width: '20%' }}>
+                  <Text></Text>
+                </View>
+
+              </View>
+
+
+              <KeyboardAwareScrollView style={{}}>
+                <LinearGradient
+                  colors={['#bfcfb2', '#98a988', '#bfcfb2']}
+                  style={{
+                    left: 0,
+                    right: 0,
+                    height: 10,
+                    width: '100%',
+                    marginTop: 5,
+                  }}
+                ></LinearGradient>
+                <View style={[styles.RegisterRows, { height: '100%', flexDirection: 'column' }]}>
+                  <Text style={styles.textstyle1}>
+                    Old value
+                  </Text>
+                  {/* <View style={{display:'flex', flex:2,flexDirection:'column', width:180}}> */}
+                  <View style={[styles.inputView, { height: 200, width: '100%' }]}>
+
+                    <Text>
+                      {this.state.ProjectMission1}
+                    </Text>
+
+                  </View>
+                  {/* </View>     */}
+
+
+                </View>
+
+                <View style={[styles.RegisterRows, { height: '100%', flexDirection: 'column' }]}>
+                  <Text style={styles.textstyle1}>
+                    New Value
+                  </Text>
+                  {/* <View style={{display:'flex', flex:2,flexDirection:'row', width:180}}> */}
+                  <View style={[styles.inputView, { height: 200, width: '100%' }]}>
+
+                    <TextInput
+                      multiline={true}
+                      numberOfLines={5}
+                      onChangeText={(text) => this.setState({ MissionUpdated: text })}
+                      style=
+                      {[styles.textinputstyle, { height: '100%', width: '100%', textAlign: 'center' }]}
+                      placeholder={'New Project Mission'}
+                    // value={this.state.MissionUpdated}
+                    />
+
+                  </View>
+                  {/* </View>              */}
+                </View>
+
+                <View style={[styles.RegisterRows]}>
+                  <TouchableOpacity style={{
+                    width: '100%', height: 50, backgroundColor: '#bc9855',
+                    marginTop: 10, borderRadius: 15, justifyContent: 'center', alignItems: 'center'
+                  }}
+
+                    onPress={async () => {
+                      if (this.state.MissionUpdated === '') {
+                        this.showAlert('Mission', 'Nothing Updated')
+                        this.setState({ MissionUpdateModal: false })
+                      }
+                      else {
+                        this.setState({ MissionSaved: false })
+                        await this.UpdateMission();
+                        this.showAlert('Mission', 'Mission Updated')
+                        this.setState({ MissionUpdateModal: false, MissionSaved: true })
+                      }
+
+                    }}
+                  >
+                    <Text style={[styles.text, { fontSize: 15 }]}>Save</Text>
+                  </TouchableOpacity>
+                </View>
+              </KeyboardAwareScrollView>
+            </View> : <Loading />}
+          </View>
+        </Modal>
+
+        {/* show desc */}
+        <Modal animationType='slide'
+          visible={this.state.DescriptionShowModal}
+          onRequestClose={() => { this.setState({ DescriptionShowModal: false }) }
+          }
+          style={styles.ModalView}>
+          <View style={styles.cancelicon}>
+            <Icon name='close' color="black" size={25} onPress={() => {
+              this.setState({ DescriptionShowModal: false })
+            }} />
+          </View>
+          <View style={styles.modalS}>
+            <View style={{ flexDirection: 'row', marginBottom: 10 }}>
+              <View style={{ width: '20%', alignItems: 'flex-start' }}>
+
+              </View>
+              <View style={{ width: '60%', alignItems: 'center', justifyContent: 'center' }}>
+                <Text style={styles.textAddress}>Description</Text>
+              </View>
+              <View style={{ width: '20%' }}>
+                <Text></Text>
+              </View>
+
+            </View>
+            <LinearGradient
+              colors={['#bfcfb2', '#98a988', '#bfcfb2']}
+              style={{
+                left: 0,
+                right: 0,
+                height: 10,
+                width: '100%',
+                marginTop: 5,
+              }}
+            ></LinearGradient>
+            <KeyboardAwareScrollView style={{ width: '100%', marginBottom: 5 }}>
+
+              <View style={[{ height: '100%', flexDirection: 'column', width: '100%', marginTop: 20 }]}>
+                <Text style={{ fontFamily: 'SairaSemiCondensed-Regular', fontSize: 14, color: 'black' }}>
+                  {this.state.ProjectDescription1}
+                </Text>
+              </View>
+            </KeyboardAwareScrollView>
+          </View>
+        </Modal>
+
+        {/*Edit Desc Modal*/}
+        <Modal animationType='slide'
+          visible={this.state.DescriptionUpdatedModal}
+          onRequestClose={() => { this.setState({ DescriptionUpdatedModal: false }) }
+          }
+          style={styles.ModalView}>
+          <View style={styles.cancelicon}>
+            <Icon name='close' color="black" size={25} onPress={() => {
+              this.setState({ DescriptionUpdatedModal: false })
+            }} />
+          </View>
+          <View style={styles.MainView}>
+            {this.state.DescriptionSaved ? <View style={styles.modalS}>
+              <View style={{ flexDirection: 'row', marginBottom: 10 }}>
+                <View style={{ width: '20%', alignItems: 'flex-start' }}>
+
+                </View>
+                <View style={{ width: '60%', alignItems: 'center', justifyContent: 'center' }}>
+                  <Text style={styles.textAddress}>Edit Description</Text>
+                </View>
+                <View style={{ width: '20%' }}>
+                  <Text></Text>
+                </View>
+
+              </View>
+
+              <KeyboardAwareScrollView style={{}}>
+                <LinearGradient
+                  colors={['#bfcfb2', '#98a988', '#bfcfb2']}
+                  style={{
+                    left: 0,
+                    right: 0,
+                    height: 10,
+                    width: '100%',
+                    marginTop: 5,
+                  }}
+                ></LinearGradient>
+                <View style={{ height: '80%', flexDirection: 'column', width: '100%', marginTop: 20 }}>
+
+                  <View style={[styles.inputView, { height: 550, width: '100%' }]}>
+
+                    <TextInput
+                      scrollEnabled
+                      multiline={true}
+                      numberOfLines={10}
+                      onChangeText={(text) => this.setState({ DescriptionUpdated: text })}
+                      style=
+                      {[styles.textinputstyle, { height: '100%', width: '100%', }]}
+                      // placeholder={'New Project Mission'} 
+                      value={this.state.DescriptionUpdated}
+                    />
+
+                  </View>
+                  {/* </View>              */}
+
+
+                  <View style={[{ height: '30%', width: '100%', marginTop: 15 }]}>
+                    <TouchableOpacity style={{
+                      width: '100%', height: 50, backgroundColor: '#bc9855',
+                      marginTop: 10, borderRadius: 15, justifyContent: 'center', alignItems: 'center'
+                    }}
+
+                      onPress={async () => {
+                        if (this.state.DescriptionUpdated === this.state.ProjectDescription1) {
+                          this.showAlert('Description', 'Nothing Updated')
+                          this.setState({ DescriptionUpdatedModal: false })
+                        }
+                        else {
+                          this.setState({ DescriptionSaved: false })
+                          await this.UpdateDescription();
+                          this.showAlert('Description', 'Description Updated')
+                          this.setState({ DescriptionUpdatedModal: false, DescriptionSaved: true })
+                        }
+
+                      }}
+                    >
+                      <Text style={[styles.text, { fontSize: 15 }]}>Save</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </KeyboardAwareScrollView>
+            </View> : <Loading />}
+          </View>
+        </Modal>
+
+        {/*Budget Modal*/}
+        <Modal animationType='slide'
+          visible={this.state.BudgetUpdatedModal}
+          onRequestClose={() => { this.setState({ BudgetUpdatedModal: false }) }
+          }
+          style={styles.ModalView}>
+          <View style={styles.cancelicon}>
+            <Icon name='close' color="black" size={25} onPress={() => {
+              this.setState({ BudgetUpdatedModal: false })
+            }} />
+          </View>
+          <View style={styles.MainView}>
+            {this.state.BudgetSaved ? <View style={styles.modalS}>
+              <View style={{ flexDirection: 'row', marginBottom: 10 }}>
+                <View style={{ width: '20%', alignItems: 'flex-start' }}>
+
+                </View>
+                <View style={{ width: '60%', alignItems: 'center', justifyContent: 'center' }}>
+                  <Text style={styles.textAddress}>Edit Budget</Text>
+                </View>
+                <View style={{ width: '20%' }}>
+                  <Text></Text>
+                </View>
+
+              </View>
+
+              <KeyboardAwareScrollView style={{}}>
+                <LinearGradient
+                  colors={['#bfcfb2', '#98a988', '#bfcfb2']}
+                  style={{
+                    left: 0,
+                    right: 0,
+                    height: 10,
+                    width: '100%',
+                    marginTop: 5,
+                  }}
+                ></LinearGradient>
+                <View style={[styles.RegisterRows, { height: '100%', flexDirection: 'row' }]}>
+                  <Text style={styles.textstyle1}>
+                    Old value
+                  </Text>
+                  {/* <View style={{display:'flex', flex:2,flexDirection:'column', width:180}}> */}
+                  <View style={[styles.inputView,]}>
+
+                    <Text>
+                      {this.state.ProjectBudget1}
+                    </Text>
+
+                  </View>
+                  {/* </View>     */}
+
+
+                </View>
+
+                <View style={[styles.RegisterRows, { height: '100%', flexDirection: 'row' }]}>
+                  <Text style={styles.textstyle1}>
+                    New Value
+                  </Text>
+                  {/* <View style={{display:'flex', flex:2,flexDirection:'row', width:180}}> */}
+                  <View style={[styles.inputView]}>
+                    <TextInput
+                      keyboardType='number-pad'
+                      onChangeText={(text) => this.setState({ BudgetUpdated: text })}
+                      style=
+                      {[styles.textinputstyle]}
+                      placeholder={'New Project Budget'}
+                    // value={this.state.Budget}
+                    />
+
+
+                  </View>
+                  {/* </View>              */}
+                </View>
+
+                <View style={[styles.RegisterRows, { height: '100%', flexDirection: 'row' }]}>
+                  <Text style={styles.textstyle1}></Text>
+                  <TouchableOpacity style={[styles.inputView, {
+                    width: '100%', backgroundColor: '#bc9855',
+                    borderRadius: 15, justifyContent: 'center', alignItems: 'center'
+                  }]}
+
+                    onPress={async () => {
+                      if (this.state.BudgetUpdated === '') {
+                        this.showAlert('Budget', 'Nothing Updated')
+                        this.setState({ BudgetSaved: false })
+                      }
+                      else {
+                        this.setState({ BudgetSaved: false })
+                        await this.UpdateBudget();
+                        this.showAlert('Budget', 'Budget Updated')
+                        this.setState({ BudgetUpdatedModal: false, BudgetSaved: true })
+                      }
+
+                    }}
+                  >
+                    <Text style={[styles.text, { fontSize: 15 }]}>Save</Text>
+                  </TouchableOpacity>
+                </View>
+              </KeyboardAwareScrollView>
+            </View> : <Loading />}
+          </View>
+        </Modal>
+
+        {/*DeadLine Modal*/}
+        <Modal animationType='slide'
+          visible={this.state.DeadLineUpdatedModal}
+          onRequestClose={() => { this.setState({ DeadLineUpdatedModal: false }) }
+          }
+          style={styles.ModalView}>
+          <View style={styles.cancelicon}>
+            <Icon name='close' color="black" size={25} onPress={() => {
+              this.setState({ DeadLineUpdatedModal: false })
+            }} />
+          </View>
+          <View style={styles.MainView}>
+            {this.state.DeadLineSaved ? <View style={styles.modalS}>
+              <View style={{ flexDirection: 'row', marginBottom: 10 }}>
+                <View style={{ width: '20%', alignItems: 'flex-start' }}>
+
+                </View>
+                <View style={{ width: '60%', alignItems: 'center', justifyContent: 'center' }}>
+                  <Text style={styles.textAddress}>Edit DeadLine</Text>
+                </View>
+                <View style={{ width: '20%' }}>
+                  <Text></Text>
+                </View>
+
+              </View>
+
+              <KeyboardAwareScrollView style={{}}>
+                <LinearGradient
+                  colors={['#bfcfb2', '#98a988', '#bfcfb2']}
+                  style={{
+                    left: 0,
+                    right: 0,
+                    height: 10,
+                    width: '100%',
+                    marginTop: 5,
+                  }}
+                ></LinearGradient>
+                <View style={[styles.RegisterRows, { height: '100%', flexDirection: 'row' }]}>
+                  <Text style={styles.textstyle1}>
+                    Old value
+                  </Text>
+                  {/* <View style={{display:'flex', flex:2,flexDirection:'column', width:180}}> */}
+                  <View style={[styles.inputView,]}>
+
+                    <Text>
+                      {this.state.ProjectDeadLine1}
+                    </Text>
+
+                  </View>
+                  {/* </View>     */}
+
+
+                </View>
+
+                <View style={[styles.RegisterRows, { height: '100%', flexDirection: 'row' }]}>
+                  <Text style={styles.textstyle1}>
+                    New Value
+                  </Text>
+                  {/* <View style={{display:'flex', flex:2,flexDirection:'row', width:180}}> */}
+                  <View style={[styles.inputView]}>
+
+                    < TouchableOpacity style={styles.inputView}
+                      onPress={this.showPicker}
+                    >
+                      <Text>
+
+                        {this.state.DeadLineUpdated !== ""
+                          ? moment(this.state.DeadLineUpdated).calendar()
+                          : "Click to choose Date"}
+                      </Text>
+                    </TouchableOpacity>
+
+
+                    <DateTimePickerModal
+                      isVisible={this.state.datetimevisible}
+                      onConfirm={this.handlePicker}
+                      onCancel={this.hidePicker}
+                      mode="date"
+                      is24Hour={false}
+                    />
+
+                  </View>
+                  {/* </View>              */}
+                </View>
+
+                <View style={[styles.RegisterRows, { height: '100%', flexDirection: 'row' }]}>
+                  <Text style={styles.textstyle1}></Text>
+                  <TouchableOpacity style={[styles.inputView, {
+                    width: '100%', backgroundColor: '#bc9855',
+                    borderRadius: 15, justifyContent: 'center', alignItems: 'center'
+                  }]}
+
+                    onPress={async () => {
+                      if (this.state.DeadLineUpdated === '') {
+                        this.showAlert('DeadLine', 'Nothing Updated')
+                        this.setState({ DeadLineUpdatedModal: false })
+                      }
+                      else {
+                        this.setState({ DeadLineSaved: false })
+                        await this.UpdateDeadLine();
+                        this.showAlert('DeadLine', 'DeadLine Updated')
+                        this.setState({ DeadLineUpdatedModal: false, DeadLineSaved: true })
+                      }
+
+                    }}
+                  >
+                    <Text style={[styles.text, { fontSize: 15 }]}>Save</Text>
+                  </TouchableOpacity>
+                </View>
+              </KeyboardAwareScrollView>
+            </View> : <Loading />}
+          </View>
+        </Modal>
+
+        {/*Add person to preject Modal*/}
+        <Modal animationType='slide'
+          visible={this.state.TeamMembersUpdateModal}
+          onRequestClose={async () => {
+            this.setState({ TeamMembersUpdateModal: false })
+            await this.getProjectInfo(this.state.ProjectID);
+            this.setState({ loadProject: true })
+          }
+          }
+          style={[styles.ModalView, { marginLeft: 20 }]}>
+          <View style={[styles.MainView, { paddingLeft: 10, paddingTop: 20 }]}>
+            <AddPersonToPreject
+              Email={this.state.Email}
+              ProjectID={this.state.ProjectID}
+            />
+          </View>
+        </Modal>
+
+        {/*Add Task to project Modal*/}
+        <Modal animationType='slide'
+          visible={this.state.TaskUpdateModal}
+          onRequestClose={async () => {
+            this.setState({ TaskUpdateModal: false, loadProject: false })
+            await this.loadTasks()
+            await this.loadTasks1(this.state.ProjectID);
+            this.setState({ loadProject: true })
+          }
+          }
+          style={[styles.ModalView]}>
+            <View style={styles.ModalView}>
+            {!this.state.loadTasks?<Loading/>:<View style={[styles.MainView]}>
+            <AddTask1
+              Email={this.state.Email}
+              ProjectID={this.state.ProjectID}
+              setStateModal={() => {
+                // await this.getTeamMembers();
+                this.setState({ AddTaskModal: true })
+              }}
+              loadTasks={this.state.Tasks}
+              EditTasks={this.EditTask}
+              ModalVisible={async () => {
+                this.setState({loadTasks:false})
+                await this.loadTasks();
+                await this.loadTasks1(this.state.ProjectID);
+                this.setState({ loadTasks:true})
+              }}
+            />
+          </View>}
+            </View>
+          
+        </Modal>
+        {/*Add Task to preject sub Modal*/}
+        <Modal animationType='slide'
+          visible={this.state.AddTaskModal}
+          onRequestClose={async () => {
+            this.setState({ AddTaskModal: false })
+          }
+          }
+          style={[styles.ModalView]}>
+          <View style={[styles.MainView]}>
+            <AddTask
+              Email={this.state.Email}
+              ProjectID={this.state.ProjectID}
+              setStateModal={() => this.setState({ AddTaskModal: true })}
+              TeamMembers={this.state.TeamMembers}
+              ModalVisible={async () => {
+                this.setState({ AddTaskModal: false ,loadTasks:false})
+                await this.loadTasks();
+                this.setState({ loadTasks:true})
+              }}
+            />
+          </View>
+        </Modal>
+
+        {/*Edit Task to preject sub Modal*/}
+        <Modal animationType='slide'
+          visible={this.state.EditTaskModal}
+          onRequestClose={async () => {
+            this.setState({ EditTaskModal: false })
+          }
+          }
+          style={[styles.ModalView]}>
+          <View style={[styles.MainView]}>
+
+            <EditTask
+              Task={this.state.TaskItem}
+              TeamMembers={this.state.TeamMembers}
+              ModalVisible={async () => {
+                this.setState({ EditTaskModal: false ,loadTasks:false})
+                await this.loadTasks();
+                this.setState({ loadTasks:true})
+              }}
+            />
+          </View>
+        </Modal>
       </SafeAreaView>
     );
   }
@@ -1817,6 +3366,14 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'column',
     alignItems: 'center',
+    //  justifyContent: 'center',
+    backgroundColor: '#bfcfb2',
+  },
+  MainView1: {
+    display: 'flex',
+    flex: 1,
+    flexDirection: 'column',
+    //  alignItems: 'center',
     //  justifyContent: 'center',
     backgroundColor: '#bfcfb2',
   },

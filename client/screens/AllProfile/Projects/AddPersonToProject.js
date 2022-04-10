@@ -28,6 +28,7 @@ import { serverLink } from '../../serverLink';
 class AddPersonToPreject extends Component {
 
   constructor(props) {
+
     super(props);
     this.state = {
       search: "",
@@ -35,22 +36,27 @@ class AddPersonToPreject extends Component {
       masterDataSource: [],
       added: [],
       added1: [],
-      addedToDB: [],
       ShowModal: false,
       ChooseInterestsModal: false,
       searchby: "first",
-      Email: this.props.route.params.Email,
-      ProjectID: this.props.route.params.ProjectID,
+      searchbyInterest: "1",
+      Email: this.props.Email,
+      ProjectID: this.props.ProjectID,
       counter: 0,
       enableSearch: false,
       loadedSearch: false,
       loadSave: true,
       iconColor: 'black',
 
-      flag: false
+      enableSearchInput: true,
+      flag: false,
+      Token: '',
     };
+    // NotificationsListener()
+    // this.props = props;
     this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
   }
+
   componentDidMount = async () => {
     this.setState({ loadSave: false })
     await this.getData();
@@ -78,9 +84,9 @@ class AddPersonToPreject extends Component {
   }
 
   handleBackButtonClick() {
-    if(this.state.ChooseInterestsModal)this.setState({ChooseInterestsModal:false})
-    else if (this.state.ShowModal)this.setState({ShowModal:false})
-    else this.props.navigation.push('Project', { Email: this.state.Email });
+    if (this.state.ChooseInterestsModal) this.setState({ ChooseInterestsModal: false })
+    else if (this.state.ShowModal) this.setState({ ShowModal: false })
+    // else this.props.navigation.push('Project', { Email: this.state.Email });
     return true;
   }
 
@@ -102,28 +108,29 @@ class AddPersonToPreject extends Component {
 
   };
 
-  OpenProfile = (_id, Email) => {
-    this.props.navigation.navigate('profileForOthers', { Email: Email, GuestEmail: this.state.Email, where: 'AddPersonToProject' })
-  }
+  // OpenProfile = (_id, Email) => {
+  //   // this.props.navigation.navigate('profileForOthers', { Email: Email, GuestEmail: this.state.Email, where: 'AddPersonToProject' })
+  //   this.props.ProfileForOthers(Email, this.state.Email, 'AddPersonToProject' )
+  // }
 
   searchFilterFunction = async (text) => {
     this.setState({ loadedSearch: false })
     await this.getData();
     await this.getAddedMembers();
     if (this.state.added.length)
-      console.log(this.state.added[0]._id)
-    this.state.added.map((item) => {
+      // console.log(this.state.added[0]._id)
+      this.state.added.map((item) => {
 
-      console.log(this.state.added[0]._id)
-      const items = this.state.masterDataSource.filter(item1 => item1._id !== item._id)
+        // console.log(this.state.added[0]._id)
+        const items = this.state.masterDataSource.filter(item1 => item1._id !== item._id)
 
-      this.setState({
-        filteredDataSource: [],
-        masterDataSource: items, //simple value
-      });
-      console.log(this.state.masterDataSource)
+        this.setState({
+          filteredDataSource: [],
+          masterDataSource: items, //simple value
+        });
+        // console.log(this.state.masterDataSource)
 
-    })
+      })
     if (text) {
       if (this.state.searchby == "second") {
         const newData = this.state.masterDataSource.filter(
@@ -155,31 +162,41 @@ class AddPersonToPreject extends Component {
           search: text
         });
       }
-
-      //    else if(this.state.searchby=="third"){
-      //      const newData =this.state.masterDataSource.filter(
-      //        function (item) {
-      //          const itemData = item.Email
-      //            ? item.Email.toUpperCase()
-      //            : ''.toUpperCase();
-      //          const textData = text.toUpperCase();
-      //          return itemData.indexOf(textData) > -1;
-      //      });
-      //      this.setState({filteredDataSource:newData,
-      //        search:text});
-      //        } 
-      //      }
-      //      else {
-      //        // Inserted text is blank
-      //        // Update FilteredDataSource with masterDataSource
-      //        this.setState({
-      //          filteredDataSource:[],
-      //        search:text,
-
-      //  });
-
+    }
+    else if (this.state.searchby == "third") {
+      var flag = false;
+      const newData = this.state.masterDataSource.filter(
+        item => {
+          flag = false;
+          item.InterestedIn.map(interest => {
+            if (interest.name === this.state.searchbyInterest) {
+              flag = true;
+            }
+          })
+          return flag;
+        }
+      );
+      this.setState({
+        filteredDataSource: newData,
+        search: text,
+        enableSearch: true,
+      });
+      console.log(this.state.filteredDataSource)
 
     }
+
+
+
+    else {
+      this.setState({
+        filteredDataSource: [],
+        search: text,
+        enableSearch: false,
+      });
+    }
+
+
+
     this.setState({ loadedSearch: true })
 
   };
@@ -191,7 +208,7 @@ class AddPersonToPreject extends Component {
         <View style={[styles.item, { flexDirection: 'row' }]}>
           <TouchableOpacity style={{ width: '90%' }} onPress={() => {
             ///go to profile
-            this.props.navigation.navigate('profileForOthers', { Email: item.Email, GuestEmail: this.state.Email, where: 'AddPersonToProject' })
+            // this.props.ProfileForOthers(item.Email, this.state.Email, 'AddPersonToProject' )
           }}>
             <Text style={styles.textItems}>{item.NickName}</Text>
           </TouchableOpacity>
@@ -216,8 +233,7 @@ class AddPersonToPreject extends Component {
         <View style={[styles.item, { flexDirection: 'row' }]}>
           <TouchableOpacity style={{ width: '90%' }} onPress={() => {
             ///go to profile
-            this.props.navigation.navigate('profileForOthers', { Email: item.Email, GuestEmail: this.state.Email, where: 'AddPersonToProject' })
-
+            // this.props.ProfileForOthers(item.Email, this.state.Email, 'AddPersonToProject' )
           }}>
             <Text style={styles.textItems}>{item.Email}</Text>
           </TouchableOpacity>
@@ -242,8 +258,7 @@ class AddPersonToPreject extends Component {
         <View style={[styles.item, { flexDirection: 'row' }]}>
           <TouchableOpacity style={{ width: '90%' }} onPress={() => {
             ///go to profile
-            this.props.navigation.navigate('profileForOthers', { Email: item.Email, GuestEmail: this.state.Email, where: 'AddPersonToProject' })
-
+            // this.props.ProfileForOthers(item.Email, this.state.Email, 'AddPersonToProject' )
           }}>
             <Text style={styles.textItems}>{item.Email}</Text>
           </TouchableOpacity>
@@ -284,7 +299,9 @@ class AddPersonToPreject extends Component {
       added: [...this.state.added, {
         _id: item._id
         , NickName: item.NickName, Email: item.Email
-      }], loadSave: false
+      }],
+      added1: [...this.state.added1, { ProjectID: this.state.ProjectID, MemberID: item._id, Accepted: false }],
+      loadSave: false
     })
     const _id = item._id;
     const items = this.state.masterDataSource.filter(item => item._id !== _id);
@@ -296,6 +313,7 @@ class AddPersonToPreject extends Component {
       loadSave: true
 
     });
+    await this.send();
     await this.saveMemeber(item._id)
   }
 
@@ -377,7 +395,58 @@ class AddPersonToPreject extends Component {
     });
     const body = await response.json();
   }
+  getToken = async () => {
+    // const t = await AsyncStorage.getItem('fcmToken')
+    // console.log(t)
+    await fetch(serverLink + '/getToken', {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(
+        {
+          // "Token": t,
+          "Email": this.state.Email,
+        }
+      )
+    }).then(resp => {
+      return resp.json();
+    }).then(async (jsonresponse) => {
+      console.log(jsonresponse)
+      this.setState({ Token: jsonresponse.Token })
+      // await this.send();
+    }).catch(error => {
+      console.log(error);
+    })///fetch
+  }
 
+
+  send = async () => {
+    await this.getToken();
+
+    await fetch(serverLink + '/sendNotification', {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(
+        {
+          "Token": this.state.Token,
+          "title1":"hello",
+          "body1":"hello1",
+          "title2":"hello2",
+          "body2":"hello3",
+        }
+      )
+    }).then(resp => {
+      return resp.json();
+    }).then(jsonresponse => {
+      console.log(jsonresponse)
+
+    }).catch(error => {
+      console.log(error);
+    })///fetch
+  }
 
   render() {
     return (
@@ -422,6 +491,7 @@ class AddPersonToPreject extends Component {
                   value={this.state.search}
                   underlineColorAndroid="transparent"
                   placeholder="Choose method of search -> By :"
+                  editable={this.state.enableSearchInput}
                 />
               </View>
               <View style={{ width: '20%', height: 40 }}>
@@ -445,7 +515,7 @@ class AddPersonToPreject extends Component {
             </View>
             {this.state.enableSearch ?
               this.state.loadedSearch ?
-                <SafeAreaView style={{ width: '100%', height: '100%', flex: 1 }}>
+                <SafeAreaView style={{ width: '100%', height: '100%', flex: 1, marginLeft: 10 }}>
                   <FlatList
                     scrollEnabled
                     vertical
@@ -470,7 +540,7 @@ class AddPersonToPreject extends Component {
                         key={name._id}
                         todo={name}
                         deleteTodo={this.deleteTodo}
-                        OpenProfile={this.OpenProfile}
+                        // OpenProfile={this.OpenProfile}
                         Flag={this.state.added1[this.state.added.indexOf(name)].Accepted}
                       />
                     ))
@@ -482,8 +552,6 @@ class AddPersonToPreject extends Component {
 
         {this.state.ShowModal ?
           <BottomSheet
-
-
             draggableRange={{ top: 200, bottom: 200 }}
             snappingPoints={[55, 100, 180]}
             showBackdrop={false}
@@ -492,9 +560,12 @@ class AddPersonToPreject extends Component {
             <View style={styles.bottomSheetContainer}>
 
               <RadioButton.Group onValueChange={value => {
-                this.setState({ searchby: value, ShowModal: !this.state.ShowModal });
+                this.setState({ searchby: value, ShowModal: !this.state.ShowModal, search: '', filteredDataSource: [] });
                 if (value === "third") {
-                  this.setState({ ChooseInterestsModal: true })
+                  this.setState({ ChooseInterestsModal: true, enableSearchInput: false })
+                }
+                else {
+                  this.setState({ enableSearchInput: true })
                 }
               }} value={this.state.searchby}>
                 <RadioButton.Item label="Email" value="first"
@@ -525,43 +596,48 @@ class AddPersonToPreject extends Component {
 
             <View style={styles.bottomSheetContainer}>
 
-              <RadioButton.Group onValueChange={value => {
-                this.setState({ searchby: value, ShowModal: !this.state.ShowModal });
+              <RadioButton.Group onValueChange={async (value) => {
+                this.setState({
+                  searchby: "third",
+                  searchbyInterest: value,
+                  ChooseInterestsModal: false
+                });
+                await this.searchFilterFunction()
 
               }} value={this.state.searchby}>
-                <RadioButton.Item label="Business and Management" value="1"
+                <RadioButton.Item label="Business and Management" value="Business and Management"
                   uncheckedColor={"black"}
                   color={'black'} />
-                <RadioButton.Item label="Computer Science and Information Technology" value="2"
+                <RadioButton.Item label="Computer Science and Information Technology" value="Computer Science and Information Technology"
                   uncheckedColor={"black"}
                   color={'black'} />
-                <RadioButton.Item label="Education " value="3"
+                <RadioButton.Item label="Education " value="Education"
                   uncheckedColor={"black"}
                   color={'black'} />
-                <RadioButton.Item label="Environmental, Agricultural, and Physical Sciences" value="4"
+                <RadioButton.Item label="Environmental, Agricultural, and Physical Sciences" value="Environmental, Agricultural, and Physical Sciences"
                   uncheckedColor={"black"}
                   color={'black'} />
-                <RadioButton.Item label="Government and Law" value="5"
-                  uncheckedColor={"black"}
-                  color={'black'} />
-
-                <RadioButton.Item label="Library and Information Science" value="6"
-                  uncheckedColor={"black"}
-                  color={'black'} />
-                <RadioButton.Item label="Media and Communications" value="7"
-                  uncheckedColor={"black"}
-                  color={'black'} />
-                <RadioButton.Item label="Medical, Healthcare, and Life Sciences" value="8"
+                <RadioButton.Item label="Government and Law" value="Government and Law"
                   uncheckedColor={"black"}
                   color={'black'} />
 
-                <RadioButton.Item label="Science and Engineering" value="9"
+                <RadioButton.Item label="Library and Information Science" value="Library and Information Science"
                   uncheckedColor={"black"}
                   color={'black'} />
-                <RadioButton.Item label="Security and Forensics" value="10"
+                <RadioButton.Item label="Media and Communications" value="Media and Communications"
                   uncheckedColor={"black"}
                   color={'black'} />
-                <RadioButton.Item label="Social Sciences and Humanities" value="11"
+                <RadioButton.Item label="Medical, Healthcare, and Life Sciences" value="Medical, Healthcare, and Life Sciences"
+                  uncheckedColor={"black"}
+                  color={'black'} />
+
+                <RadioButton.Item label="Science and Engineering" value="Science and Engineering"
+                  uncheckedColor={"black"}
+                  color={'black'} />
+                <RadioButton.Item label="Security and Forensics" value="Security and Forensics"
+                  uncheckedColor={"black"}
+                  color={'black'} />
+                <RadioButton.Item label="Social Sciences and Humanities" value="Social Sciences and Humanities"
                   uncheckedColor={"black"}
                   color={'black'} />
                 {/* <Button title="Search" onPress={()=>this.getData()}></Button> */}
@@ -610,13 +686,16 @@ const styles = StyleSheet.create({
     backgroundColor: '#bfcfb2',
   },
   bottomSheetContainer: {
+    width: '100%',
     flex: 1,
     paddingTop: 20,
     paddingBottom: 8,
-    borderTopLeftRadius: 15,
-    borderTopRightRadius: 15,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    borderTopColor: '#98a988',
+    borderWidth: 2,
     elevation: 4,
-    backgroundColor:'#bfcfb2'
+    backgroundColor: '#bfcfb2'
   },
   textAddress: {
     fontSize: 20,
