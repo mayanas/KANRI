@@ -161,7 +161,7 @@ class Messages extends Component {
                 </View>
                 <View style={{justifyContent:'flex-start',alignItems:'flex-start',width:'85%'}}>
                 <Text
-                  onPress={() => this.setState({ chatModal: false })}
+                  // onPress={() => this.setState({ chatModal: false })}
                   style={{ fontFamily: 'SairaSemiCondensed-Bold', fontSize: 18, color: 'black' }}>{this.state.dstNickName}</Text>
               
                 </View>

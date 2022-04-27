@@ -9,11 +9,12 @@ import ProgressCircle from 'react-native-progress-circle'
 import { LogBox } from "react-native";
 import GanttChart from 'react-native-gantt-chart'
 import Loading from '../../../Components/Loading';
-import {serverLink} from '../../serverLink';
+import { serverLink } from '../../serverLink';
 LogBox.ignoreLogs([
   "ViewPropTypes will be removed",
   "ColorPropType will be removed",
 ])
+LogBox.ignoreLogs(['Require cycle:']);
 class ViewProject extends Component {
   constructor(props) {
     super(props);
@@ -111,197 +112,204 @@ class ViewProject extends Component {
 
   render() {
     return (
-/* <View style={{ width: "100%", height: "100%", paddingLeft: 0, backgroundColor: "#bfcfb2" }}> */
-      <SafeAreaView style={{ width: "100%", height: "100%", paddingLeft: 0, backgroundColor: "#bfcfb2" }}>
-      
+      /* <View style={{ width: "100%", height: "100%", paddingLeft: 0, backgroundColor: "#bfcfb2" }}> */
+      <SafeAreaView style={{ width: "100%", height: "100%", paddingLeft: 0, backgroundColor: "#bfcfb2",flex:1,justifyContent:'center',alignItems:'center' }}>
+{this.state.loaded ?
+            <SafeAreaView style={{ width: "100%", height: "100%", paddingLeft: 0, backgroundColor: "#bfcfb2" }}>
         <Provider>
-        {this.state.loaded ?  
-        <SafeAreaView style={{ width: "100%", height: "100%", paddingLeft: 0, backgroundColor: "#bfcfb2" }}>
-          <DataTable style={{ width: "100%", marginLeft: 0, marginTop: "5%" }}  >
+          
+              <DataTable style={{ width: "100%", marginLeft: 0, marginTop: "5%" }}  >
 
-            <DataTable.Header style={{ width: "100%", marginLeft: 0 }} >
-              <DataTable.Title style={{ borderWidth: 1, borderColor: "#bc9855", justifyContent: "center", alignContent: "center", alignItems: "center" }} ><Text style={styles.text} >Task Name</Text> </DataTable.Title>
-              <DataTable.Title style={{ borderWidth: 1, borderColor: "#bc9855", justifyContent: "center", alignContent: "center", alignItems: "center" }}><Text style={styles.text} >Priority</Text></DataTable.Title>
-              <DataTable.Title style={{ borderWidth: 1, borderColor: "#bc9855", justifyContent: "center", alignContent: "center", alignItems: "center" }} ><Text style={styles.text} >Status</Text></DataTable.Title>
-              <DataTable.Title style={{ borderWidth: 1, borderColor: "#bc9855", justifyContent: "center", alignContent: "center", alignItems: "center" }} ><Text style={styles.text} > Pudget</Text></DataTable.Title>
+                <DataTable.Header style={{ width: "100%", marginLeft: 0 }} >
+                  <DataTable.Title style={{ borderWidth: 1, borderColor: "#bc9855", justifyContent: "center", alignContent: "center", alignItems: "center" }} ><Text style={styles.text} >Task Name</Text> </DataTable.Title>
+                  <DataTable.Title style={{ borderWidth: 1, borderColor: "#bc9855", justifyContent: "center", alignContent: "center", alignItems: "center" }}><Text style={styles.text} >Priority</Text></DataTable.Title>
+                  <DataTable.Title style={{ borderWidth: 1, borderColor: "#bc9855", justifyContent: "center", alignContent: "center", alignItems: "center" }} ><Text style={styles.text} >Status</Text></DataTable.Title>
+                  <DataTable.Title style={{ borderWidth: 1, borderColor: "#bc9855", justifyContent: "center", alignContent: "center", alignItems: "center" }} ><Text style={styles.text} > Pudget</Text></DataTable.Title>
 
-            </DataTable.Header>
-
-
-            {this.state.data.slice(
-              this.state.page * this.state.perPage,
-              this.state.page * this.state.perPage + this.state.perPage,
-            ).map(row => (
-
-              <DataTable.Row key={row._id} >
-                <DataTable.Cell style={{ borderWidth: 1, borderColor: "#bc9855", justifyContent: "center", alignContent: "center", alignItems: "center" }} >{row.Title}</DataTable.Cell>
-                <DataTable.Cell style={{ borderWidth: 1, borderColor: "#bc9855", justifyContent: "center", alignContent: "center", alignItems: "center" }}>{row.Priority}</DataTable.Cell>
-                <DataTable.Cell style={{ borderWidth: 1, borderColor: "#bc9855", justifyContent: "center", alignContent: "center", alignItems: "center" }}>
-                  <View style={{
-                    width: 88,
-                    height: 46,
-                    borderColor: "#bc9855",
-                    borderWidth: 1,
-
-                  }}>
-                    <SelectDropdown
-
-                      dropdownBackgroundColor={"#98a988"}
-
-                      styleInput={{ fontFamily: 'SairaSemiCondensed-Regular' }}
-                      defaultButtonText={row.Status}
-                      // rowTextForSelection={"hello"}
-                      data={this.state.StatusArray}
-                      rowTextStyle={{ fontSize: 15, fontFamily: 'SairaSemiCondensed-Regular', }}
-                      buttonTextStyle={{ fontFamily: 'SairaSemiCondensed-Regular', fontSize: 10 }}
-                      buttonStyle={{
-                        backgroundColor: '#98a988', width: "100%",
-                        height: '100%'
-                        ,
-                      }}
-                      // rowStyle={{width:"100%"}}
-                      dropdownStyle={{
-                        width: 110, backgroundColor: "#98a988", borderColor: "#bc9855",
-                        borderWidth: 1
-                      }}
-                      onSelect={(selectedItem, index) => {
-                        let newMarkers = this.state.data.map(el => (
-                          el.name === row.name ? { ...el, Status: selectedItem } : el
-                        ))
-                        this.setState({ data: newMarkers });
-                      }}
-                      buttonTextAfterSelection={(selectedItem, index) => {
-
-                        return selectedItem
-                      }
-                      }
-
-                    />
-                  </View>
+                </DataTable.Header>
 
 
+                {this.state.data.slice(
+                  this.state.page * this.state.perPage,
+                  this.state.page * this.state.perPage + this.state.perPage,
+                ).map(row => (
 
-                  {/* {row.Status} */}
-                </DataTable.Cell>
-                <DataTable.Cell style={{ borderWidth: 1, borderColor: "#bc9855", justifyContent: "center" }} >
-                  {/* {this.datediff(this.parseDate(this.state.currentDate), this.parseDate(row.DeadLine))}  */}
-                  {/* { this.datediff(new Date().getDate(), this.parseDate(row.DeadLine))} */}
-                  { }
+                  <DataTable.Row key={row._id} >
+                    <DataTable.Cell style={{ borderWidth: 1, borderColor: "#bc9855", justifyContent: "center", alignContent: "center", alignItems: "center" }} >
+                      <Text style={{ fontFamily: 'SairaSemiCondensed-Regular', fontSize: 15 }}>
+                        {row.Title}
+                      </Text>
+                    </DataTable.Cell>
+                    <DataTable.Cell style={{ borderWidth: 1, borderColor: "#bc9855", justifyContent: "center", alignContent: "center", alignItems: "center" }}>{row.Priority}</DataTable.Cell>
+                    <DataTable.Cell style={{ borderWidth: 1, borderColor: "#bc9855", justifyContent: "center", alignContent: "center", alignItems: "center" }}>
+                      <View style={{
+                        width: 92,
+                        height: 46,
+                        borderColor: "#bc9855",
+                        borderWidth: 1,
 
-                </DataTable.Cell>
+                      }}>
+                        <SelectDropdown
 
-              </DataTable.Row>
+                          dropdownBackgroundColor={"#98a988"}
+                          
 
-            ))}
+                          styleInput={{ fontFamily: 'SairaSemiCondensed-Regular' }}
+                          defaultButtonText={row.Status}
+                          // rowTextForSelection={"hello"}
+                          data={this.state.StatusArray}
+                          rowTextStyle={{ fontSize: 15, fontFamily: 'SairaSemiCondensed-Regular', }}
+                          buttonTextStyle={{ fontFamily: 'SairaSemiCondensed-Regular', fontSize: 16, }}
+                          buttonStyle={{
+                            backgroundColor: '#98a988', width: "100%",
+                            height: '100%'
+                            ,
+                          }}
+                          // rowStyle={{width:"100%"}}
+                          dropdownStyle={{
+                            width: 170, backgroundColor: "#98a988", borderColor: "#bc9855",
+                            borderWidth: 1
+                          }}
+                          onSelect={(selectedItem, index) => {
+                            let newMarkers = this.state.data.map(el => (
+                              el.name === row.name ? { ...el, Status: selectedItem } : el
+                            ))
+                            this.setState({ data: newMarkers });
+                          }}
+                          buttonTextAfterSelection={(selectedItem, index) => {
+
+                            return selectedItem
+                          }
+                          }
+
+                        />
+                      </View>
 
 
 
-            <DataTable.Pagination
-              page={this.state.page}
-              numberOfPages={Math.ceil(this.state.data.length / this.state.perPage)}
-              onPageChange={page => { this.setState({ page: page }) }}
-              //  label={`1-to of ${this.state.data.length}`}
-              //  showFastPaginationControls
-              //  numberOfItemsPerPageList={numberOfItemsPerPageList}
-              numberOfItemsPerPage={this.state.numberOfItemsPerPage}
-              //  onItemsPerPageChange={onItemsPerPageChange}
-              selectPageDropdownLabel={'Rows per page'}
+                      {/* {row.Status} */}
+                    </DataTable.Cell>
+                    <DataTable.Cell style={{ borderWidth: 1, borderColor: "#bc9855", justifyContent: "center" }} >
+                      {/* {this.datediff(this.parseDate(this.state.currentDate), this.parseDate(row.DeadLine))}  */}
+                      {/* { this.datediff(new Date().getDate(), this.parseDate(row.DeadLine))} */}
+                      <Text style={{ fontFamily: 'SairaSemiCondensed-Regular', fontSize: 15 }}>
+                        {row.Budget}
+                      </Text>
 
-            />
+                    </DataTable.Cell>
 
-          </DataTable >
+                  </DataTable.Row>
 
-          <View style={{
-            flex: 1,
-            width: '100%',
-            height: '100%',
-            padding: 10
-          }}>
-
-            <Portal style={{ width: '100%', height: '100%' }}>
-              <Dialog
-                visible={this.state.showDialog}
-                onDismiss={this.hideDialog}
-
-                style={{
-                  borderRadius: 10,
-                  backgroundColor: '#bfcfb2'
-                }}
-              >
-                <Dialog.Title style={{ fontFamily: 'SairaSemiCondensed-Regular', fontSize: 18, textAlign: 'center' }}>
-                  {this.state.pressedTaskName}
-
-                </Dialog.Title>
-                <Dialog.Content style={{ alignItems: 'center' }}>
-                  <Text>
-
-                    Assigned To : {this.state.pressedTaskAssignedTo}
-                    <Text> Remaining Days:  {this.datediff(this.parseDate(this.state.currentDate), this.state.pressedTaskEnd)}
-                    </Text>
-                  </Text>
+                ))}
 
 
 
+                <DataTable.Pagination
+                  page={this.state.page}
+                  numberOfPages={Math.ceil(this.state.data.length / this.state.perPage)}
+                  onPageChange={page => { this.setState({ page: page }) }}
+                  //  label={`1-to of ${this.state.data.length}`}
+                  //  showFastPaginationControls
+                  //  numberOfItemsPerPageList={numberOfItemsPerPageList}
+                  numberOfItemsPerPage={this.state.numberOfItemsPerPage}
+                  //  onItemsPerPageChange={onItemsPerPageChange}
+                  selectPageDropdownLabel={'Rows per page'}
+
+                />
+
+              </DataTable >
+
+              <View style={{
+                flex: 1,
+                width: '100%',
+                height: '100%',
+                padding: 10
+              }}>
+
+                <Portal style={{ width: '100%', height: '100%' }}>
+                  <Dialog
+                    visible={this.state.showDialog}
+                    onDismiss={this.hideDialog}
+
+                    style={{
+                      borderRadius: 10,
+                      backgroundColor: '#bfcfb2'
+                    }}
+                  >
+                    <Dialog.Title style={{ fontFamily: 'SairaSemiCondensed-Regular', fontSize: 18, textAlign: 'center' }}>
+                      {this.state.pressedTaskName}
+
+                    </Dialog.Title>
+                    <Dialog.Content style={{ alignItems: 'center' }}>
+                      <Text>
+
+                        Assigned To : {this.state.pressedTaskAssignedTo}
+                        <Text> Remaining Days:  {this.datediff(this.parseDate(this.state.currentDate), this.state.pressedTaskEnd)}
+                        </Text>
+                      </Text>
 
 
-                </Dialog.Content>
-              </Dialog>
-            </Portal>
-
-          </View>
-
-
-          <View style={{ width: "80%", justifyContent: "center", alignContent: "center", alignItems: "center", marginHorizontal: "10%"}} >
-            <ProgressCircle
-              percent={this.state.projectProgress}
-              radius={70}
-              borderWidth={10}
-              color="#bc9855"
-              shadowColor="#98a988"
-              bgColor="#bfcfb2"
-            >
-
-              <Text style={{ fontSize: 18 }}>{this.state.projectProgress + '%'}</Text>
-            </ProgressCircle>
-
-
-          </View>
 
 
 
-          <View style={{ marginTop: "1%", marginLeft: "5%", marginRight: "5%" }}>
+                    </Dialog.Content>
+                  </Dialog>
+                </Portal>
+
+              </View>
+
+
+              <View style={{ width: "80%", justifyContent: "center", alignContent: "center", alignItems: "center", marginHorizontal: "10%" }} >
+                <ProgressCircle
+                  percent={this.state.projectProgress}
+                  radius={90}
+                  borderWidth={15}
+                  color="#bc9855"
+                  shadowColor="#98a988"
+                  bgColor="#bfcfb2"
+                >
+
+                  <Text style={{ fontSize: 18 }}>{this.state.projectProgress + '%'}</Text>
+                </ProgressCircle>
+
+
+              </View>
 
 
 
-            <GanttChart
-              data={this.state.tasks}
-              numberOfTicks={4}
-              onPressTask={task => {
-                this.setState({
-                  pressedTaskAssignedTo: task.MemberEmail,
-                  pressedTaskEnd: task.end,
-                  pressedTaskName: task.name,
-                  showDialog: true,
-                })
-              }}
-              gridMin={new Date(2022, 4, 1).getTime()}
-              gridMax={new Date(2022, 4, 20).getTime()}
-
-              colors={{
-                barColorPrimary: '#bc9855',
-                barColorSecondary: '#98a988',
-                textColor: 'black',
-                backgroundColor: '#bfcfb2'
-              }}
-            // width={100}
-            />
+              <View style={{ marginTop: "1%", marginLeft: "5%", marginRight: "5%" }}>
 
 
-          </View>
 
-</SafeAreaView>:<Loading/>}
+                <GanttChart
+                  data={this.state.tasks}
+                  numberOfTicks={4}
+                  onPressTask={task => {
+                    this.setState({
+                      pressedTaskAssignedTo: task.MemberEmail,
+                      pressedTaskEnd: task.end,
+                      pressedTaskName: task.name,
+                      showDialog: true,
+                    })
+                  }}
+                  gridMin={new Date(2022, 4, 1).getTime()}
+                  gridMax={new Date(2022, 4, 20).getTime()}
+
+                  colors={{
+                    barColorPrimary: '#bc9855',
+                    barColorSecondary: '#98a988',
+                    textColor: 'black',
+                    backgroundColor: '#bfcfb2'
+                  }}
+                // width={100}
+                />
+
+
+              </View>
+
+           
         </Provider>
-       
+        </SafeAreaView> : <Loading />}
       </SafeAreaView>
       // </View>
 
@@ -313,7 +321,7 @@ const styles = StyleSheet.create({
     color: 'black',
     textAlign: 'center',
     fontSize: 15,
-    fontFamily: "SairaSemiCondensed-Regular",
+    fontFamily: "SairaSemiCondensed-Bold",
   },
 
 });

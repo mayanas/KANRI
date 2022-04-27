@@ -78,7 +78,7 @@ class ProfileForOthers extends Component {
       FollowingsList: null,
       FollowersList: null,
       Followed: false,
-      ChatScreenModal:false,
+      ChatScreenModal: false,
 
     }
     this.phoneinput = React.createRef();
@@ -306,7 +306,7 @@ class ProfileForOthers extends Component {
           }}
             onPress={async () => {
               /////////////////////////request to join///////////////////////
-              
+
             }}>
             <Icon
               name="plus-circle-outline"
@@ -516,12 +516,12 @@ class ProfileForOthers extends Component {
   }
   FollowButtonPressed = async () => {
     console.log('follow')
-   await this.setState({
+    await this.setState({
       color: "#98a988",
       followtext: "Following",
-      Followed:true,
-      FollowersList:[...this.state.FollowersList,this.state.GuestEmail],
-      followers:this.state.followers+1,
+      Followed: true,
+      FollowersList: [...this.state.FollowersList, this.state.GuestEmail],
+      followers: this.state.followers + 1,
     });
     await this.Follow()
     console.log(this.state.FollowersList)
@@ -532,8 +532,8 @@ class ProfileForOthers extends Component {
     await this.setState({
       color: "#bc9855",
       followtext: "Follow",
-      Followed:false,
-      followers:this.state.followers-1,
+      Followed: false,
+      followers: this.state.followers - 1,
     });
     const items = await this.state.FollowersList.filter(item => item !== this.state.GuestEmail);
     await this.setState({ FollowersList: items });
@@ -542,7 +542,7 @@ class ProfileForOthers extends Component {
   }
   MessegeButtonPressed = async () => {
     console.log('messege')
-    this.setState({ChatScreenModal:true})
+    this.setState({ ChatScreenModal: true })
   }
   CallButtonPressed = () => {
     this.call()
@@ -686,42 +686,42 @@ class ProfileForOthers extends Component {
                     paddingVertical: 5,
                   }}>
                   {/* {this.state.FollowEnable ? */}
-                    <TouchableOpacity
-                      disabled={!this.state.FollowEnable}
-                      onPress={async () => {
-                        if (this.state.Followed) {
-                          await this.UnFollowButtonPressed();
-                        }
-                        else {
-                          await this.FollowButtonPressed();
-                        }
-                       
+                  <TouchableOpacity
+                    disabled={!this.state.FollowEnable}
+                    onPress={async () => {
+                      if (this.state.Followed) {
+                        await this.UnFollowButtonPressed();
+                      }
+                      else {
+                        await this.FollowButtonPressed();
                       }
 
-                      }
+                    }
+
+                    }
+                    style={{
+                      width: '33%',
+                      paddingHorizontal: 4,
+                    }}>
+                    <View
                       style={{
-                        width: '33%',
-                        paddingHorizontal: 4,
+                        height: 35,
+                        borderRadius: 5,
+                        borderColor: 'black',
+                        backgroundColor: this.state.color,
+                        borderWidth: 1,
+                        justifyContent: 'center',
+                        alignItems: 'center',
                       }}>
-                      <View
-                        style={{
-                          height: 35,
-                          borderRadius: 5,
-                          borderColor: 'black',
-                          backgroundColor: this.state.color,
-                          borderWidth: 1,
-                          justifyContent: 'center',
-                          alignItems: 'center',
-                        }}>
-                        <Text
-                          style={styles.text}>
-                          {this.state.followtext}
-                        </Text>
-                      </View>
-                    </TouchableOpacity> 
-                    {/* : */}
-                    {/* <View style={{ width: '18%', paddingHorizontal: 4 }}></View> */}
-                    {/* } */}
+                      <Text
+                        style={styles.text}>
+                        {this.state.followtext}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                  {/* : */}
+                  {/* <View style={{ width: '18%', paddingHorizontal: 4 }}></View> */}
+                  {/* } */}
                   <TouchableOpacity
                     onPress={async () => await this.MessegeButtonPressed()}
                     style={{
@@ -772,22 +772,22 @@ class ProfileForOthers extends Component {
                     marginTop: 5,
                   }}
                 ></LinearGradient>
-                
+
                 {/* {console.log(ProfileOwenerDetails.props)} */}
 
               </View>
-              
-              
+
+
             </View>
-            
+
             <SafeAreaView style={{ height: '100%', width: '100%', flex: 1 }}>
-              
+
               <ScrollView vertical showsVerticalScrollIndicator={false} style={{ height: '100%' }}>
                 {/* InterestedIn Cards */}
-                <View style={{ width: '100%', height: 320, }}>
+                <View style={{ width: '100%', height: 320 }}>
                   <Text style={[styles.text, { paddingHorizontal: 20 }]}>Interested In</Text>
                   <FlatList
-
+                    contentContainerStyle={this.state.InterestedIn.length<=1? {width:'100%'}:{}}
                     scrollEnabled={true}
                     showsHorizontalScrollIndicator={false}
                     horizontal
@@ -808,13 +808,14 @@ class ProfileForOthers extends Component {
                     height: 10,
                     width: '100%',
                     marginTop: 5,
+
                   }}
                 ></LinearGradient>
                 {/* Projects created */}
                 <View style={{ width: '100%', height: 320, }}>
                   <Text style={[styles.text, { paddingHorizontal: 20 }]}>Created Projects</Text>
                   <FlatList
-
+                    contentContainerStyle={this.state.Projects.length<=1? {width:'100%'}:{}}
                     showsHorizontalScrollIndicator={false}
                     horizontal
                     width={'100%'}
@@ -840,7 +841,7 @@ class ProfileForOthers extends Component {
                 <View style={{ width: '100%', height: 320, }}>
                   <Text style={[styles.text, { paddingHorizontal: 20 }]}>Joined Projects</Text>
                   <FlatList
-
+                    contentContainerStyle={this.state.ProjectsJoinedInfo.length<=1? {width:'100%'}:{}}
                     showsHorizontalScrollIndicator={false}
                     horizontal
                     width={'100%'}
@@ -915,21 +916,36 @@ class ProfileForOthers extends Component {
           }
           style={styles.ModalView}>
 
-          <View style={{backgroundColor:"#bfcfb2",width:'100%',height:"100%"}}>
-            <View style={{width:'100%',height:50,backgroundColor:'#bc9855',justifyContent:'center',
-             alignItems:'flex-start',paddingLeft:40}}>
-              <Text style={{fontFamily:'SairaSemiCondensed-Bold',fontSize:18,color:'black'}}>{this.state.NickName}</Text>
+          <View style={{ backgroundColor: "#bfcfb2", width: '100%', height: "100%" }}>
+            <View style={{
+              width: '100%', height: 50, backgroundColor: '#bc9855', justifyContent: 'center',
+              alignItems: 'center', flexDirection: 'row'
+            }}>
+              <View style={{ justifyContent: 'flex-start', alignItems: 'flex-start', width: '15%', paddingLeft: 10 }}>
+                <Icon
+                  name='backburger'
+                  size={30}
+                  color={'black'}
+                  onPress={() => this.setState({ ChatScreenModal: false })}
+                />
+              </View>
+              <View style={{ justifyContent: 'flex-start', alignItems: 'flex-start', width: '85%' }}>
+                <Text
+                  // onPress={() => this.setState({ chatModal: false })}
+                  style={{ fontFamily: 'SairaSemiCondensed-Bold', fontSize: 18, color: 'black' }}>{this.state.NickName}</Text>
+
+              </View>
             </View>
-            <ChatScreen 
-            srcEmail={this.state.GuestEmail} 
-            dstEmail={this.state.Email}
-            srcNickName={this.state.GuestNickName}
-            dstNickName={this.state.NickName}
+            <ChatScreen
+              srcEmail={this.state.GuestEmail}
+              dstEmail={this.state.Email}
+              srcNickName={this.state.GuestNickName}
+              dstNickName={this.state.NickName}
             />
           </View>
         </Modal>
 
-        
+
       </SafeAreaView>
     );
   }

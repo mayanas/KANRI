@@ -131,7 +131,7 @@ class HomeScreen extends Component {
   }
   _onRefresh = async () => {
     this.setState({ refreshing: true });
-    this.getProjectsHome();
+    await this.getProjectsHome();
     this.wait(2000).then(() => this.setState({ refreshing: false }))
 
   }

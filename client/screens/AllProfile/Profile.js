@@ -35,6 +35,7 @@ import PhoneInput from 'react-native-phone-number-input';
 import SelectDropdown from 'react-native-select-dropdown';
 import { launchImageLibrary } from 'react-native-image-picker';
 import Icon from 'react-native-vector-icons/dist/MaterialCommunityIcons';
+import Ionicons from 'react-native-vector-icons/dist/Ionicons';
 import Feather from 'react-native-vector-icons/Feather';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import CountryPicker, {
@@ -57,7 +58,8 @@ import ChangePassword from './ChangePassword';
 import ProfileForOthers from './ProfileForOthers';
 import AskAsCustomer from './AskAsCutomer';
 import ViewProject from './Projects/ViewProject';
-import ChatScreen from './ChatScreen'; 
+import ChatScreen from './ChatScreen';
+import ProjectChatGroup from './ProjectChatGroup';
 
 const Degrees = ["Doctoral Degree", "Master's Degree", "Bachelor's Degree", "Diploma's Degree", "Undergraduate", "None of the above"]
 const checkList = [
@@ -221,9 +223,12 @@ class Profile extends Component {
 
       ViewModal: false,
       ProjectIDView: '',
-      ChatScreenModal:false,
-      dstEmail:'',
-      dstNickName:'',
+      ChatScreenModal: false,
+      dstEmail: '',
+      dstNickName: '',
+
+      ProjectChatModal:false,
+      ProjectIDChat:'',
     }
     this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
     this.phoneinput = React.createRef();
@@ -868,6 +873,7 @@ class Profile extends Component {
     });
 
   }
+  
   funcProjects = ({ item, index }) => {
 
     return (
@@ -905,10 +911,11 @@ class Profile extends Component {
             borderWidth: 0.5, flexDirection: 'row'
           }}
             onPress={async () => {
-
+             await this.setState({ProjectIDChat:item._id})
+              this.setState({ProjectChatModal:true})
             }}>
-            <Icon
-              name="chat-outline"
+            <Ionicons
+              name="chatbubbles-outline"
               size={15}
               color={'black'} />
             <Text style={styles.text1}>Chat</Text>
@@ -1060,19 +1067,20 @@ class Profile extends Component {
               color={'black'} />
             <Text style={styles.text1}>View</Text>
           </TouchableOpacity>
-
+        
           <TouchableOpacity style={{
             backgroundColor: '#bc9855', width: '30%', height: '50%',
             alignItems: 'center', justifyContent: 'center', borderRadius: 15,
             borderWidth: 0.5, flexDirection: 'row', marginRight: '2.5%'
           }}
-            onPress={async () => {
-
-            }}>
-            <Icon
-              name="chat-outline"
-              size={15}
-              color={'black'} />
+          onPress={async () => {
+            await this.setState({ProjectIDChat:item._id})
+             this.setState({ProjectChatModal:true})
+           }}>
+           <Ionicons
+             name="chatbubbles-outline"
+             size={15}
+             color={'black'} />
             <Text style={styles.text1}>Chat</Text>
           </TouchableOpacity>
 
@@ -1428,9 +1436,9 @@ class Profile extends Component {
               />
             </TouchableOpacity>
             <TouchableOpacity style={{ marginHorizontal: 4 }}
-              onPress={async()=>{
-                await this.setState({dstEmail:item.Email,dstNickName:item.NickName});
-                this.setState({ChatScreenModal:true})
+              onPress={async () => {
+                await this.setState({ dstEmail: item.Email, dstNickName: item.NickName });
+                this.setState({ ChatScreenModal: true })
               }}
             >
               <Icon
@@ -2079,7 +2087,7 @@ class Profile extends Component {
                 <View style={{ width: '100%', height: 320, }}>
                   <Text style={[styles.text, { paddingHorizontal: 20 }]}>Interested In</Text>
                   <FlatList
-
+                    contentContainerStyle={this.state.InterestedIn.length <= 1 ? { width: '100%' } : {}}
                     showsHorizontalScrollIndicator={false}
                     horizontal
                     width={'100%'}
@@ -2105,7 +2113,7 @@ class Profile extends Component {
                 <View style={{ width: '100%', height: 320, }}>
                   <Text style={[styles.text, { paddingHorizontal: 20 }]}>Created Projects</Text>
                   <FlatList
-
+                    contentContainerStyle={this.state.Projects.length <= 1 ? { width: '100%' } : {}}
                     showsHorizontalScrollIndicator={false}
                     horizontal
                     width={'100%'}
@@ -2131,6 +2139,7 @@ class Profile extends Component {
                 <View style={{ width: '100%', height: 320, }}>
                   <Text style={[styles.text, { paddingHorizontal: 20 }]}>Joined Projects</Text>
                   <FlatList
+                    contentContainerStyle={this.state.ProjectsJoinedInfo.length <= 1 ? { width: '100%' } : {}}
 
                     showsHorizontalScrollIndicator={false}
                     horizontal
@@ -4146,7 +4155,7 @@ class Profile extends Component {
           }
           style={styles.ModalView}>
 
-          <View style={styles.modalS}>
+          <View style={[styles.modalS,{padding:0,paddingTop:10}]}>
             <View style={{ flexDirection: 'row', marginBottom: 10 }}>
               <View style={{ width: '20%', alignItems: 'flex-start' }}>
 
@@ -4169,14 +4178,14 @@ class Profile extends Component {
                 marginTop: 5,
               }}
             ></LinearGradient>
-            <KeyboardAwareScrollView style={{ width: '100%', marginBottom: 5 }} showsVerticalScrollIndicator={false}>
+            {/* <KeyboardAwareScrollView style={{ width: '100%', marginBottom: 5 }} showsVerticalScrollIndicator={false}> */}
 
-              <View style={[{ height: '100%', flexDirection: 'column', width: '100%', marginTop: 20 }]}>
+              <View style={[{ height: '100%', flexDirection: 'column', width: '100%',  }]}>
                 <ViewProject
                   ProjectID={this.state.ProjectIDView}
                 />
               </View>
-            </KeyboardAwareScrollView>
+            {/* </KeyboardAwareScrollView> */}
           </View>
         </Modal>
 
@@ -4188,16 +4197,50 @@ class Profile extends Component {
           }
           style={styles.ModalView}>
 
-          <View style={{backgroundColor:"#bfcfb2",width:'100%',height:"100%"}}>
-            <View style={{width:'100%',height:50,backgroundColor:'#bc9855',justifyContent:'center',
-             alignItems:'flex-start',paddingLeft:40}}>
-              <Text style={{fontFamily:'SairaSemiCondensed-Bold',fontSize:18,color:'black'}}>{this.state.dstNickName}</Text>
+          <View style={{ backgroundColor: "#bfcfb2", width: '100%', height: "100%" }}>
+            <View style={{
+              width: '100%', height: 50, backgroundColor: '#bc9855', justifyContent: 'center',
+              alignItems: 'center', flexDirection: 'row'
+            }}>
+              <View style={{ justifyContent: 'flex-start', alignItems: 'flex-start', width: '15%', paddingLeft: 10 }}>
+                <Icon
+                  name='backburger'
+                  size={30}
+                  color={'black'}
+                  onPress={() => this.setState({ ChatScreenModal: false })}
+                />
+              </View>
+              <View style={{ justifyContent: 'flex-start', alignItems: 'flex-start', width: '85%' }}>
+                <Text
+                  // onPress={() => this.setState({ chatModal: false })}
+                  style={{ fontFamily: 'SairaSemiCondensed-Bold', fontSize: 18, color: 'black' }}>{this.state.dstNickName}</Text>
+
+              </View>
             </View>
-            <ChatScreen 
-            srcEmail={this.state.Email} 
-            dstEmail={this.state.dstEmail}
-            srcNickName={this.NickName}
-            dstNickName={this.state.dstNickName}
+            <ChatScreen
+              srcEmail={this.state.Email}
+              dstEmail={this.state.dstEmail}
+              srcNickName={this.NickName}
+              dstNickName={this.state.dstNickName}
+            />
+          </View>
+        </Modal>
+
+        {/* Group Chat Modal */}
+        <Modal animationType='slide'
+          visible={this.state.ProjectChatModal}
+          onRequestClose={() => { this.setState({ ProjectChatModal: false }) }
+          }
+          style={styles.ModalView}>
+
+          <View style={{ backgroundColor: "#bfcfb2", width: '100%', height: "100%" }}>
+            
+            <ProjectChatGroup
+             ProjectId = {this.state.ProjectIDChat}
+             Email = {this.state.Email}
+             NickName = {this.state.NickName}
+             ProjectChatGroup = {()=>this.setState({ ProjectChatModal: false })}
+            //  messages = 
             />
           </View>
         </Modal>

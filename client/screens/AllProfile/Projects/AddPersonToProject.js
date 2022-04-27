@@ -55,6 +55,7 @@ class AddPersonToPreject extends Component {
 
       ProfileForOthersModal: false,
       ProfileForOthersEmail: "",
+      RecieverEmail:'',
     };
     // NotificationsListener()
     // this.props = props;
@@ -318,7 +319,8 @@ class AddPersonToPreject extends Component {
       masterDataSource: items, //simple value
       enableSearch: false,
       loadedSearch: false,
-      loadSave: true
+      loadSave: true,
+      RecieverEmail:item.Email,
 
     });
     await this.send();
@@ -416,7 +418,7 @@ class AddPersonToPreject extends Component {
       body: JSON.stringify(
         {
           // "Token": t,
-          "Email": this.state.Email,
+          "Email": this.state.RecieverEmail,
         }
       )
     }).then(resp => {

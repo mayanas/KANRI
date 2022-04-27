@@ -801,8 +801,31 @@ app.post("/getProjectsHome", (req, res) => {
     }
   });
 })
+app.post("/getMessages", (req, res) => {
+  const database = client.db('KANRI');
+  const users = database.collection('Projects');
 
+  users.findOne({  _id: ObjectId(req.body.ProjectID) }, function (err, result) {
+    if (err) throw err;
+    if (result == null) res.send(JSON.stringify("null"));
+    else {
+      // console.log('getUserinfo')
+      console.log(result.Messages);
+      res.send(JSON.stringify(result.Messages));
 
+    }
+
+  });
+})
+app.post("/saveMessages", (req, res) => {
+  console.log(req.body.ProjectID);
+     const database = client.db('KANRI');
+     const users = database.collection('Projects');
+     var myquery = {  _id: ObjectId(req.body.ProjectID) };
+     var newvalues = { $push: { Messages: req.body.messages } };
+     const update = { $push: { "Messages":req.body.messages}};
+ return users.updateOne(myquery, update);
+  });
 
 
 app.post("/sendToken", (req, res) => {
