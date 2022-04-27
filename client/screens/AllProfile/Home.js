@@ -8,6 +8,7 @@ import {
   BackHandler,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import Icon from 'react-native-vector-icons/dist/MaterialCommunityIcons';
 import HomeScreen from './HomeScreen';
 import Profile from './Profile';
 import Messages from './Messages';
@@ -55,8 +56,8 @@ class Home extends Component {
             else if (route.name === 'Notifications') {
               iconName = focused ? 'md-notifications' : 'md-notifications';
             }
-            else if (route.name === 'My Tasks') {
-              iconName = focused ? 'md-checkmark-circle' : 'md-checkmark-circle';
+            else if (route.name === 'Invitations') {
+              iconName = focused ? 'md-person-add-sharp' : 'md-person-add-sharp';
             }
             // You can return any component that you like here!
             return <Ionicons name={iconName} size={size} color={color} />;
@@ -72,6 +73,8 @@ class Home extends Component {
             color: "black",
             fontFamily: 'SairaSemiCondensed-Regular'
           },
+          tabBarHideOnKeyboard: true,
+        // tabBarStyle: [{ display: "flex" }, null]
           
 
         })}
@@ -79,14 +82,15 @@ class Home extends Component {
         {/* {console.log(this.props.route.params.Email)} */}
         
         <Tab.Screen name="Profile" component={Profile} initialParams={{ Email: this.props.route.params.Email }} />
-        <Tab.Screen name="My Tasks" component={MyTasks} initialParams={{ Email: this.props.route.params.Email }} />
+        <Tab.Screen name="Invitations" component={MyTasks} initialParams={{ Email: this.props.route.params.Email }} />
         <Tab.Screen name="Home" component={HomeScreen} initialParams={{ Email: this.props.route.params.Email }}
           listeners={{
             focus: () => BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick)
             , blur: () => BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick)
           }} />
         <Tab.Screen name="Notifications" component={Notifications} options={{ tabBarBadge: 3 }} initialParams={{ Email: this.props.route.params.Email }} />
-        <Tab.Screen name="Messages" component={Messages} options={{ tabBarBadge: 3 }} initialParams={{ Email: this.props.route.params.Email }} />
+        <Tab.Screen name="Messages" component={Messages} options={{ tabBarBadge: 3 }} 
+        initialParams={{ Email: this.props.route.params.Email}} />
 
 
       </Tab.Navigator>

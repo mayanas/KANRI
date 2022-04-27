@@ -122,7 +122,7 @@ handleBackButtonClick() {
   );
   sendToken = async()=>{
     const t = await AsyncStorage.getItem('fcmToken')
-    console.log(t)
+    console.log('t')
     await fetch(serverLink+'/sendToken', {
       method: "POST",
       headers: {
@@ -205,9 +205,11 @@ handleBackButtonClick() {
 
       try{
         await AsyncStorage.setItem('Email',this.state.Email);
+        // await AsyncStorage.setItem('Followings',"0");
+        // await AsyncStorage.setItem('FollowingsList',null);
         // await firebase.auth().createUserWithEmailAndPassword(this.state.Email, this.state.passwordValue);
         // await AsyncStorage.setItem('Password',this.state.PasswordEncoded);
-        getFcmToken()
+        await getFcmToken()
         NotificationsListener()
       await  this.sendToken()
       // await this.send()

@@ -157,8 +157,9 @@ class AddTask extends Component {
                   backgroundColor: '#bfcfb2'
                 }}
               >
+                {/*  Add Collaborators */}
                 <Dialog.Title style={{ fontFamily: 'SairaSemiCondensed-Regular', fontSize: 18, textAlign: 'center' }}>
-                  Add Collaborators
+                 Choose team member
                 </Dialog.Title>
                 <Dialog.Content style={{ alignItems: 'center' }}>
                   <SelectDropdown
@@ -229,7 +230,9 @@ class AddTask extends Component {
               <View style={{ paddingTop: 50 }}>
                 <SelectDropdown
                   dropdownBackgroundColor={"#98a988"}
-                  buttonStyle={[styles.textinputstyle, { width: '41%', height: 37 }]}
+                  buttonStyle={[styles.textinputstyle, { width: '38%', height: 37 }]}
+                  rowTextStyle={{fontFamily: 'SairaSemiCondensed-Regular',fontSize:16}}
+                  buttonTextStyle={{fontFamily: 'SairaSemiCondensed-Regular',fontSize:16}}
                   styleInput={{ fontFamily: 'SairaSemiCondensed-Regular' }}
                   defaultButtonText={"Priority"}
                   rowTextForSelection={""}
@@ -292,9 +295,9 @@ class AddTask extends Component {
                       backgroundColor: '#bc9855',
                       elevation: 1,
                     }}
-                    textStyle={{ fontFamily: 'SairaSemiCondensed-Regular', }}
+                    textStyle={{ fontFamily: 'SairaSemiCondensed-Regular', fontSize:16}}
                   >
-                    Add Collaborators
+                    Team member
                   </Chip>
                 }
               </View>

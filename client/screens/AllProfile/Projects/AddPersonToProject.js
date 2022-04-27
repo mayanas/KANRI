@@ -25,6 +25,7 @@ import LinearGradient from 'react-native-linear-gradient';
 
 import Add from "./Add";
 import { serverLink } from '../../serverLink';
+import ProfileForOthers from '../ProfileForOthers';
 class AddPersonToPreject extends Component {
 
   constructor(props) {
@@ -51,6 +52,9 @@ class AddPersonToPreject extends Component {
       enableSearchInput: true,
       flag: false,
       Token: '',
+
+      ProfileForOthersModal: false,
+      ProfileForOthersEmail: "",
     };
     // NotificationsListener()
     // this.props = props;
@@ -92,7 +96,7 @@ class AddPersonToPreject extends Component {
 
 
   // function to delete 
-  deleteTodo = (_id, NickName) => {
+  deleteTodo = (_id, NickName,MemberEmail) => {
     this.setState({
       masterDataSource: [...this.state.masterDataSource, {
         _id: _id
@@ -103,15 +107,16 @@ class AddPersonToPreject extends Component {
     const items = this.state.added.filter(item => item._id !== _id);
     this.setState({ added: items });
 
-    this.deleteTeamMember(_id)
+    this.deleteTeamMember(_id,MemberEmail)
 
 
   };
 
-  // OpenProfile = (_id, Email) => {
-  //   // this.props.navigation.navigate('profileForOthers', { Email: Email, GuestEmail: this.state.Email, where: 'AddPersonToProject' })
-  //   this.props.ProfileForOthers(Email, this.state.Email, 'AddPersonToProject' )
-  // }
+  OpenProfile = (_id, Email) => {
+    // this.props.navigation.navigate('profileForOthers', { Email: Email, GuestEmail: this.state.Email, where: 'AddPersonToProject' })
+    // this.props.ProfileForOthers(Email, this.state.Email, 'AddPersonToProject' )
+    this.setState({ ProfileForOthersModal: true, ProfileForOthersEmail: Email })
+  }
 
   searchFilterFunction = async (text) => {
     this.setState({ loadedSearch: false })
@@ -208,6 +213,7 @@ class AddPersonToPreject extends Component {
         <View style={[styles.item, { flexDirection: 'row' }]}>
           <TouchableOpacity style={{ width: '90%' }} onPress={() => {
             ///go to profile
+            this.setState({ ProfileForOthersModal: true, ProfileForOthersEmail: item.Email })
             // this.props.ProfileForOthers(item.Email, this.state.Email, 'AddPersonToProject' )
           }}>
             <Text style={styles.textItems}>{item.NickName}</Text>
@@ -233,6 +239,7 @@ class AddPersonToPreject extends Component {
         <View style={[styles.item, { flexDirection: 'row' }]}>
           <TouchableOpacity style={{ width: '90%' }} onPress={() => {
             ///go to profile
+            this.setState({ ProfileForOthersModal: true, ProfileForOthersEmail: item.Email })
             // this.props.ProfileForOthers(item.Email, this.state.Email, 'AddPersonToProject' )
           }}>
             <Text style={styles.textItems}>{item.Email}</Text>
@@ -258,6 +265,7 @@ class AddPersonToPreject extends Component {
         <View style={[styles.item, { flexDirection: 'row' }]}>
           <TouchableOpacity style={{ width: '90%' }} onPress={() => {
             ///go to profile
+            this.setState({ ProfileForOthersModal: true, ProfileForOthersEmail: item.Email })
             // this.props.ProfileForOthers(item.Email, this.state.Email, 'AddPersonToProject' )
           }}>
             <Text style={styles.textItems}>{item.Email}</Text>
@@ -379,7 +387,8 @@ class AddPersonToPreject extends Component {
     });
     const body = await response.json();
   }
-  deleteTeamMember = async (MemberID) => {
+  deleteTeamMember = async (MemberID,MemberEmail) => {
+    console.log(MemberEmail)
     const response = await fetch(serverLink + "/deleteTeamMember", {
       method: "POST",
       headers: {
@@ -390,6 +399,7 @@ class AddPersonToPreject extends Component {
         {
           ProjectID: this.state.ProjectID,
           MemberID: MemberID,
+          MemberEmail:MemberEmail,
         }
       )
     });
@@ -432,10 +442,10 @@ class AddPersonToPreject extends Component {
       body: JSON.stringify(
         {
           "Token": this.state.Token,
-          "title1":"hello",
-          "body1":"hello1",
-          "title2":"hello2",
-          "body2":"hello3",
+          "title1": "hello",
+          "body1": "hello1",
+          "title2": "hello2",
+          "body2": "hello3",
         }
       )
     }).then(resp => {
@@ -447,7 +457,11 @@ class AddPersonToPreject extends Component {
       console.log(error);
     })///fetch
   }
-
+  GoToMessages= (srcEmail,dstEmail)=> {
+    console.log('messege1')
+    this.props.GoToMessages(srcEmail,dstEmail);
+    // this.props.navigation.navigate('Messages')
+  }
   render() {
     return (
 
@@ -532,6 +546,7 @@ class AddPersonToPreject extends Component {
               :
               <KeyboardAwareScrollView style={{ backgroundColor: '#bfcfb2', marginTop: 30 }}>
                 <View style={{ width: '100%', justifyContent: 'center' }}>
+                  {console.log(this.state.added)}
                   {
 
                     this.state.added.map(name => (
@@ -540,7 +555,7 @@ class AddPersonToPreject extends Component {
                         key={name._id}
                         todo={name}
                         deleteTodo={this.deleteTodo}
-                        // OpenProfile={this.OpenProfile}
+                        OpenProfile={this.OpenProfile}
                         Flag={this.state.added1[this.state.added.indexOf(name)].Accepted}
                       />
                     ))
@@ -649,6 +664,23 @@ class AddPersonToPreject extends Component {
 
           </BottomSheet>
           : null}
+        {/*Profile for others Modal*/}
+        <Modal animationType='slide'
+          visible={this.state.ProfileForOthersModal}
+          onRequestClose={async () => {
+            this.setState({ ProfileForOthersModal: false })
+          }
+          }
+          style={[styles.ModalView]}>
+          <View style={[styles.MainView]}>
+
+            <ProfileForOthers
+              Email={this.state.ProfileForOthersEmail}
+              GuestEmail={this.state.Email}
+              GoToMessages={this.GoToMessages}
+            />
+          </View>
+        </Modal>
       </SafeAreaView>
     );
 

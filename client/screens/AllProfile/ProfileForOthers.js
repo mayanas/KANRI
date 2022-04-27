@@ -21,7 +21,9 @@ import {
   ToastAndroid,
   ScrollView,
   TouchableOpacity,
-  SafeAreaView
+  SafeAreaView,
+  Linking,
+  LogBox,
 } from 'react-native';
 
 import Loading from '../../Components/Loading';
@@ -34,16 +36,17 @@ import LinearGradient from 'react-native-linear-gradient';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { TextInput } from 'react-native-gesture-handler';
 
-import Icon from 'react-native-vector-icons/dist/FontAwesome';
-
+import Icon from 'react-native-vector-icons/dist/MaterialCommunityIcons';
+import moment from 'moment';
 
 import { serverLink } from '../serverLink';
-
+import ChatScreen from './ChatScreen';
+LogBox.ignoreLogs(['Require cycle:']);
 class ProfileForOthers extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      Email: "",
+      Email: this.props.Email,
       profileImage: '',
       NickName: '',
       Bio: "",
@@ -52,54 +55,61 @@ class ProfileForOthers extends Component {
       FullName: "",
       PhoneNumber: "",
       Country: "",
+      BirthDate: '',
+      Age: 0,
       loaded: false,
 
-      views: 1200,
+      // views: 1200,
       // userName:"sara_a",
       numProject: 20,
       followers: 1000,
       following: 2000,
 
-      GuestEmail: this.props.route.params.GuestEmail,
+      GuestEmail: this.props.GuestEmail,
+      GuestNickName: this.props.GuestNickName,
       followtext: "Follow",
       color: "#bc9855",
-      IsFollowed: false,
+      Projects: [],
+      ProjectsJoined: null,
+      ProjectsJoinedInfo: [],
+      DescModal: false,
+      ProjectDesc: '',
+      FollowEnable: true,
+      FollowingsList: null,
+      FollowersList: null,
+      Followed: false,
+      ChatScreenModal:false,
+
     }
-    this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
     this.phoneinput = React.createRef();
   }
 
 
-  UNSAFE_componentWillMount() {
-    BackHandler.addEventListener('hardwareBackPress', this.handleBackButtonClick);
-  }
-
-  componentWillUnmount() {
-    BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
-  }
-
-  handleBackButtonClick() {
-    // if(this.state.isModalVisible&&!this.state.Edited) {this.setState({isModalVisible:true});return true;}
-    // if (this.props.route.params.where === 'AddPersonToProject')
-      // this.props.navigation.navigate('Profile', { Email: this.props.route.params.GuestEmail });
-    // else this.props.navigation.navigate('Home', { Email: this.props.route.params.GuestEmail });
-    this.props.navigation.navigate('Home', { Email: this.props.route.params.GuestEmail });
-    return true;
-  }
-
-
-  async componentDidMount() {
+  async loadProfile() {
     await this.setState({
-      Email: this.props.route.params.Email,
-      GuestEmail: this.props.route.params.GuestEmail,
+      Email: this.props.Email,
+      GuestEmail: this.props.GuestEmail,
       loaded: false
     })
     await this.getInfo();
-    // await this.getProfileImage();
     await this.getUserInfo();
+    await this.getProjectsInfo();
+    await this.getProjectsJoined();
     if (this.state.InterestedIn.length != 0)
-      this.setState({ loaded: true, })
-    // console.log(this.state.BioUpdated)
+      this.setState({
+        loaded: true,
+        Age: moment().diff(this.state.BirthDate, 'years')
+      })
+    if (this.state.Followed) {
+      this.setState({ followtext: "Following", color: "#98a988" })
+    }
+    else {
+      this.setState({ followtext: "Follow", color: "#bc9855" })
+    }
+  }
+  async componentDidMount() {
+    if (this.state.Email === this.state.GuestEmail) this.setState({ FollowEnable: false })
+    await this.loadProfile();
 
   }
   async getInfo() {
@@ -127,7 +137,10 @@ class ProfileForOthers extends Component {
           followers: jsonresponse.Followers,
           following: jsonresponse.Following,
           numProject: jsonresponse.Projects,
-          views: jsonresponse.Views,
+          // views: jsonresponse.Views,
+          FollowingsList: jsonresponse.FollowingsList,
+          FollowersList: jsonresponse.FollowersList,
+          Followed: jsonresponse.Followed
         })
 
 
@@ -159,6 +172,7 @@ class ProfileForOthers extends Component {
           Country: jsonresponse.Country,
           PhoneNumber: jsonresponse.PhoneNumber,
           Password: jsonresponse.Password,
+          BirthDate: jsonresponse.BirthDate,
 
         })
 
@@ -169,7 +183,252 @@ class ProfileForOthers extends Component {
     });
 
   }
+  async getProjectsInfo() {
+    await fetch(serverLink + "/getProjectsInfo", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(
+        {
+          "Email": this.state.Email,
+        }
+      )
+    }).then(resp => {
+      return resp.json();
+    }).then(jsonresponse => {
+      if (jsonresponse !== "null") {
+        // console.log(jsonresponse)
+        this.setState({
+          Projects: jsonresponse
+        })
 
+      }
+
+    }).catch(error => {
+      console.log(error);
+    });
+
+  }
+  async getProjectsJoined() {
+    await fetch(serverLink + "/getProjectsJoined", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(
+        {
+          "Email": this.state.Email,
+        }
+      )
+    }).then(resp => {
+      return resp.json();
+    }).then(jsonresponse => {
+      if (jsonresponse !== "null") {
+        this.setState({
+          ProjectsJoined: jsonresponse,
+          ProjectsJoinedInfo: []
+        })
+        jsonresponse.map(async item => {
+          await this.getProjectInfoJoined(item.ProjectID)
+        })
+        // console.log(this.state.ProjectsJoined)
+
+      }
+
+    }).catch(error => {
+      console.log(error);
+    });
+  }
+  async getProjectInfoJoined(ProjectID) {
+    await fetch(serverLink + "/getProjectInfoJoined", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(
+        {
+          // "Email": this.state.Email,
+          "ProjectID": ProjectID,
+        }
+      )
+    }).then(resp => {
+      return resp.json();
+    }).then(jsonresponse => {
+      console.log(jsonresponse.ProjectName)
+      if (jsonresponse !== "null") {
+        this.setState({
+          ProjectsJoinedInfo: [...this.state.ProjectsJoinedInfo, jsonresponse]
+        })
+        //  console.log(this.state.ProjectID)
+
+      }
+
+    }).catch(error => {
+      console.log(error);
+    });
+  }
+  funcProjects = ({ item, index }) => {
+
+    return (
+      <View style={{
+        height: '90%',
+        width: 250,
+        backgroundColor: '#98a988',
+        margin: 15,
+        // paddingHorizontal:15,
+        borderRadius: 15,
+        overflow: 'hidden',
+        // justifyContent:'center',
+        alignItems: 'center'
+      }}>
+
+        <View style={{
+          width: '100%',
+          height: '20%', alignItems: 'center', justifyContent: 'center', marginTop: 5,
+        }}>
+          <Text style={[styles.text, { fontSize: 20 }]}>{item.ProjectName}</Text>
+        </View>
+
+        <View style={{ width: '100%', height: '50%', paddingHorizontal: 5, }}>
+          <Text style={styles.text}>Project Mission </Text>
+          <Text style={styles.textinterest}>" {item.ProjectMission} "</Text>
+        </View>
+
+        <View style={{
+          width: '100%', height: '30%',
+          flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 2,
+        }}>
+          <TouchableOpacity style={{
+            backgroundColor: '#bc9855', width: '30%', height: '50%',
+            alignItems: 'center', justifyContent: 'center', borderRadius: 15, marginHorizontal: '2.5%',
+            borderWidth: 0.5, flexDirection: 'row'
+          }}
+            onPress={async () => {
+              /////////////////////////request to join///////////////////////
+              
+            }}>
+            <Icon
+              name="plus-circle-outline"
+              size={15}
+              color={'black'} />
+            <Text style={styles.text1}>Join</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={{
+            backgroundColor: '#bc9855', width: '30%', height: '50%',
+            alignItems: 'center', justifyContent: 'center', borderRadius: 15, marginHorizontal: '2.5%',
+            borderWidth: 0.5, flexDirection: 'row'
+          }}
+            onPress={async () => {
+              /////////////////////////show desc///////////////////////
+              // console.log(item.ProjectDescription)
+              await this.setState({ ProjectDesc: item.ProjectDescription })
+              this.setState({ DescModal: true })
+            }}>
+            <Icon
+              name="information-outline"
+              size={15}
+              color={'black'} />
+            <Text style={styles.text1}>Info</Text>
+          </TouchableOpacity>
+
+        </View>
+
+
+      </View>
+
+    )
+
+
+  }
+  funcProjectsJoined = ({ item, index }) => {
+
+    return (
+      <View style={{
+        height: '90%',
+        width: 250,
+        backgroundColor: '#98a988',
+        margin: 15,
+        // paddingHorizontal:15,
+        borderRadius: 15,
+        overflow: 'hidden',
+        // justifyContent:'center',
+        alignItems: 'center'
+      }}>
+
+        <View style={{
+          width: '100%',
+          height: '20%', alignItems: 'center', justifyContent: 'center', marginTop: 5,
+        }}>
+          <Text style={[styles.text, { fontSize: 20 }]}>{item.ProjectName}</Text>
+        </View>
+
+        <View style={{ width: '100%', height: '50%', paddingHorizontal: 5, }}>
+          <Text style={styles.text}>Project Mission </Text>
+          <Text style={styles.textinterest}>" {item.ProjectMission} "</Text>
+        </View>
+
+        <View style={{
+          width: '100%', height: '30%',
+          flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 2,
+        }}>
+          <TouchableOpacity style={{
+            backgroundColor: '#bc9855', width: '30%', height: '50%',
+            alignItems: 'center', justifyContent: 'center', borderRadius: 15, marginHorizontal: '2.5%',
+            borderWidth: 0.5, flexDirection: 'row'
+          }}
+            onPress={async () => {
+              /////////////////////////request to join///////////////////////
+            }}>
+            <Icon
+              name="plus-circle-outline"
+              size={15}
+              color={'black'} />
+            <Text style={styles.text1}>Join</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={{
+            backgroundColor: '#bc9855', width: '30%', height: '50%',
+            alignItems: 'center', justifyContent: 'center', borderRadius: 15, marginHorizontal: '2.5%',
+            borderWidth: 0.5, flexDirection: 'row'
+          }}
+            onPress={async () => {
+              /////////////////////////show desc///////////////////////
+              // console.log(item.ProjectDescription)
+              await this.setState({ ProjectDesc: item.ProjectDescription })
+              this.setState({ DescModal: true })
+            }}>
+            <Icon
+              name="information-outline"
+              size={15}
+              color={'black'} />
+            <Text style={styles.text1}>Info</Text>
+          </TouchableOpacity>
+
+        </View>
+
+      </View>
+
+    )
+
+
+  }
+  call = () => {
+    console.log("+++++++++callNumber ", this.state.PhoneNumber);
+    let phoneNumber = `tel:${this.state.PhoneNumber}`;
+
+
+    Linking.canOpenURL(phoneNumber)
+      .then(supported => {
+        if (!supported) {
+          Alert.alert("Number is not available");
+        } else {
+          return Linking.openURL(phoneNumber);
+        }
+      })
+      .catch(err => console.log(err));
+  };
 
   showAlert = (title, field) =>
     Alert.alert(
@@ -228,16 +487,65 @@ class ProfileForOthers extends Component {
   }
 
 
-  FollowButtonPressed = () => {
+  Follow = async () => {
+    await fetch(serverLink + "/Follow", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(
+        {
+          "Email": this.state.Email,
+          "GuestEmail": this.state.GuestEmail,
+          "Followers": this.state.followers,
+          "Followed": this.state.Followed,
+          "FollowersList": this.state.FollowersList,
+        }
+      )
+    }).then(resp => {
+      return resp.json();
+    }).then(jsonresponse => {
+      if (jsonresponse !== "null") {
+        console.log(jsonresponse)
+
+      }
+
+    }).catch(error => {
+      console.log(error);
+    });
+  }
+  FollowButtonPressed = async () => {
     console.log('follow')
+   await this.setState({
+      color: "#98a988",
+      followtext: "Following",
+      Followed:true,
+      FollowersList:[...this.state.FollowersList,this.state.GuestEmail],
+      followers:this.state.followers+1,
+    });
+    await this.Follow()
+    console.log(this.state.FollowersList)
+    /////notification /////////////////////////////////////////////////////////////
   }
-  UnFollowButtonPressed = () => {
+  UnFollowButtonPressed = async () => {
     console.log('unfollow')
+    await this.setState({
+      color: "#bc9855",
+      followtext: "Follow",
+      Followed:false,
+      followers:this.state.followers-1,
+    });
+    const items = await this.state.FollowersList.filter(item => item !== this.state.GuestEmail);
+    await this.setState({ FollowersList: items });
+    console.log(this.state.FollowersList)
+    await this.Follow()
   }
-  MessegeButtonPressed = () => {
+  MessegeButtonPressed = async () => {
     console.log('messege')
+    this.setState({ChatScreenModal:true})
   }
   CallButtonPressed = () => {
+    this.call()
     console.log('call')
   }
 
@@ -247,16 +555,13 @@ class ProfileForOthers extends Component {
 
     return (
 
-
-
-
       <SafeAreaView style={styles.MainView}>
         {!this.state.loaded ? <Loading /> :
 
           <View style={[styles.MainView, { width: '100%', height: '100%' }]}>
 
             <View style={{ width: '100%' }}>
-              <View style={{ paddingHorizontal: 10, paddingTop: 10 }}>
+              <View style={{ paddingHorizontal: 0, paddingTop: 10 }}>
                 <View
                   style={{
                     flexDirection: 'row',
@@ -267,6 +572,7 @@ class ProfileForOthers extends Component {
                     style={{
                       flexDirection: 'row',
                       alignItems: 'center',
+                      paddingHorizontal: 10,
                     }}>
                     <Text
                       style={{
@@ -320,7 +626,7 @@ class ProfileForOthers extends Component {
                     </View>
                     <View style={{ alignItems: 'center', paddingHorizontal: 10 }}>
                       <Text style={{ fontWeight: 'bold', fontSize: 18, color: "black", }}>{this.state.following}</Text>
-                      <Text style={styles.text}>Following</Text>
+                      <Text style={styles.text}>Followings</Text>
                     </View>
                   </View>
 
@@ -335,16 +641,22 @@ class ProfileForOthers extends Component {
                       opacity: 0.6,
                       marginRight: 10
                     }}>
-                    <Icon name='eye' color="black" size={10} />
-                    {this.state.views}
+                    {/* <Icon name='eye' color="black" size={10} />
+                    {this.state.views} */}
                   </Text>
 
                 </View>
                 <View style={{ width: '100%', height: 150, paddingHorizontal: 10, }}>
-                  <Text
-                    style={styles.text}>
-                    {this.state.NickName}
-                  </Text>
+                  <View style={{ flexDirection: 'row', paddingRight: 10 }}>
+                    <Text
+                      style={[styles.text, { paddingRight: 10 }]}>
+                      {this.state.NickName}
+                    </Text>
+                    <Text
+                      style={styles.text}>
+                      ( {this.state.Age} years old )
+                    </Text>
+                  </View>
                   <Text style={styles.text}>Qualification Degree: {this.state.QualificationDegree}</Text>
 
                   <ScrollView
@@ -373,95 +685,103 @@ class ProfileForOthers extends Component {
                     flexDirection: 'row',
                     paddingVertical: 5,
                   }}>
-                  <TouchableOpacity
-                    onPress={() => {
-                      if (this.state.color == "#98a988") {
-                        this.setState({
-                          color: "#bc9855",
-                          followtext: "Follow"
-                        })
-                        this.UnFollowButtonPressed()
+                  {/* {this.state.FollowEnable ? */}
+                    <TouchableOpacity
+                      disabled={!this.state.FollowEnable}
+                      onPress={async () => {
+                        if (this.state.Followed) {
+                          await this.UnFollowButtonPressed();
+                        }
+                        else {
+                          await this.FollowButtonPressed();
+                        }
+                       
                       }
-                      else {
-                        this.setState({
-                          color: "#98a988",
-                          followtext: "Following"
-                        });
-                        this.FollowButtonPressed()
-                      }
-                    }
 
-                    }
-                    style={{
-                      width: '33%',
-                      paddingHorizontal: 1,
-                    }}>
-                    <View
+                      }
                       style={{
-                        height: 35,
-                        borderRadius: 5,
-                        borderColor: 'black',
-                        backgroundColor: this.state.color,
-                        borderWidth: 1,
-                        justifyContent: 'center',
-                        alignItems: 'center',
+                        width: '33%',
+                        paddingHorizontal: 4,
                       }}>
-                      <Text
-                        style={styles.text}>
-                        {this.state.followtext}
-                      </Text>
-                    </View>
-                  </TouchableOpacity>
+                      <View
+                        style={{
+                          height: 35,
+                          borderRadius: 5,
+                          borderColor: 'black',
+                          backgroundColor: this.state.color,
+                          borderWidth: 1,
+                          justifyContent: 'center',
+                          alignItems: 'center',
+                        }}>
+                        <Text
+                          style={styles.text}>
+                          {this.state.followtext}
+                        </Text>
+                      </View>
+                    </TouchableOpacity> 
+                    {/* : */}
+                    {/* <View style={{ width: '18%', paddingHorizontal: 4 }}></View> */}
+                    {/* } */}
                   <TouchableOpacity
-                    onPress={() => this.MessegeButtonPressed()}
+                    onPress={async () => await this.MessegeButtonPressed()}
                     style={{
                       width: '34%',
-                      paddingHorizontal: 1,
+                      paddingHorizontal: 4,
                     }}>
                     <View
                       style={styles.sview}>
-                      <Text
-                        style={styles.text}>
-                        Message
-                      </Text>
+                      <View style={{ width: '80%', justifyContent: 'center', alignItems: 'center' }}>
+                        <Text style={styles.text}>Message</Text>
+                      </View>
+                      <View style={{ width: '20%', justifyContent: 'flex-end', }}>
+                        <Icon
+                          name="message"
+                          size={15}
+                          color={'black'} />
+                      </View>
                     </View>
                   </TouchableOpacity>
                   <TouchableOpacity
                     onPress={() => this.CallButtonPressed()}
                     style={{
                       width: '33%',
-                      paddingHorizontal: 1,
+                      paddingHorizontal: 4,
                     }}>
                     <View
                       style={styles.sview}>
-                      <Text
-                        style={styles.text}
-                      >
-                        Call
-                      </Text>
+                      <View style={{ width: '80%', justifyContent: 'center', alignItems: 'center' }}>
+                        <Text style={styles.text}>Call</Text>
+                      </View>
+
+                      <View style={{ width: '20%', justifyContent: 'flex-end', }}>
+                        <Icon
+                          name="phone"
+                          size={15}
+                          color={'black'} />
+                      </View>
                     </View>
                   </TouchableOpacity>
                 </View>
-
-
+                <LinearGradient
+                  colors={['#bfcfb2', '#98a988', '#bfcfb2']}
+                  style={{
+                    left: 0,
+                    right: 0,
+                    height: 10,
+                    width: '100%',
+                    marginTop: 5,
+                  }}
+                ></LinearGradient>
+                
                 {/* {console.log(ProfileOwenerDetails.props)} */}
 
               </View>
-              <LinearGradient
-                colors={['#bfcfb2', '#98a988', '#bfcfb2']}
-                style={{
-                  left: 0,
-                  right: 0,
-                  height: 10,
-                  width: '100%',
-                  marginTop: 5,
-                }}
-              ></LinearGradient>
-
-
+              
+              
             </View>
-
-            <SafeAreaView style={{ height: '100%',width:'100%', flex: 1 }}>
+            
+            <SafeAreaView style={{ height: '100%', width: '100%', flex: 1 }}>
+              
               <ScrollView vertical showsVerticalScrollIndicator={false} style={{ height: '100%' }}>
                 {/* InterestedIn Cards */}
                 <View style={{ width: '100%', height: 320, }}>
@@ -478,75 +798,138 @@ class ProfileForOthers extends Component {
                     renderItem={this.func}
 
                   />
-                 
+
                 </View>
                 <LinearGradient
-                    colors={['#bfcfb2', '#98a988', '#bfcfb2']}
-                    style={{
-                      left: 0,
-                      right: 0,
-                      height: 10,
-                      width: '100%',
-                      marginTop: 5,
-                    }}
-                  ></LinearGradient>
-
+                  colors={['#bfcfb2', '#98a988', '#bfcfb2']}
+                  style={{
+                    left: 0,
+                    right: 0,
+                    height: 10,
+                    width: '100%',
+                    marginTop: 5,
+                  }}
+                ></LinearGradient>
+                {/* Projects created */}
                 <View style={{ width: '100%', height: 320, }}>
-                  <Text style={[styles.text, { paddingHorizontal: 20 }]}>Interested In</Text>
+                  <Text style={[styles.text, { paddingHorizontal: 20 }]}>Created Projects</Text>
                   <FlatList
 
                     showsHorizontalScrollIndicator={false}
                     horizontal
                     width={'100%'}
                     height={'100%'}
-                    keyExtractor={(item) => item.id.toString()}
-                    data={this.state.InterestedIn}
-                    renderItem={this.func}
+                    keyExtractor={(item) => item._id.toString()}
+                    data={this.state.Projects}
+                    renderItem={this.funcProjects}
 
                   />
-                 
+
                 </View>
                 <LinearGradient
-                    colors={['#bfcfb2', '#98a988', '#bfcfb2']}
-                    style={{
-                      left: 0,
-                      right: 0,
-                      height: 10,
-                      width: '100%',
-                      marginTop: 5,
-                    }}
-                  ></LinearGradient>
+                  colors={['#bfcfb2', '#98a988', '#bfcfb2']}
+                  style={{
+                    left: 0,
+                    right: 0,
+                    height: 10,
+                    width: '100%',
+                    marginTop: 5,
+                  }}
+                ></LinearGradient>
+                {/* Projects joined */}
                 <View style={{ width: '100%', height: 320, }}>
-                  <Text style={[styles.text, { paddingHorizontal: 20 }]}>Interested In</Text>
+                  <Text style={[styles.text, { paddingHorizontal: 20 }]}>Joined Projects</Text>
                   <FlatList
 
                     showsHorizontalScrollIndicator={false}
                     horizontal
                     width={'100%'}
                     height={'100%'}
-                    keyExtractor={(item) => item.id.toString()}
-                    data={this.state.InterestedIn}
-                    renderItem={this.func}
+                    keyExtractor={(item) => item._id.toString()}
+                    data={this.state.ProjectsJoinedInfo}
+                    renderItem={this.funcProjectsJoined}
 
                   />
-                  
+
                 </View>
                 <LinearGradient
-                    colors={['#bfcfb2', '#98a988', '#bfcfb2']}
-                    style={{
-                      left: 0,
-                      right: 0,
-                      height: 10,
-                      width: '100%',
-                      marginTop: 5,
-                    }}
-                  ></LinearGradient>
+                  colors={['#bfcfb2', '#98a988', '#bfcfb2']}
+                  style={{
+                    left: 0,
+                    right: 0,
+                    height: 10,
+                    width: '100%',
+                    marginTop: 5,
+                  }}
+                ></LinearGradient>
               </ScrollView>
             </SafeAreaView>
 
           </View>
 
         }
+        <Modal animationType='slide'
+          visible={this.state.DescModal}
+          onRequestClose={() => { this.setState({ DescModal: false }) }
+          }
+          style={styles.ModalView}>
+
+          <View style={styles.modalS}>
+            <View style={{ flexDirection: 'row', marginBottom: 10 }}>
+              <View style={{ width: '20%', alignItems: 'flex-start' }}>
+
+              </View>
+              <View style={{ width: '60%', alignItems: 'center', justifyContent: 'center' }}>
+                <Text style={styles.textAddress}>Description</Text>
+              </View>
+              <View style={{ width: '20%' }}>
+                <Text></Text>
+              </View>
+
+            </View>
+            <LinearGradient
+              colors={['#bfcfb2', '#98a988', '#bfcfb2']}
+              style={{
+                left: 0,
+                right: 0,
+                height: 10,
+                width: '100%',
+                marginTop: 5,
+              }}
+            ></LinearGradient>
+            <KeyboardAwareScrollView style={{ width: '100%', marginBottom: 5 }}>
+
+              <View style={[{ height: '100%', flexDirection: 'column', width: '100%', marginTop: 20 }]}>
+                <Text style={{ fontFamily: 'SairaSemiCondensed-Regular', fontSize: 14, color: 'black' }}>
+                  {this.state.ProjectDesc}
+                </Text>
+              </View>
+            </KeyboardAwareScrollView>
+          </View>
+        </Modal>
+
+
+        <Modal animationType='slide'
+          visible={this.state.ChatScreenModal}
+          onRequestClose={() => { this.setState({ ChatScreenModal: false }) }
+          }
+          style={styles.ModalView}>
+
+          <View style={{backgroundColor:"#bfcfb2",width:'100%',height:"100%"}}>
+            <View style={{width:'100%',height:50,backgroundColor:'#bc9855',justifyContent:'center',
+             alignItems:'flex-start',paddingLeft:40}}>
+              <Text style={{fontFamily:'SairaSemiCondensed-Bold',fontSize:18,color:'black'}}>{this.state.NickName}</Text>
+            </View>
+            <ChatScreen 
+            srcEmail={this.state.GuestEmail} 
+            dstEmail={this.state.Email}
+            srcNickName={this.state.GuestNickName}
+            dstNickName={this.state.NickName}
+            />
+          </View>
+        </Modal>
+
+        
       </SafeAreaView>
     );
   }
@@ -563,7 +946,31 @@ const styles = StyleSheet.create({
     //  justifyContent: 'center',
     backgroundColor: '#bfcfb2',
   },
-
+  ModalView: {
+    flex: 1,
+    height: '100%',
+    width: '100%',
+    alignContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#bfcfb2',
+  },
+  modalS: {
+    alignItems: "center",
+    alignSelf: "center",
+    display: 'flex',
+    backgroundColor: '#bfcfb2',
+    height: "100%",
+    width: '100%',
+    //  justifyContent:'center'
+    padding: 20
+  },
+  textAddress: {
+    fontSize: 20,
+    letterSpacing: 1,
+    opacity: 0.8,
+    color: "black",
+    fontFamily: 'SairaSemiCondensed-Bold'
+  },
 
   button: {
 
@@ -580,6 +987,7 @@ const styles = StyleSheet.create({
 
   text: {
     // fontWeight: 'bold',
+    // textAlign:'center',
     fontSize: 14,
     letterSpacing: 1,
     opacity: 0.8,
@@ -616,9 +1024,19 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    flexDirection: 'row'
   },
 
+  text1: {
+    // fontWeight: 'bold',
+    fontSize: 12,
+    letterSpacing: 1,
+    opacity: 0.8,
+    color: "black",
+    fontFamily: 'SairaSemiCondensed-Regular',
+    marginLeft: 4
 
+  },
 
 });
 

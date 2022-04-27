@@ -64,14 +64,7 @@ componentWillUnmount() {
     BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
 }
 handleBackButtonClick() {
-  if(!this.state.dialogVisible){
-    // if(this.state.where==='login')
-    this.props.navigation.navigate('Profile',{Email:this.state.Email})
-    // else if(this.state.where==='profile')
-    // this.props.navigation.navigate('Profile',{Email:this.state.Email})
-  }
-
-  else{
+  if(this.state.dialogVisible){
     this.setState({
       secure: true,
       passwordValue:"",
@@ -81,7 +74,16 @@ handleBackButtonClick() {
       confirmpasswordValue:"",
     PasswordEncoded:"",
     dialogVisible:false,}); 
-   }
+    
+  }
+  else{
+    this.props.navigation.goBack(null)
+    // if(this.state.where==='login')
+    // this.props.navigation.navigate('Profile',{Email:this.state.Email})
+    // else if(this.state.where==='profile')
+    // this.props.navigation.navigate('Profile',{Email:this.state.Email})
+  }
+
       return true;
 }
 

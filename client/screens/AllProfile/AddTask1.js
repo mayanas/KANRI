@@ -1,37 +1,15 @@
 
-import React, { Component, useState } from 'react';
-import Ionicons from 'react-native-vector-icons/Ionicons';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
-import DateTimePickerModal from "react-native-modal-datetime-picker";
-import moment from "moment";
+import React, { Component } from 'react';
 import Icon from "react-native-vector-icons/MaterialIcons";
 import {
     StyleSheet,
     Text,
     View,
-    TextInput,
-    ToastAndroid,
-    Animated,
     TouchableOpacity,
     FlatList,
 } from "react-native";
-import {
-    TouchableRipple,
-    Portal,
-    Dialog,
-    Provider,
-    Button,
-    Modal,
-    TextInput as PaperInput,
-    Chip,
-    Switch,
-    RadioButton,
-} from "react-native-paper";
-import { Appbar } from "react-native-paper";
-import SelectDropdown from 'react-native-select-dropdown';
+
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { isSymbolObject } from 'util/types';
-import AddTask from './Projects/AddTask';
 import { serverLink } from '../serverLink';
 class AddTask1 extends Component {
     constructor(props) {
@@ -43,7 +21,6 @@ class AddTask1 extends Component {
         tasks: null
     }
     componentDidMount() {
-        // console.log("hello")
         this.setState({ tasks: this.props.loadTasks })
     }
 
@@ -67,20 +44,20 @@ class AddTask1 extends Component {
     }
 
     update = async (item) => {
-        if (!item.Approved) {
+        // if (!item.Approved) {
             let newMarkers = this.state.tasks.map(el => (
                 el._id === item._id ? {
                     Content: item.Content, DeadLine: item.DeadLine, MemberEmail: item.MemberEmail, Priority: item.Priority,
                     ProjectID: item.ProjectID,
-                    StartDate: item.StartDate, Title: item.Title, _id: item._id, Approved: true
+                    StartDate: item.StartDate, Title: item.Title, _id: item._id, Approved: !item.Approved
                 } : el
             ))
             this.setState({ tasks: newMarkers });
-            await this.updateApproved(item._id);
-        }
+            await this.updateApproved(item._id,!item.Approved);
+        // }
 
     }
-    async updateApproved(id) {
+    async updateApproved(id,approved) {
 
         await fetch(serverLink + "/updateApproved", {
             method: "POST",
@@ -91,6 +68,7 @@ class AddTask1 extends Component {
                 {
 
                     "id": id,
+                    "Approved": approved,
                 }
             )
         }).then(response => { return response.json() }).then(resp => {
@@ -104,15 +82,7 @@ class AddTask1 extends Component {
     ItemView = ({ item }) => {
 
         return (
-            // Flat List Item
-            // <View style={{
-            //     flexDirection: "row",
-            //     width: '80%',
-            //     // justifyContent:"center",
-            //     alignItems:"center",
-
-
-            // }}>
+  
             <View style={styles.listTile}>
                 <View style={styles.leading}>
                     <Icon

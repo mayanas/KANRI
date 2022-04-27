@@ -28,6 +28,7 @@ import ProfileForOthers from './screens/AllProfile/ProfileForOthers';
 import Project from './screens/AllProfile/Projects/Project';
 import AddPersonToPreject from './screens/AllProfile/Projects/AddPersonToProject';
 import AddTask from './screens/AllProfile/Projects/AddTask';
+import ChatScreen from './screens/AllProfile/ChatScreen';
 LogBox.ignoreLogs([
   "[react-native-gesture-handler] Seems like you\'re using an old API with gesture components, check out new Gestures system!",
 ]);
@@ -59,6 +60,7 @@ const Stack = createNativeStackNavigator();
           <Stack.Screen name="profileForOthers" component={ProfileForOthers}></Stack.Screen>
           <Stack.Screen name="Project" component={Project}></Stack.Screen>
           <Stack.Screen name="AddPersonToProject" component={AddPersonToPreject}></Stack.Screen>
+          <Stack.Screen name="ChatScreen" component={ChatScreen}></Stack.Screen>
           <Stack.Screen name="AddTask" component={AddTask}></Stack.Screen>
       </Stack.Navigator>
       </NavigationContainer>

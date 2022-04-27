@@ -72,7 +72,7 @@ app.post("/addUser", (req, res) => {
     PhoneNumber: req.body.PhoneNumber,
     Email: req.body.Email,
     Password: req.body.Password,
-    Token:'',
+    Token: '',
   };
   users.find({ Email: req.body.Email }, { projection: { _id: 1 } }).toArray(function (err, result) {
     if (err) throw err;
@@ -296,7 +296,7 @@ app.post("/getData", (req, res) => {
 
   const database = client.db('KANRI');
   const users = database.collection('ProfileInfo');
-  users.find({}, { projection: { _id: 1, NickName: 1, Email: 1 ,InterestedIn:1} }).toArray(function (err, result) {
+  users.find({}, { projection: { _id: 1, NickName: 1, Email: 1, InterestedIn: 1 } }).toArray(function (err, result) {
     if (err) throw err;
     if (result.length == 0) {
       console.log("no Data")
@@ -320,11 +320,20 @@ app.post("/saveProjectInfo", (req, res) => {
     ProjectMission: req.body.ProjectMission,
     ProjectDescription: req.body.ProjectDescription,
     ProjectBudget: req.body.ProjectBudget,
+    RemainingBudget: req.body.RemainingBudget,
     DeadLine: req.body.DeadLine,
+    MeetingLink: "",
+    CreationTime: req.body.CreationTime,
   };
   const user = users.insertOne(query, function (err, result) {
     if (err) throw err;
     // console.log(result.ops._id);
+    var myquery = { Email: req.body.Email };
+    var newvalues = { $set: { Projects: req.body.Projects } };
+    database.collection('ProfileInfo').updateOne(myquery, newvalues, function (err, result) {
+      if (err) throw err;
+      // res.send(JSON.stringify("Phone Number updated"))
+    });
     res.send(JSON.stringify(result));
   });
 });
@@ -332,7 +341,7 @@ app.post("/getProjectsInfo", (req, res) => {
   const database = client.db('KANRI');
   const users = database.collection('Projects');
 
-  users.find({ Email: req.body.Email }, { projection: { _id: 1, ProjectName: 1, ProjectMission: 1 } }).toArray(function (err, result) {
+  users.find({ Email: req.body.Email }, { projection: { _id: 1, ProjectName: 1, ProjectMission: 1, ProjectDescription: 1, MeetingLink: 1 } }).toArray(function (err, result) {
     if (err) throw err;
     if (result.length == 0) {
       res.send(JSON.stringify("null"));
@@ -443,6 +452,14 @@ app.post("/deleteTeamMember", (req, res) => {
   };
   const user = users.deleteOne(query, function (err, obj) {
     if (err) throw err;
+    const query1 = {
+      ProjectID: req.body.ProjectID,
+      MemberEmail: req.body.MemberEmail
+    };
+    console.log(req.body.MemberEmail)
+    database.collection('ProjectTasks').deleteOne(query1, function (err, obj) {
+      if (err) throw err;
+    })
     console.log("1 document deleted");
     res.send(JSON.stringify(obj));
   });
@@ -452,7 +469,7 @@ app.post("/deleteTeamMember", (req, res) => {
 app.post("/getTeamMembers", (req, res) => {
   const database = client.db('KANRI');
   const users = database.collection('ProjectTeamMembers');
-  users.find({ ProjectID: req.body.ProjectID,Accepted:true }, { projection: { _id: 1, ProjectID: 1, MemberID: 1, Accepted: 1 } }).toArray(function (err, result) {
+  users.find({ ProjectID: req.body.ProjectID, Accepted: true }, { projection: { _id: 1, ProjectID: 1, MemberID: 1, Accepted: 1 } }).toArray(function (err, result) {
     if (err) throw err;
     if (result.length == 0) {
       console.log("gg")
@@ -468,8 +485,12 @@ app.post("/getTeamMembers", (req, res) => {
 app.post("/loadMembers", (req, res) => {
   const database = client.db('KANRI');
   const users = database.collection('ProfileInfo');
-  users.find({_id: ObjectId(req.body.MemberID) }, { projection: { _id: 1, NickName: 1, QualificationDegree: 1,
-     Email: 1 } }).toArray(function (err, result) {
+  users.find({ _id: ObjectId(req.body.MemberID) }, {
+    projection: {
+      _id: 1, NickName: 1, QualificationDegree: 1,
+      Email: 1
+    }
+  }).toArray(function (err, result) {
     if (err) throw err;
     if (result.length == 0) {
       console.log("gg")
@@ -485,7 +506,7 @@ app.post("/loadMembers", (req, res) => {
 app.post("/getPhoneNumber", (req, res) => {
   const database = client.db('KANRI');
   const users = database.collection('users');
-  users.findOne({ Email: req.body.Email },  { projection: { _id:0, PhoneNumber:1}},function (err, result) {
+  users.findOne({ Email: req.body.Email }, { projection: { _id: 0, PhoneNumber: 1 } }, function (err, result) {
     if (err) throw err;
     if (result == null) res.send(JSON.stringify("null"));
     else {
@@ -495,20 +516,33 @@ app.post("/getPhoneNumber", (req, res) => {
 
   });
 });
+app.post("/getNickName", (req, res) => {
+  const database = client.db('KANRI');
+  const users = database.collection('ProfileInfo');
+  users.findOne({ Email: req.body.Email }, { projection: { _id: 0, NickName: 1 } }, function (err, result) {
+    if (err) throw err;
+    if (result == null) res.send(JSON.stringify("null"));
+    else {
+      // console.log(result.Password);
+      res.send(JSON.stringify(result.NickName));
+    }
 
+  });
+});
 app.post("/AddTask", (req, res) => {
   const database = client.db('KANRI');
   const users = database.collection('ProjectTasks');
   const query = {
     ProjectID: req.body.ProjectID,
     MemberEmail: req.body.MemberEmail,
-    Title:req.body.Title,
-    StartDate:req.body.StartDate,
-    DeadLine:req.body.DeadLine,
-    Content:req.body.Content,
-    Priority:req.body.Priority,
-    Approved:false,
-    Status:"Not started yet",
+    Title: req.body.Title,
+    StartDate: req.body.StartDate,
+    DeadLine: req.body.DeadLine,
+    Content: req.body.Content,
+    Priority: req.body.Priority,
+    Approved: false,
+    Status: "Not started yet",
+    Budget: "0",
   };
   const user = users.insertOne(query, function (err, result) {
     if (err) throw err;
@@ -520,7 +554,7 @@ app.post("/loadTasks", (req, res) => {
   const database = client.db('KANRI');
   const users = database.collection('ProjectTasks');
   console.log(req.body.ProjectID)
-  users.find({ProjectID: req.body.ProjectID}).toArray(function (err, result) {
+  users.find({ ProjectID: req.body.ProjectID }).toArray(function (err, result) {
     if (err) throw err;
     if (result.length == 0) {
       // console.log("gg")
@@ -537,7 +571,7 @@ app.post("/updateApproved", (req, res) => {
   const users = database.collection('ProjectTasks');
   // console.log(req.body.Mission)
   var myquery = { _id: ObjectId(req.body.id) };
-  var newvalues = { $set: { Approved: true} };
+  var newvalues = { $set: { Approved: req.body.Approved } };
   users.updateOne(myquery, newvalues, function (err, result) {
     if (err) throw err;
     res.send(JSON.stringify("Approved updated"))
@@ -548,15 +582,18 @@ app.post("/updateTask", (req, res) => {
   const users = database.collection('ProjectTasks');
   // console.log(req.body.Mission)
   var myquery = { _id: ObjectId(req.body.TaskId) };
-  var newvalues = { $set: { 
-    MemberEmail:req.body.MemberEmail,
-          Title:req.body.Title,
-          StartDate: req.body.StartDate,
-          DeadLine:req.body.DeadLine,
-          Content: req.body.Content,
-          Priority:req.body.Priority,
-    
-    Approved: false} };
+  var newvalues = {
+    $set: {
+      MemberEmail: req.body.MemberEmail,
+      Title: req.body.Title,
+      StartDate: req.body.StartDate,
+      DeadLine: req.body.DeadLine,
+      Content: req.body.Content,
+      Priority: req.body.Priority,
+
+      Approved: false
+    }
+  };
   users.updateOne(myquery, newvalues, function (err, result) {
     if (err) throw err;
     res.send(JSON.stringify("Approved updated"))
@@ -567,7 +604,7 @@ app.post("/DeleteTask", (req, res) => {
   const database = client.db('KANRI');
   const users = database.collection('ProjectTasks');
   const query = {
-    _id: ObjectId (req.body.id),
+    _id: ObjectId(req.body.id),
 
   };
   console.log(req.body.id)
@@ -578,6 +615,194 @@ app.post("/DeleteTask", (req, res) => {
   });
 
 });
+app.post("/getProjectsJoined", (req, res) => {
+  const database = client.db('KANRI');
+  const users = database.collection('ProjectTasks');
+
+  users.find({ MemberEmail: req.body.Email }).toArray(function (err, result) {
+    if (err) throw err;
+    if (result.length == 0) {
+      res.send(JSON.stringify("null"));
+    }
+    else {
+      // console.log(result);
+      res.send(JSON.stringify(result));
+    }
+  });
+})
+
+app.post("/getProjectInfoJoined", (req, res) => {
+  const database = client.db('KANRI');
+  const users = database.collection('Projects');
+
+  users.findOne({ _id: ObjectId(req.body.ProjectID) }, function (err, result) {
+    if (err) throw err;
+    if (result == null) res.send(JSON.stringify("null"));
+    else {
+      res.send(JSON.stringify(result));
+    }
+
+  });
+
+})
+
+app.post("/deleteFromProjects", (req, res) => {
+  // console.log(req.body.Email)
+  const database = client.db('KANRI');
+  const users = database.collection('Projects');
+  const query = {
+    _id: ObjectId(req.body.ProjectID),
+
+  };
+
+  const user = users.deleteOne(query, function (err, obj) {
+    if (err) throw err;
+    var query1 = {
+      Email: req.body.Email,
+    }
+    console.log(req.body.Email);
+    var newvalues = { $set: { Projects: req.body.Projects - 1 } }
+    database.collection('ProfileInfo').updateOne(query1, newvalues, function (err, result) {
+      if (err) throw err;
+    })
+    console.log("project document deleted");
+    res.send(JSON.stringify(obj));
+  });
+
+});
+
+app.post("/deleteFromProjectsTasks", (req, res) => {
+  // console.log(req.body.Email)
+  const database = client.db('KANRI');
+  const users = database.collection('ProjectTasks');
+  const query = {
+    ProjectID: req.body.ProjectID,
+
+  };
+  console.log(req.body.id)
+  const user = users.deleteMany(query, function (err, obj) {
+    if (err) throw err;
+    console.log("project tasks document deleted");
+    res.send(JSON.stringify(obj));
+  });
+
+});
+
+app.post("/deleteFromProjectsTeamMembers", (req, res) => {
+  // console.log(req.body.Email)
+  const database = client.db('KANRI');
+  const users = database.collection('ProjectTeamMembers');
+  const query = {
+    ProjectID: req.body.ProjectID,
+
+  };
+  console.log(req.body.id)
+  const user = users.deleteMany(query, function (err, obj) {
+    if (err) throw err;
+    console.log("project team document deleted");
+    res.send(JSON.stringify(obj));
+  });
+
+});
+app.post("/saveTaskBudget", (req, res) => {
+  const database = client.db('KANRI');
+  const users = database.collection('ProjectTasks');
+  var myquery = { _id: ObjectId(req.body.TaskID) };
+  var newvalues = { $set: { Budget: req.body.Budget } };
+  users.updateOne(myquery, newvalues, function (err, result) {
+    if (err) throw err;
+    var myquery = { _id: ObjectId(req.body.ProjectID) };
+    var newvalues = { $set: { RemainingBudget: req.body.RemainingBudget } };
+    database.collection('Projects').updateOne(myquery, newvalues, function (err, result) {
+      if (err) throw err;
+    })
+    res.send(JSON.stringify("Task Budget updated"))
+  });
+});
+app.post("/UpdateMeetingLink", (req, res) => {
+  const database = client.db('KANRI');
+  const users = database.collection('Projects');
+  // console.log(req.body.Mission)
+  var myquery = { _id: ObjectId(req.body.ProjectID) };
+  var newvalues = { $set: { MeetingLink: req.body.ZoomLink } };
+  users.updateOne(myquery, newvalues, function (err, result) {
+    if (err) throw err;
+    res.send(JSON.stringify("Meeting updated"))
+  });
+});
+app.post("/getMeetingLink", (req, res) => {
+
+
+  const database = client.db('KANRI');
+  const users = database.collection('Projects');
+  users.findOne({ _id: ObjectId(req.body.ID) }, { projection: { _id: 0, MeetingLink: 1 } }, function (err, result) {
+    if (err) throw err;
+    if (result == null) res.send(JSON.stringify("null"));
+    else {
+      console.log(result);
+      res.send(JSON.stringify(result.MeetingLink));
+
+    }
+
+  });
+});
+
+app.post("/Follow", (req, res) => {
+  const database = client.db('KANRI');
+  const users = database.collection('ProfileInfo');
+  var myquery = { Email: req.body.Email };
+  var newvalues = {
+    $set: {
+      Followers: req.body.Followers,
+      Followed: req.body.Followed,
+      FollowersList: req.body.FollowersList
+    }
+  }
+  users.updateOne(myquery, newvalues, function (err, result) {
+    if (err) throw err;
+    var following = 1
+    var myquery = { Email: req.body.GuestEmail };
+    var newvalues
+    if (req.body.Followed) {
+      following = 1
+      newvalues = {
+        $inc: { Following: following },
+        $addToSet: { "FollowingsList": req.body.Email }
+      }
+    } else {
+      following = -1
+      newvalues = {
+        $inc: { Following: following },
+        $pull: { FollowingsList: req.body.Email }
+      }
+    }
+
+
+    users.updateOne(myquery, newvalues, function (err, result) {
+      if (err) throw err;
+      // res.send(JSON.stringify("Follow updated"))
+    });
+    res.send(JSON.stringify("Follow updated"))
+  });
+})
+
+app.post("/getProjectsHome", (req, res) => {
+  const database = client.db('KANRI');
+  const users = database.collection('Projects');
+
+  users.find().sort({CreationTime:-1}).toArray(function (err, result) {
+    if (err) throw err;
+    if (result.length == 0) {
+      res.send(JSON.stringify("null"));
+    }
+    else {
+      console.log(result);
+      res.send(JSON.stringify(result));
+    }
+  });
+})
+
+
 
 
 app.post("/sendToken", (req, res) => {
@@ -585,6 +810,7 @@ app.post("/sendToken", (req, res) => {
   const database = client.db('KANRI');
   const users = database.collection('users');
   var myquery = { Email: req.body.Email };
+  console.log(req.body.Token)
   var newvalues = { $set: { Token: req.body.Token } };
   users.updateOne(myquery, newvalues, function (err, result) {
     if (err) throw err;
@@ -598,11 +824,11 @@ app.post("/getToken", (req, res) => {
 
   const database = client.db('KANRI');
   const users = database.collection('users');
-  users.findOne({ Email: req.body.Email }, { projection: { _id: 0, Token:1 } }, function (err, result) {
+  users.findOne({ Email: req.body.Email }, { projection: { _id: 0, Token: 1 } }, function (err, result) {
     if (err) throw err;
     if (result == null) res.send(JSON.stringify("null"));
     else {
-       console.log(result);
+      console.log(result);
       res.send(JSON.stringify(result));
 
     }

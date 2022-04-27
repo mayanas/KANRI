@@ -15,12 +15,18 @@
    TouchableOpacity,
    BackHandler,
  } from 'react-native';
+import { Modal } from 'react-native-paper';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Lottie from '../Components/Lottie';
+import About from './About';
  
  class Kanri extends Component{
   constructor(props){
     super(props);
     this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
+    this.state={
+      AboutUsModal:false,
+    }
   }
 
   UNSAFE_componentWillMount() {
@@ -39,6 +45,7 @@ handleBackButtonClick() {
      
      return (
 
+      <SafeAreaView style={styles.MainView}>
        <View style={styles.MainView}>
          <Lottie/>
         
@@ -67,10 +74,13 @@ handleBackButtonClick() {
  
          <View style={{marginTop:0}}>
            <Text style={styles.textstyle1} onPress={
-              ()=>this.props.navigation.push('about')
+              ()=>this.props.navigation.navigate('about')
             }>ABOUT US</Text>
          </View>
+         
        </View>
+
+     </SafeAreaView>
      );
    }
  }
@@ -79,11 +89,19 @@ handleBackButtonClick() {
  const styles = StyleSheet.create({
    MainView: {
      backgroundColor: '#bfcfb2',
-     flex: 4,
+     flex: 1,
      flexDirection: 'column',
      alignItems: 'center',
      justifyContent: 'center',
    },
+     ModalView: {
+    flex: 1,
+    height: '100%',
+    width: '100%',
+    alignContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#bfcfb2',
+  },
    gifView:{
      flex: 1,
      marginBottom: 100
