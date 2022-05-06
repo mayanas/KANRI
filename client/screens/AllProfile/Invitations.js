@@ -6,30 +6,23 @@ import {
   Text,
   LogBox,
   BackHandler,
-  SafeAreaView,
-  Modal
+  SafeAreaView
 } from 'react-native';
-import { List, Divider,  } from 'react-native-paper';
+import { List, Divider, Modal } from 'react-native-paper';
 import firestore from '@react-native-firebase/firestore';
 import Loading from '../../Components/Loading';
-import ChatScreen from './ChatScreen';
 LogBox.ignoreLogs(["EventEmitter.removeListener"]);
 // import { LogBox } from 'react-native';
 LogBox.ignoreLogs(['Require cycle:']);
 import Icon from 'react-native-vector-icons/dist/MaterialCommunityIcons';
 
-class Messages extends Component {
+class Invitations extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      Email: this.props.route.params.Email.toUpperCase(),
-      threads: [],
-      threads1: [],
-      loading: true,
-      chatModal: false,
-      dstEmail: '',
-      dstNickName: '',
-      srcNickName: '',
+      Email: this.props.route.params.Email,
+      NickName:'',
+      loading: false,
     }
     this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
   }
@@ -42,54 +35,37 @@ class Messages extends Component {
     BackHandler.removeEventListener('hardwareBackPress', this.handleBackButtonClick);
   }
   handleBackButtonClick() {
-    console.log('hello')
-    if (this.state.chatModal) this.setState({ chatModal: false })
-    else
-      this.props.navigation.navigate('Home', { Email: this.props.route.params.Email });
+
+    this.props.navigation.navigate('Home', { Email: this.props.route.params.Email });
     return true;
   }
 
-  componentDidMount() {
-    const unsubscribe = firestore()
-      .collection('THREADS')
-      // add this
-      .orderBy('latestMessage.createdAt', 'desc')
-      .onSnapshot(querySnapshot => {
-        const threads = querySnapshot.docs.map(documentSnapshot => {
-          return {
-            _id: documentSnapshot.id,
-            // name: '',
-            // add this
-            latestMessage: {
-              text: ''
-            },
-            // ---
-            ...documentSnapshot.data()
-          };
-        });
+  loadInvitations =async()=>{
+    const response = await fetch(serverLink + "/getNickName", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
 
-        this.setState({ threads: threads });
-
-        var j = 0;
-        var max;
-        var threads1 = []
-        //   var max =threads[0]._id.split(':'); //max=11715557:11715558 max[0]=11715557, max[1]=11715558
-        for (let i = 0; i < this.state.threads.length; i++) {
-          max = this.state.threads[i]._id.split(':');
-          if (max[0] === this.state.Email || max[1] === this.state.Email) {
-            threads1[j] = this.state.threads[i]
-            j++;
-          }
+      },
+      body: JSON.stringify(
+        {
+          Email: this.state.Email
         }
-        // console.log(threads1)
-        this.setState({ threads1: threads1 });
+      )
+    });
+    const body = await response.json();
+    if (body == "null") {
+      this.showAlert("Warning", "Email does not exist!")
+    } else {
+      console.log(body);
+      this.setState({NickName:body})
+    }
 
-        if (this.state.loading) {
-          this.setState({ loading: false });
-        }
-      });
 
-    return () => unsubscribe();
+    
+  }
+  async componentDidMount() {
+    await this.loadInvitations();
   }
 
   render() {
@@ -100,43 +76,14 @@ class Messages extends Component {
           {this.state.loading ? <Loading /> :
             <SafeAreaView style={styles.container}>
               <View style={{ width: '100%', height: 50, backgroundColor: "#bc9855", justifyContent: 'center', alignItems: 'center', marginBottom: 10 }}>
-                <Text style={{ fontFamily: 'SairaSemiCondensed-Bold', fontSize: 20, color: 'black' }}>Chats</Text>
+                <Text style={{ fontFamily: 'SairaSemiCondensed-Bold', fontSize: 20, color: 'black' }}>Invitations</Text>
               </View>
-              
-              <FlatList
-                data={this.state.threads1}
-                keyExtractor={item => item._id}
-                ItemSeparatorComponent={() => <Divider style={{ height: 3, color: '#98a988' }} />}
-                renderItem={({ item }) => (
-                  <TouchableOpacity
-                    onPress={() => {
-                      if (item.email1 === this.state.Email) {
-                        this.setState({ dstEmail: item.email2, dstNickName: item.nickName2, srcNickName: item.nickName1 })
-                      } else {
-                        this.setState({ dstEmail: item.email1, dstNickName: item.nickName1, srcNickName: item.nickName2 })
+            </SafeAreaView>
 
-                      }
 
-                       this.setState({ chatModal: true })
-                    }}
-                  >
-                    <List.Item
-                      title={item.email1 === this.state.Email ? item.nickName2 : item.nickName1}
-                      description={item.latestMessage.text}
-                      titleNumberOfLines={1}
-                      titleStyle={styles.listTitle}
-                      descriptionStyle={styles.listDescription}
-                      descriptionNumberOfLines={1}
-                    />
-                  </TouchableOpacity>
-                )
-                }
-              />
-
-            </SafeAreaView >
           }
 
-          <Modal animationType='slide'
+          {/* <Modal animationType='slide'
             visible={this.state.chatModal}
 
             transparent={true}
@@ -174,7 +121,7 @@ class Messages extends Component {
                 dstNickName={this.state.dstNickName}
               />
             </View>
-          </Modal>
+          </Modal> */}
 
         </SafeAreaView>
       </View>
@@ -199,11 +146,11 @@ const styles = StyleSheet.create({
     // height: '100%',
   },
   listTitle: {
-    fontSize: 16,
+    fontSize: 18,
     fontFamily: 'SairaSemiCondensed-Bold'
   },
   listDescription: {
-    fontSize: 14,
+    fontSize: 15,
     fontFamily: 'SairaSemiCondensed-Regular'
   },
   ModalView: {
@@ -222,4 +169,4 @@ const styles = StyleSheet.create({
 });
 
 
-export default Messages;
+export default Invitations;

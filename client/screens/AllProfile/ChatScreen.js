@@ -1,110 +1,112 @@
 
-   
-import React, {useState, useEffect, useCallback} from 'react';
-import {View, ActivityIndicator, StyleSheet,LogBox,Text} from 'react-native';
-import {Bubble, GiftedChat, Send,SystemMessage,Avatar} from 'react-native-gifted-chat';
-import { IconButton } from 'react-native-paper';
 
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, ActivityIndicator, StyleSheet, LogBox, Text } from 'react-native';
+import { Bubble, GiftedChat, Send, SystemMessage, Avatar } from 'react-native-gifted-chat';
+import { IconButton } from 'react-native-paper';
 import firestore from '@react-native-firebase/firestore';
 import Loading from '../../Components/Loading';
+import PushNotification from 'react-native-push-notification';
 LogBox.ignoreLogs(["EventEmitter.removeListener"]);
 LogBox.ignoreLogs(['Require cycle:']);
 
-const ChatScreen = ( params ) => {
+const ChatScreen = (params) => {
   const [messages, setMessages] = useState([]);
 
   const [loading, setLoading] = useState(true);
 
-  const max  = params.srcEmail.toUpperCase();
+  const max = params.srcEmail.toUpperCase();
   const min = params.dstEmail.toUpperCase();
   const sender = params.srcEmail.toUpperCase();
+  
 
-  const maxNickName  = params.srcNickName;
+  const maxNickName = params.srcNickName;
   const minNickName = params.dstNickName;
 
 
-//   const arr = ['foo', 'bar', 'baz']
-  const compare =  min.localeCompare(max)
+  //   const arr = ['foo', 'bar', 'baz']
+  const compare = min.localeCompare(max)
   //if(min<max)alpha
-  const sorted = compare==-1? (min+':'+max):(max+':'+min)
-//   console.log(sorted)
- async function handleSend(messages) {
-  const text = messages[0].text;
+  const sorted = compare == -1 ? (min + ':' + max) : (max + ':' + min)
+  //   console.log(sorted)
+  async function handleSend(messages) {
+    const text = messages[0].text;
 
-  firestore()
-    .collection('THREADS')
-    .doc(sorted)
-    .collection('MESSAGES')
-    .add({
-      text,
-      createdAt: new Date().getTime(),
-      user: {
-        _id: sender,
-       email: sender
-      }
-    });
-
-  await firestore()
-    .collection('THREADS')
-    .doc(sorted)
-    .set(
-      {
-        email1: max,
-        email2: min,
-        nickName1: maxNickName,
-        nickName2: minNickName,
-        latestMessage: {
-          text,
-          createdAt: new Date().getTime()
+    firestore()
+      .collection('THREADS')
+      .doc(sorted)
+      .collection('MESSAGES')
+      .add({
+        text,
+        createdAt: new Date().getTime(),
+        user: {
+          _id: sender,
+          email: sender
         }
-      },
-      { merge: true }
-    );
-}
+      });
+
+    await firestore()
+      .collection('THREADS')
+      .doc(sorted)
+      .set(
+        {
+          email1: max,
+          email2: min,
+          nickName1: maxNickName,
+          nickName2: minNickName,
+          latestMessage: {
+            text,
+            createdAt: new Date().getTime()
+          }
+        },
+        { merge: true }
+      );
+  }
 
   useEffect(() => {
 
     const messagesListener = firestore()
-    .collection('THREADS')
-    .doc(sorted)
-    .collection('MESSAGES')
-    .orderBy('createdAt', 'desc')
-    .onSnapshot(querySnapshot => {
-      const messages = querySnapshot.docs.map(doc => {
-        const firebaseData = doc.data();
+      .collection('THREADS')
+      .doc(sorted)
+      .collection('MESSAGES')
+      .orderBy('createdAt', 'desc')
+      .onSnapshot(querySnapshot => {
+        const messages = querySnapshot.docs.map(doc => {
+          const firebaseData = doc.data();
 
-        const data = {
-          _id: doc.id,
-          text: '',
-          
-          createdAt: new Date().getTime(),
-          ...firebaseData
-        };
+          const data = {
+            _id: doc.id,
+            text: '',
 
-        if (!firebaseData.system) {
-          data.user = {
-            ...firebaseData.user,
-            name: firebaseData.user.email
+            createdAt: new Date().getTime(),
+            ...firebaseData
           };
-        }
 
-        return data;
+          if (!firebaseData.system) {
+            data.user = {
+              ...firebaseData.user,
+              name: firebaseData.user.email
+            };
+          }
+
+          return data;
+        });
+
+        setMessages(messages);
+        if (loading) {
+          setLoading(false);
+        }
       });
 
-      setMessages(messages);
-      if (loading) {
-        setLoading(false);
-      }
-    });
-
-  // Stop listening for updates whenever the component unmounts
-  return () => messagesListener();
+    // Stop listening for updates whenever the component unmounts
+    return () => messagesListener();
 
   }, []);
   if (loading) {
     return <Loading />;
   }
 
+ 
   function renderBubble(props) {
     return (
       <Bubble
@@ -120,13 +122,13 @@ const ChatScreen = ( params ) => {
         textStyle={{
           right: {
             color: 'white',
-            fontFamily:'SairaSemiCondensed-Regular',
-            fontSize:15
+            fontFamily: 'SairaSemiCondensed-Regular',
+            fontSize: 15
           },
           left: {
             color: 'white',
-            fontFamily:'SairaSemiCondensed-Regular',
-            fontSize:15
+            fontFamily: 'SairaSemiCondensed-Regular',
+            fontSize: 15
           }
         }}
       />
@@ -157,7 +159,7 @@ const ChatScreen = ( params ) => {
       </View>
     );
   }
-  
+
 
   function renderSystemMessage(props) {
     return (
@@ -170,22 +172,22 @@ const ChatScreen = ( params ) => {
   }
 
   return (
-    <View style={{width:'100%',height:'100%',flex:1,backgroundColor:'#bfcfb2'}}>
-    <GiftedChat
-      messages={messages}
-      onSend={handleSend}
-      user={{ _id: sender }}
-      placeholder='Type your message here'
-      alwaysShowSend
-      showUserAvatar
-      scrollToBottom
-      renderBubble={renderBubble}
-      renderLoading={renderLoading}
-      renderSend={renderSend}
-      scrollToBottomComponent={scrollToBottomComponent}
-      renderSystemMessage={renderSystemMessage}
-      textInputStyle ={{fontFamily:'SairaSemiCondensed-Regular',fontSize:15}}
-    />
+    <View style={{ width: '100%', height: '100%', flex: 1, backgroundColor: '#bfcfb2' }}>
+      <GiftedChat
+        messages={messages}
+        onSend={handleSend}
+        user={{ _id: sender }}
+        placeholder='Type your message here'
+        alwaysShowSend
+        showUserAvatar
+        scrollToBottom
+        renderBubble={renderBubble}
+        renderLoading={renderLoading}
+        renderSend={renderSend}
+        scrollToBottomComponent={scrollToBottomComponent}
+        renderSystemMessage={renderSystemMessage}
+        textInputStyle={{ fontFamily: 'SairaSemiCondensed-Regular', fontSize: 15 }}
+      />
     </View>
   );
 
@@ -197,7 +199,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor:'#bfcfb2',
+    backgroundColor: '#bfcfb2',
   },
   sendingContainer: {
     justifyContent: 'center',
@@ -216,12 +218,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#fff',
     fontWeight: 'bold',
-    fontFamily:'SairaSemiCondensed-Regular'
+    fontFamily: 'SairaSemiCondensed-Regular'
   },
-//   AvatarComponent:{
-//     //   width:10,
-//     //   height:10,
-//       backgroundColor:'#bc9855'
-//   }
+  //   AvatarComponent:{
+  //     //   width:10,
+  //     //   height:10,
+  //       backgroundColor:'#bc9855'
+  //   }
 });
 export default ChatScreen;

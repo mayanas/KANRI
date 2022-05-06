@@ -191,6 +191,8 @@ android {
 dependencies {
 
     implementation project(':lottie-react-native')
+    implementation project(':react-native-push-notification')
+
     implementation platform('com.google.firebase:firebase-bom:29.2.1')
     implementation 'com.google.firebase:firebase-analytics'
     implementation fileTree(dir: "libs", include: ["*.jar"])

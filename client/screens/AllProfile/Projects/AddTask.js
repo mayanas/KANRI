@@ -28,12 +28,16 @@ import { Appbar } from "react-native-paper";
 import SelectDropdown from 'react-native-select-dropdown';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { serverLink } from '../../serverLink';
+import firestore from '@react-native-firebase/firestore';
 class AddTask extends Component {
   constructor(props) {
     super(props);
 
   }
   state = {
+    Email:this.props.Email,
+    NickName:this.props.NickName,
+    ProjectName:this.props.ProjectName,
     ProjectID: this.props.ProjectID,
     MemberID: "",
     showPicker: false,
@@ -83,6 +87,27 @@ class AddTask extends Component {
     }).catch(error => {
       console.log(error);
     });
+    if(this.state.email!==""){
+      firestore()
+      .collection('NOTIFICATIONS')
+      .doc(this.state.email)
+      .collection('NOTIFICATIONS')
+      .add({
+          Boolean: false,
+          Type: "AttachFromProject",
+          SenderNickName: this.state.NickName,
+          message: this.state.newTaskTitle + " task from " + this.state.ProjectName + " has been attached to you",
+          projectId: this.state.ProjectID,
+          ProjectName:this.state.ProjectName,
+          // leaderEmail: item.Email,
+          Date: new Date().toDateString(),
+          createdAt: new Date().getTime(),
+          user: {
+              _id: this.state.Email,
+              email: this.state.Email
+          }
+      });
+  }
     this.props.ModalVisible();
 
   }

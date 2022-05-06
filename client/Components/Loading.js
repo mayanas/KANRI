@@ -19,7 +19,9 @@ class Loading extends Component {
                 flex: 1,
                 justifyContent: 'center',
                 alignItems: 'center',
-                backgroundColor:'#bfcfb2'
+                backgroundColor:'#bfcfb2',
+                width:'100%',
+                height:'100%'
               }}>
               <ActivityIndicator size="large" color='#555555' />
               <Text style={{ fontFamily:'SairaSemiCondensed-Regular', fontSize: 16, color: '#555555',}}>

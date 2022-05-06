@@ -7,6 +7,8 @@ import BottomSheet from "rn-sliding-up-panel";
 import { RadioButton } from 'react-native-paper';
 //  import RadioGroup from 'react-native-radio-buttons-group';
 import Loading from '../../../Components/Loading';
+import firestore from '@react-native-firebase/firestore';
+
 import {
   SafeAreaView,
   Text,
@@ -43,6 +45,9 @@ class AddPersonToPreject extends Component {
       searchbyInterest: "1",
       Email: this.props.Email,
       ProjectID: this.props.ProjectID,
+      NickName: this.props.NickName,
+      ProjectName: this.props.ProjectName,
+      ProjectMission: this.props.ProjectMission,
       counter: 0,
       enableSearch: false,
       loadedSearch: false,
@@ -55,7 +60,7 @@ class AddPersonToPreject extends Component {
 
       ProfileForOthersModal: false,
       ProfileForOthersEmail: "",
-      RecieverEmail:'',
+      RecieverEmail: '',
     };
     // NotificationsListener()
     // this.props = props;
@@ -63,6 +68,7 @@ class AddPersonToPreject extends Component {
   }
 
   componentDidMount = async () => {
+    console.log("Mount" + this.state.ProjectName)
     this.setState({ loadSave: false })
     await this.getData();
     await this.getAddedMembers();
@@ -97,7 +103,7 @@ class AddPersonToPreject extends Component {
 
 
   // function to delete 
-  deleteTodo = (_id, NickName,MemberEmail) => {
+  deleteTodo = (_id, NickName, MemberEmail) => {
     this.setState({
       masterDataSource: [...this.state.masterDataSource, {
         _id: _id
@@ -108,7 +114,7 @@ class AddPersonToPreject extends Component {
     const items = this.state.added.filter(item => item._id !== _id);
     this.setState({ added: items });
 
-    this.deleteTeamMember(_id,MemberEmail)
+    this.deleteTeamMember(_id, MemberEmail)
 
 
   };
@@ -309,7 +315,7 @@ class AddPersonToPreject extends Component {
         _id: item._id
         , NickName: item.NickName, Email: item.Email
       }],
-      added1: [...this.state.added1, { ProjectID: this.state.ProjectID, MemberID: item._id, Accepted: false }],
+      added1: [...this.state.added1, { ProjectID: this.state.ProjectID, MemberID: item._id, MemberEmail: item.MemberEmail, Accepted: false }],
       loadSave: false
     })
     const _id = item._id;
@@ -320,11 +326,90 @@ class AddPersonToPreject extends Component {
       enableSearch: false,
       loadedSearch: false,
       loadSave: true,
-      RecieverEmail:item.Email,
+      RecieverEmail: item.Email,
 
     });
-    await this.send();
-    await this.saveMemeber(item._id)
+    // await this.send();
+    // firestore().collection('NOTIFICATIONS').doc(item.Email).collection('NOTIFICATIONS')
+    // .where("Type", "==", "AddToProject")
+    // .where("projectId", "==", this.state.ProjectID)
+    // .get().then((querySnapshot) => {
+    //   if (querySnapshot.empty) {
+
+
+    await fetch(serverLink + "/getInviteToProject", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(
+        {
+          Type: "InviteToProject",
+          SenderNickName: this.state.NickName,
+          SenderEmail: this.state.Email,
+          ProjectID: this.state.ProjectID,
+          ProjectName: this.state.ProjectName,
+          ProjectMission: this.state.ProjectMission,
+          RecieverEmail: item.Email,
+        }
+      )
+    }).then(resp => {
+      return resp.json();
+    }).then(async jsonresponse => {
+      if (jsonresponse === "null") {
+        firestore()
+          .collection('NOTIFICATIONS')
+          .doc(item.Email)
+          .collection('NOTIFICATIONS')
+          .add({
+            Boolean: false,
+            Type: "AddToProject",
+            SenderNickName: this.state.NickName,
+            message: "Inviting you to join project " + this.state.ProjectName + "",
+            projectId: this.state.ProjectID,
+            // leaderEmail: item.Email,
+            Date: new Date().toDateString(),
+            createdAt: new Date().getTime(),
+            user: {
+              _id: this.state.Email,
+              email: this.state.Email
+            }
+          });
+
+        await fetch(serverLink + "/InvitationsAsktojoin", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(
+            {
+              Type: "InviteToProject",
+              SenderNickName: this.state.NickName,
+              SenderEmail: this.state.Email,
+              ProjectID: this.state.ProjectID,
+              ProjectName: this.state.ProjectName,
+              ProjectMission: this.state.ProjectMission,
+              RecieverEmail: item.Email,
+              CreationTime: new Date()
+            }
+          )
+        }).then(resp => {
+          return resp.json();
+        }).then(jsonresponse => {
+          if (jsonresponse !== "null") {
+            console.log(jsonresponse)
+          }
+
+        }).catch(error => {
+          console.log(error);
+        });
+      }
+
+    }).catch(error => {
+      console.log(error);
+    });
+    // }})
+    await this.saveMemeber(item._id, item.Email)
   }
 
   getData = async () => {
@@ -373,7 +458,7 @@ class AddPersonToPreject extends Component {
 
     }
   }
-  saveMemeber = async (MemberID) => {
+  saveMemeber = async (MemberID, MemberEmail) => {
     const response = await fetch(serverLink + "/saveMember", {
       method: "POST",
       headers: {
@@ -384,12 +469,13 @@ class AddPersonToPreject extends Component {
         {
           ProjectID: this.state.ProjectID,
           MemberID: MemberID,
+          MemberEmail: MemberEmail,
         }
       )
     });
     const body = await response.json();
   }
-  deleteTeamMember = async (MemberID,MemberEmail) => {
+  deleteTeamMember = async (MemberID, MemberEmail) => {
     console.log(MemberEmail)
     const response = await fetch(serverLink + "/deleteTeamMember", {
       method: "POST",
@@ -401,73 +487,44 @@ class AddPersonToPreject extends Component {
         {
           ProjectID: this.state.ProjectID,
           MemberID: MemberID,
-          MemberEmail:MemberEmail,
+          MemberEmail: MemberEmail,
+          Type: "AddToProject",
+          SenderNickName: this.state.NickName,
+          SenderEmail: this.state.Email,
+          ProjectName: this.state.ProjectName,
+          ProjectMission: this.state.ProjectMission,
+          RecieverEmail: MemberEmail,
+
         }
       )
     });
+    firestore()
+      .collection('NOTIFICATIONS')
+      .doc(MemberEmail)
+      .collection('NOTIFICATIONS')
+      .add({
+        Boolean: false,
+        Type: "DeleteMemberFromProject",
+        SenderNickName: this.state.NickName,
+        message: "Removing you from project " + this.state.ProjectName + "",
+        projectId: this.state.ProjectID,
+        // leaderEmail: item.Email,
+        Date: new Date().toDateString(),
+        createdAt: new Date().getTime(),
+        user: {
+          _id: this.state.Email,
+          email: this.state.Email
+        }
+      });
     const body = await response.json();
   }
-  getToken = async () => {
-    // const t = await AsyncStorage.getItem('fcmToken')
-    // console.log(t)
-    await fetch(serverLink + '/getToken', {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(
-        {
-          // "Token": t,
-          "Email": this.state.RecieverEmail,
-        }
-      )
-    }).then(resp => {
-      return resp.json();
-    }).then(async (jsonresponse) => {
-      console.log(jsonresponse)
-      this.setState({ Token: jsonresponse.Token })
-      // await this.send();
-    }).catch(error => {
-      console.log(error);
-    })///fetch
-  }
 
 
-  send = async () => {
-    await this.getToken();
 
-    await fetch(serverLink + '/sendNotification', {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(
-        {
-          "Token": this.state.Token,
-          "title1": "hello",
-          "body1": "hello1",
-          "title2": "hello2",
-          "body2": "hello3",
-        }
-      )
-    }).then(resp => {
-      return resp.json();
-    }).then(jsonresponse => {
-      console.log(jsonresponse)
-
-    }).catch(error => {
-      console.log(error);
-    })///fetch
-  }
-  GoToMessages= (srcEmail,dstEmail)=> {
-    console.log('messege1')
-    this.props.GoToMessages(srcEmail,dstEmail);
-    // this.props.navigation.navigate('Messages')
-  }
   render() {
     return (
 
-      <SafeAreaView ew style={[styles.MainView,]}>
+      <SafeAreaView ew style={[styles.MainView, { width: '100%', height: '100%' }]}>
         {/* <KeyboardAwareScrollView scrollEnabled style={[styles.MainView,]}> */}
         <View style={{ flexDirection: 'row', marginTop: 10 }}>
           <View style={{ width: '20%', alignItems: 'flex-start' }}>
@@ -491,7 +548,11 @@ class AddPersonToPreject extends Component {
             marginTop: 5,
           }}
         ></LinearGradient>
-        {!this.state.loadSave ? <Loading /> :
+
+        {!this.state.loadSave ?
+          <View style={{ width: '100%', height: '100%', flex: 1 }}>
+            <Loading />
+          </View> :
           <View style={{ width: '100%', height: '100%' }}>
             <View style={{ flexDirection: "row", marginTop: 20, height: 50 }} >
               <View style={{ width: '80%', height: 40, marginHorizontal: 15 }}>
@@ -548,7 +609,6 @@ class AddPersonToPreject extends Component {
               :
               <KeyboardAwareScrollView style={{ backgroundColor: '#bfcfb2', marginTop: 30 }}>
                 <View style={{ width: '100%', justifyContent: 'center' }}>
-                  {console.log(this.state.added)}
                   {
 
                     this.state.added.map(name => (
@@ -679,7 +739,7 @@ class AddPersonToPreject extends Component {
             <ProfileForOthers
               Email={this.state.ProfileForOthersEmail}
               GuestEmail={this.state.Email}
-              GoToMessages={this.GoToMessages}
+              GuestNickName={this.state.NickName}
             />
           </View>
         </Modal>

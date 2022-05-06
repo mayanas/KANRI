@@ -35,7 +35,7 @@ import LinearGradient from 'react-native-linear-gradient';
 // import {Avatar} from 'react-native-paper';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { TextInput } from 'react-native-gesture-handler';
-
+import firestore from '@react-native-firebase/firestore';
 import Icon from 'react-native-vector-icons/dist/MaterialCommunityIcons';
 import moment from 'moment';
 
@@ -268,6 +268,80 @@ class ProfileForOthers extends Component {
       console.log(error);
     });
   }
+  joinProject = async (item) => {
+
+    await fetch(serverLink + "/getJoin", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(
+        {
+          Type: "RequestToJoin",
+          SenderNickName: this.state.GuestNickName,
+          SenderEmail: this.state.GuestEmail,
+          ProjectID: item._id,
+          ProjectName: item.ProjectName,
+          RecieverEmail: this.state.Email,
+          // CreationTime: new Date()
+        }
+      )
+    }).then(resp => {
+      return resp.json();
+    }).then(async jsonresponse => {
+      if (jsonresponse === "null") {
+        firestore()
+          .collection('NOTIFICATIONS')
+          .doc(item.Email)
+          .collection('NOTIFICATIONS')
+          // .doc(item.Email)
+          .add({
+            Boolean: false,
+            Type: "Join",
+            SenderNickName: this.state.GuestNickName,
+            message: "Requests to join your project " + item.ProjectName,
+            projectId: item._id,
+            // leaderEmail: item.Email,
+            Date: new Date().toDateString(),
+            createdAt: new Date().getTime(),
+            user: {
+              _id: this.state.GuestEmail,
+              email: this.state.GuestEmail
+            }
+          });
+
+        await fetch(serverLink + "/Invitations", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(
+            {
+              Type: "RequestToJoin",
+              SenderNickName: this.state.GuestNickName,
+              SenderEmail: this.state.GuestEmail,
+              ProjectID: item._id,
+              ProjectName: item.ProjectName,
+              RecieverEmail: this.state.Email,
+              CreationTime: new Date()
+            }
+          )
+        }).then(resp => {
+          return resp.json();
+        }).then(jsonresponse => {
+          if (jsonresponse !== "null") {
+            console.log(jsonresponse)
+          }
+
+        }).catch(error => {
+          console.log(error);
+        });
+      }
+
+    }).catch(error => {
+      console.log(error);
+    });
+  }
   funcProjects = ({ item, index }) => {
 
     return (
@@ -304,9 +378,11 @@ class ProfileForOthers extends Component {
             alignItems: 'center', justifyContent: 'center', borderRadius: 15, marginHorizontal: '2.5%',
             borderWidth: 0.5, flexDirection: 'row'
           }}
+            disabled={item.Email === this.state.GuestEmail}
             onPress={async () => {
               /////////////////////////request to join///////////////////////
-
+              // console.log(item)
+              this.joinProject(item)
             }}>
             <Icon
               name="plus-circle-outline"
@@ -378,8 +454,11 @@ class ProfileForOthers extends Component {
             alignItems: 'center', justifyContent: 'center', borderRadius: 15, marginHorizontal: '2.5%',
             borderWidth: 0.5, flexDirection: 'row'
           }}
+            disabled={item.Email == this.state.GuestEmail}
             onPress={async () => {
+              // console.log(item.Email)
               /////////////////////////request to join///////////////////////
+              this.joinProject(item)
             }}>
             <Icon
               name="plus-circle-outline"
@@ -525,6 +604,22 @@ class ProfileForOthers extends Component {
     });
     await this.Follow()
     console.log(this.state.FollowersList)
+    firestore()
+      .collection('NOTIFICATIONS')
+      .doc(this.state.Email)
+      .collection('NOTIFICATIONS')
+      .add({
+        Boolean: false,
+        Type: "Follow",
+        SenderNickName: this.state.GuestNickName,
+        message: "Started following you",
+        Date: new Date().toDateString(),
+        createdAt: new Date().getTime(),
+        user: {
+          _id: this.state.GuestEmail,
+          email: this.state.GuestEmail
+        }
+      });
     /////notification /////////////////////////////////////////////////////////////
   }
   UnFollowButtonPressed = async () => {
@@ -539,6 +634,20 @@ class ProfileForOthers extends Component {
     await this.setState({ FollowersList: items });
     console.log(this.state.FollowersList)
     await this.Follow()
+    firestore()
+      .collection('NOTIFICATIONS')
+      .doc(this.state.Email)
+      .collection('NOTIFICATIONS')
+      .where("SenderNickName", "==", this.state.GuestNickName)
+      .where("Type", "==", "Follow")
+
+      .get()
+      .then(function (querySnapshot) {
+        querySnapshot.forEach(function (doc) {
+          doc.ref.delete();
+        });
+      });
+
   }
   MessegeButtonPressed = async () => {
     console.log('messege')
@@ -787,7 +896,7 @@ class ProfileForOthers extends Component {
                 <View style={{ width: '100%', height: 320 }}>
                   <Text style={[styles.text, { paddingHorizontal: 20 }]}>Interested In</Text>
                   <FlatList
-                    contentContainerStyle={this.state.InterestedIn.length<=1? {width:'100%'}:{}}
+                    contentContainerStyle={this.state.InterestedIn.length <= 1 ? { width: '100%' } : {}}
                     scrollEnabled={true}
                     showsHorizontalScrollIndicator={false}
                     horizontal
@@ -815,7 +924,7 @@ class ProfileForOthers extends Component {
                 <View style={{ width: '100%', height: 320, }}>
                   <Text style={[styles.text, { paddingHorizontal: 20 }]}>Created Projects</Text>
                   <FlatList
-                    contentContainerStyle={this.state.Projects.length<=1? {width:'100%'}:{}}
+                    contentContainerStyle={this.state.Projects.length <= 1 ? { width: '100%' } : {}}
                     showsHorizontalScrollIndicator={false}
                     horizontal
                     width={'100%'}
@@ -841,7 +950,7 @@ class ProfileForOthers extends Component {
                 <View style={{ width: '100%', height: 320, }}>
                   <Text style={[styles.text, { paddingHorizontal: 20 }]}>Joined Projects</Text>
                   <FlatList
-                    contentContainerStyle={this.state.ProjectsJoinedInfo.length<=1? {width:'100%'}:{}}
+                    contentContainerStyle={this.state.ProjectsJoinedInfo.length <= 1 ? { width: '100%' } : {}}
                     showsHorizontalScrollIndicator={false}
                     horizontal
                     width={'100%'}

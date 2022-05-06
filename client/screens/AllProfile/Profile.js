@@ -23,7 +23,8 @@ import {
   TouchableOpacity,
   SafeAreaView,
   Linking,
-  LogBox
+  LogBox,
+  RefreshControl,
 } from 'react-native';
 
 import Loading from '../../Components/Loading';
@@ -60,6 +61,8 @@ import AskAsCustomer from './AskAsCutomer';
 import ViewProject from './Projects/ViewProject';
 import ChatScreen from './ChatScreen';
 import ProjectChatGroup from './ProjectChatGroup';
+import PushNotification from 'react-native-push-notification';
+import firestore from '@react-native-firebase/firestore';
 
 const Degrees = ["Doctoral Degree", "Master's Degree", "Bachelor's Degree", "Diploma's Degree", "Undergraduate", "None of the above"]
 const checkList = [
@@ -223,12 +226,21 @@ class Profile extends Component {
 
       ViewModal: false,
       ProjectIDView: '',
+      ProjectNameView: '',
       ChatScreenModal: false,
       dstEmail: '',
       dstNickName: '',
 
-      ProjectChatModal:false,
-      ProjectIDChat:'',
+      ProjectChatModal: false,
+      ProjectIDChat: '',
+      ProjectNameChat: '',
+      showPickerMeeting: false,
+      MeetingDate: "",
+      TeamMembersMeeting: [],
+      ProjectNameMeeting: '',
+      refreshing: false,
+      FollowersList: [],
+      FollowingsList: [],
     }
     this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
     this.phoneinput = React.createRef();
@@ -265,7 +277,8 @@ class Profile extends Component {
   async loadProfile() {
     await this.setState({
       Email: this.props.route.params.Email,
-      loaded: false
+      loaded: false,
+      // refreshing:true
     })
     await this.getInfo();
     await this.getUserInfo();
@@ -274,6 +287,8 @@ class Profile extends Component {
     console.log(this.state.ProjectsJoinedInfo)
     if (this.state.InterestedIn.length != 0)
       await this.setState({
+
+        // refreshing:false,
         loaded: true,
         phonevalid: false,
         phonevalue: "",
@@ -331,6 +346,50 @@ class Profile extends Component {
       )
     }).then(response => { return response.json() }).then(resp => {
       this.setState({ ProjectID: resp.insertedId })
+    })
+
+    if (this.state.CustomerEmail !== this.state.Email) {
+      firestore()
+        .collection('NOTIFICATIONS')
+        .doc(this.state.CustomerEmail)
+        .collection('NOTIFICATIONS')
+        .add({
+          Boolean: false,
+          Type: "CreatedProject",
+          SenderNickName: this.state.NickName,
+          message: "Project " + this.state.ProjectName + " has been created",
+          projectId: this.state.ProjectID,
+          ProjectName: this.state.ProjectName,
+          // leaderEmail: item.Email,
+          Date: new Date().toDateString(),
+          createdAt: new Date().getTime(),
+          user: {
+            _id: this.state.Email,
+            email: this.state.Email
+          }
+        });
+    }
+
+    this.state.FollowersList.map((follower) => {
+      firestore()
+        .collection('NOTIFICATIONS')
+        .doc(follower)
+        .collection('NOTIFICATIONS')
+        .add({
+          Boolean: false,
+          Type: "CreatedProject",
+          SenderNickName: this.state.NickName,
+          message: "Project " + this.state.ProjectName + " has been created",
+          projectId: this.state.ProjectID,
+          ProjectName: this.state.ProjectName,
+          // leaderEmail: item.Email,
+          Date: new Date().toDateString(),
+          createdAt: new Date().getTime(),
+          user: {
+            _id: this.state.Email,
+            email: this.state.Email
+          }
+        });
     })
 
 
@@ -862,9 +921,10 @@ class Profile extends Component {
     }).then(async jsonresponse => {
       if (jsonresponse !== "null") {
         await this.setState({
-          MeetingLink: jsonresponse
+          MeetingLink: jsonresponse.MeetingLink,
+          MeetingDate: jsonresponse.MeetingDate,
         })
-
+        console.log(this.state.MeetingDate)
 
       }
 
@@ -873,7 +933,7 @@ class Profile extends Component {
     });
 
   }
-  
+
   funcProjects = ({ item, index }) => {
 
     return (
@@ -911,8 +971,8 @@ class Profile extends Component {
             borderWidth: 0.5, flexDirection: 'row'
           }}
             onPress={async () => {
-             await this.setState({ProjectIDChat:item._id})
-              this.setState({ProjectChatModal:true})
+              await this.setState({ ProjectIDChat: item._id, ProjectNameChat: item.ProjectName })
+              this.setState({ ProjectChatModal: true })
             }}>
             <Ionicons
               name="chatbubbles-outline"
@@ -930,8 +990,11 @@ class Profile extends Component {
               await this.getMeetingLink(item._id)
               if (this.state.MeetingLink === "")
                 this.showAlert('Meeting Link', 'No availabe link')
-              else
+              else {
+                this.showAlert('Meeting Date', this.state.MeetingDate)
                 Linking.openURL(this.state.MeetingLink)
+              }
+
 
 
             }}>
@@ -947,7 +1010,20 @@ class Profile extends Component {
             borderWidth: 0.5, flexDirection: 'row'
           }}
             onPress={async () => {
-              await this.setState({ MeetingLink: item.MeetingLink, ProjectIDFromMeeting: item._id })
+
+              let newMarkers = this.state.Projects.map(el => (
+                el._id === item._id ? {
+                  ...el, MeetingDate: this.state.MeetingDate
+                } : el
+              ))
+              this.setState({ Projects: newMarkers });
+              await this.setState({
+                // MeetingDate: item.MeetingDate,
+                MeetingLink: item.MeetingLink,
+                ProjectIDFromMeeting: item._id,
+                ProjectNameMeeting: item.ProjectName,
+              })
+              await this.getTeamMembers(item._id)
               this.setState({ AddMeetingModal: true, })
 
             }}>
@@ -987,7 +1063,7 @@ class Profile extends Component {
             borderWidth: 0.5, flexDirection: 'row'
           }}
             onPress={async () => {
-              this.setState({ ViewModal: true, ProjectIDView: item._id })
+              this.setState({ ViewModal: true, ProjectIDView: item._id, ProjectNameView: item.ProjectName })
             }}>
             <Icon
               name="chart-timeline"
@@ -1002,7 +1078,7 @@ class Profile extends Component {
           }}
             onPress={async () => {
               this.setState({ projectdeleted: false })
-              await this.deleteProject(item._id);
+              await this.deleteProject(item._id, item.CustomerEmail);
               this.setState({ projectdeleted: true })
               // this.props.navigation.navigate('Project', { Email: this.state.Email, ProjectID: item._id.toString() })
             }}>
@@ -1059,7 +1135,7 @@ class Profile extends Component {
             borderWidth: 0.5, flexDirection: 'row', marginHorizontal: '2.5%'
           }}
             onPress={async () => {
-              this.setState({ ViewModal: true })
+              this.setState({ ViewModal: true, ProjectIDView: item._id, ProjectNameView: item.ProjectName })
             }}>
             <Icon
               name="chart-timeline"
@@ -1067,20 +1143,20 @@ class Profile extends Component {
               color={'black'} />
             <Text style={styles.text1}>View</Text>
           </TouchableOpacity>
-        
+
           <TouchableOpacity style={{
             backgroundColor: '#bc9855', width: '30%', height: '50%',
             alignItems: 'center', justifyContent: 'center', borderRadius: 15,
             borderWidth: 0.5, flexDirection: 'row', marginRight: '2.5%'
           }}
-          onPress={async () => {
-            await this.setState({ProjectIDChat:item._id})
-             this.setState({ProjectChatModal:true})
-           }}>
-           <Ionicons
-             name="chatbubbles-outline"
-             size={15}
-             color={'black'} />
+            onPress={async () => {
+              await this.setState({ ProjectIDChat: item._id, ProjectNameChat: item.ProjectName })
+              this.setState({ ProjectChatModal: true })
+            }}>
+            <Ionicons
+              name="chatbubbles-outline"
+              size={15}
+              color={'black'} />
             <Text style={styles.text1}>Chat</Text>
           </TouchableOpacity>
 
@@ -1093,8 +1169,10 @@ class Profile extends Component {
               await this.getMeetingLink(item._id)
               if (this.state.MeetingLink === "")
                 this.showAlert('Meeting Link', 'No availabe link')
-              else
+              else {
+                this.showAlert('Meeting Date', this.state.MeetingDate)
                 Linking.openURL(this.state.MeetingLink)
+              }
             }}>
             <Icon
               name="link"
@@ -1191,6 +1269,7 @@ class Profile extends Component {
       await AsyncStorage.setItem('Password', '');
       await AsyncStorage.setItem('fcmToken', '');
       this.props.navigation.push("kanri");
+      PushNotification.deleteChannel("channel-id3")
     }
     catch (error) {
       console.log(error);
@@ -1474,7 +1553,7 @@ class Profile extends Component {
     }).then(resp => {
       return resp.json();
     }).then(jsonresponse => {
-      console.log(jsonresponse.ProjectName)
+      // console.log(jsonresponse.ProjectName)
       if (jsonresponse !== "null") {
         this.setState({
           ProjectID: ProjectID,
@@ -1510,10 +1589,10 @@ class Profile extends Component {
     }).then(resp => {
       return resp.json();
     }).then(async (jsonresponse) => {
-      console.log(jsonresponse.ProjectName)
+      // console.log(jsonresponse.ProjectName)
       if (jsonresponse !== "null") {
         this.setState({ TeamMembers: [...this.state.TeamMembers, jsonresponse[0]] })
-        console.log(this.state.TeamMembers)
+        // console.log(this.state.TeamMembers)
       }
 
     }).catch(error => {
@@ -1537,11 +1616,11 @@ class Profile extends Component {
     }).then(resp => {
       return resp.json();
     }).then(async (jsonresponse) => {
-      console.log(jsonresponse.ProjectName)
+      // console.log(jsonresponse.ProjectName)
       if (jsonresponse !== "null") {
-        // this.setState({
-        //   TeamMembers: jsonresponse
-        // })
+        this.setState({
+          TeamMembersMeeting: jsonresponse
+        })
         jsonresponse.map(async item => {
           await this.loadMembers(item.MemberID);
         })
@@ -1722,7 +1801,7 @@ class Profile extends Component {
       console.log(resp);
     })
   }
-  deleteProject = async (ProjectID) => {
+  deleteProject = async (ProjectID, CustomerEmail) => {
     this.setState({ loaded: false })
     await this.deleteFromProjects(ProjectID, this.state.Email)
     await this.deleteFromProjectsTasks(ProjectID)
@@ -1731,7 +1810,55 @@ class Profile extends Component {
     await this.getUserInfo();
     await this.getProjectsInfo();
     await this.getProjectsJoined();
+    await this.getTeamMembers(ProjectID);
     this.setState({ loaded: true })
+    this.state.TeamMembersMeeting.map(member => {
+
+      if (member.Accepted) {
+        firestore()
+          .collection('NOTIFICATIONS')
+          .doc(member.MemberEmail)
+          .collection('NOTIFICATIONS')
+          .add({
+            Boolean: false,
+            Type: "DeleteProject",
+            SenderNickName: this.state.NickName,
+            message: "Project " + this.state.ProjectName1 + " has been deleted",
+            projectId: member.ProjectID,
+            ProjectName: this.state.ProjectName,
+            // leaderEmail: item.Email,
+            Date: new Date().toDateString(),
+            createdAt: new Date().getTime(),
+            user: {
+              _id: this.state.Email,
+              email: this.state.Email,
+            }
+          });
+      }
+
+
+    })
+    if (CustomerEmail !== this.state.Email) {
+      firestore()
+        .collection('NOTIFICATIONS')
+        .doc(CustomerEmail)
+        .collection('NOTIFICATIONS')
+        .add({
+          Boolean: false,
+          Type: "DeleteProject",
+          SenderNickName: this.state.NickName,
+          message: "Project " + this.state.ProjectName1 + " has been deleted",
+          projectId: this.state.ProjectID,
+          ProjectName: this.state.ProjectName,
+          // leaderEmail: item.Email,
+          Date: new Date().toDateString(),
+          createdAt: new Date().getTime(),
+          user: {
+            _id: this.state.Email,
+            email: this.state.Email
+          }
+        });
+    }
   }
   saveTaskBudget = async (TaskID, ProjectID) => {
     await fetch(serverLink + "/saveTaskBudget", {
@@ -1820,6 +1947,7 @@ class Profile extends Component {
     );
   };
   updateMeetingLink = async () => {
+
     let newMarkers = this.state.Projects.map(el => (
       el._id === this.state.ProjectIDFromMeeting ? {
         ...el, MeetingLink: this.state.MeetingLink
@@ -1835,10 +1963,12 @@ class Profile extends Component {
         {
           "ProjectID": this.state.ProjectIDFromMeeting,
           "ZoomLink": this.state.MeetingLink,
+          "MeetingDate": this.state.MeetingDate,
         }
       )
     }).then(response => { return response.json() }).then(resp => {
       console.log(resp);
+
 
     })
   }
@@ -1849,8 +1979,28 @@ class Profile extends Component {
 
   };
 
+  handlePicker1 = async (date) => {
+    // console.log(date)
+    const dateFormat = moment(date).format("YYYY-MM-DD HH:mm:ss");
+    await this.setState({ MeetingDate: dateFormat, });
+    this.setState({ showPickerMeeting: false })
+  };
+  showPicker1 = () => {
+    this.setState({ showPickerMeeting: true });
+  }
 
+  hidePicker1 = () => {
+    this.setState({ showPickerMeeting: false });
+  }
+  wait = (timeout) => {
+    return new Promise(resolve => setTimeout(resolve, timeout));
+  }
+  _onRefresh = async () => {
+    this.setState({ refreshing: true });
+    await this.loadProfile();
 
+    this.setState({ refreshing: false })
+  }
   render() {
 
     return (
@@ -2082,7 +2232,11 @@ class Profile extends Component {
             </View>
 
             <SafeAreaView style={{ height: '100%', width: '100%', flex: 1 }}>
-              <ScrollView vertical showsVerticalScrollIndicator={false} style={{ height: '100%' }}>
+              <ScrollView vertical showsVerticalScrollIndicator={false} style={{ height: '100%' }}
+                refreshControl={
+                  <RefreshControl refreshing={this.state.refreshing} onRefresh={this._onRefresh} />
+                }
+              >
                 {/* InterestedIn Cards */}
                 <View style={{ width: '100%', height: 320, }}>
                   <Text style={[styles.text, { paddingHorizontal: 20 }]}>Interested In</Text>
@@ -2880,7 +3034,7 @@ class Profile extends Component {
 
             <SafeAreaView style={{ width: '100%', height: '100%', flex: 1 }}>
               {this.state.savedInfo ?
-                <KeyboardAwareScrollView>
+                <KeyboardAwareScrollView showsVerticalScrollIndicator={false}>
                   <View style={{ width: '100%', height: 600 }}>
                     <ProgressSteps progressBarColor="#98a988" completedProgressBarColor="#bc9855"
                       activeStepIconColor="#bfcfb2" completedStepIconColor="#bc9855"
@@ -3934,9 +4088,13 @@ class Profile extends Component {
           }
           style={[styles.ModalView, { marginLeft: 20 }]}>
           <View style={[styles.MainView, { paddingLeft: 10, paddingTop: 20 }]}>
+            {/* {console.log("ds"+this.state.ProjectName)} */}
             <AddPersonToPreject
               Email={this.state.Email}
               ProjectID={this.state.ProjectID}
+              NickName={this.state.NickName}
+              ProjectName={this.state.ProjectName1}
+              ProjectMission={this.state.ProjectMission}
             />
           </View>
         </Modal>
@@ -3956,6 +4114,9 @@ class Profile extends Component {
             {!this.state.loadTasks ? <Loading /> : <View style={[styles.MainView]}>
               <AddTask1
                 Email={this.state.Email}
+                CustomerEmail={this.state.CustomerEmail1}
+                NickName={this.state.NickName}
+                ProjectName={this.state.ProjectName1}
                 ProjectID={this.state.ProjectID}
                 setStateModal={() => {
                   // await this.getTeamMembers();
@@ -3986,6 +4147,8 @@ class Profile extends Component {
           <View style={[styles.MainView]}>
             <AddTask
               Email={this.state.Email}
+              NickName={this.state.NickName}
+              ProjectName={this.state.ProjectName1}
               ProjectID={this.state.ProjectID}
               setStateModal={() => this.setState({ AddTaskModal: true })}
               TeamMembers={this.state.TeamMembers}
@@ -4009,6 +4172,10 @@ class Profile extends Component {
           <View style={[styles.MainView]}>
 
             <EditTask
+              Email={this.state.Email}
+              NickName={this.state.NickName}
+              ProjectName={this.state.ProjectName1}
+              ProjectID={this.state.ProjectID}
               Task={this.state.TaskItem}
               TeamMembers={this.state.TeamMembers}
               ModalVisible={async () => {
@@ -4038,6 +4205,13 @@ class Profile extends Component {
           </View>
         </Modal>
 
+        <DateTimePickerModal
+          isVisible={this.state.showPickerMeeting}
+          onConfirm={this.handlePicker1}
+          onCancel={this.hidePicker1}
+          mode="datetime"
+          is24Hour={false}
+        />
         {/*Add meeting Modal*/}
         <Modal animationType='slide'
           visible={this.state.AddMeetingModal}
@@ -4045,31 +4219,34 @@ class Profile extends Component {
           }
           style={styles.ModalView}>
           <View style={styles.MainView}>
-            {this.state.MeetingSaved ? <View style={styles.modalS}>
-              <View style={{ flexDirection: 'row', marginBottom: 10 }}>
-                <View style={{ width: '20%', alignItems: 'flex-start' }}>
+            {this.state.MeetingSaved ? <View style={[styles.MainView, { width: '100%' }]}>
 
-                </View>
-                <View style={{ width: '60%', alignItems: 'center', justifyContent: 'center' }}>
-                  <Text style={styles.textAddress}>Add Meeting Link</Text>
-                </View>
-                <View style={{ width: '20%' }}>
-                  <Text></Text>
-                </View>
-
+              <View style={{ width: '100%', height: 50, backgroundColor: "#bc9855", justifyContent: 'center', alignItems: 'center', marginBottom: 10 }}>
+                <Text style={{ fontFamily: 'SairaSemiCondensed-Bold', fontSize: 20, color: 'black' }}>Add Meeting Link</Text>
               </View>
-              <LinearGradient
-                colors={['#bfcfb2', '#98a988', '#bfcfb2']}
-                style={{
-                  left: 0,
-                  right: 0,
-                  height: 10,
-                  width: '100%',
-                  marginTop: 5,
-                }}
-              ></LinearGradient>
+
               <KeyboardAwareScrollView style={{}}>
 
+                <View style={[styles.RegisterRows, { height: '100%', flexDirection: 'row' }]}>
+                  <Text style={styles.textstyle1}>
+                    Date
+                  </Text>
+                  {/* <View style={{display:'flex', flex:2,flexDirection:'row', width:180}}> */}
+                  <View style={[styles.inputView, { height: 50 }]}>
+                    <Text
+                      onPress={this.showPicker1}
+                      style={[styles.dateInput,]}>
+
+                      {this.state.MeetingDate !== ""
+                        ? moment(this.state.MeetingDate).calendar()
+                        : "Meeting date"}
+                      {/* {console.log(this.state.MeetingDate)} */}
+                    </Text>
+
+
+                  </View>
+                  {/* </View>              */}
+                </View>
                 <View style={[styles.RegisterRows, { height: '100%', flexDirection: 'row' }]}>
                   <Text style={styles.textstyle1}>
                     Zoom Link
@@ -4081,7 +4258,7 @@ class Profile extends Component {
                       onChangeText={(text) => {
 
                         this.setState({ MeetingLink: text })
-                        console.log(this.state.MeetingLink)
+                        // console.log(this.state.MeetingLink)
                       }
                       }
                       style=
@@ -4097,6 +4274,7 @@ class Profile extends Component {
                   {/* </View>              */}
                 </View>
 
+
                 <View style={[styles.RegisterRows, { height: '100%', flexDirection: 'row' }]}>
                   <Text style={styles.textstyle1}></Text>
                   <TouchableOpacity style={[styles.inputView, {
@@ -4105,9 +4283,9 @@ class Profile extends Component {
                   }]}
 
                     onPress={async () => {
-                      if (this.state.MeetingLink === "") {
-                        this.showAlert('Meeting Link', 'Nothing Added')
-                        this.setState({ AddMeetingModal: false })
+                      if (this.state.MeetingLink === "" || this.state.MeetingDate === "") {
+                        this.showAlert('Meeting Link', 'Make sure all information are filled')
+                        // this.setState({ AddMeetingModal: false })
                       }
                       else {
                         console.log(this.state.MeetingLink)
@@ -4115,8 +4293,35 @@ class Profile extends Component {
                           // this.showAlert('j',this.isValidURL(this.state.MeetingLink))
                           this.setState({ MeetingSaved: false })
                           await this.updateMeetingLink();
+                          console.log("save" + this.state.MeetingDate)
                           this.showAlert('Meeting Link', 'Meeting Added')
                           this.setState({ AddMeetingModal: false, MeetingSaved: true })
+                          // this.getTeamMembers()
+                          this.state.TeamMembersMeeting.map(member => {
+
+                            if (member.Accepted) {
+                              firestore()
+                                .collection('NOTIFICATIONS')
+                                .doc(member.MemberEmail)
+                                .collection('NOTIFICATIONS')
+                                .add({
+                                  Boolean: false,
+                                  Type: "Meeting",
+                                  SenderNickName: this.state.NickName,
+                                  message: "Meeting link added to " + this.state.ProjectNameMeeting + ", Date " + this.state.MeetingDate,
+                                  projectId: member.ProjectID,
+                                  // leaderEmail: item.Email,
+                                  Date: new Date().toDateString(),
+                                  createdAt: new Date().getTime(),
+                                  user: {
+                                    _id: this.state.Email,
+                                    email: this.state.Email
+                                  }
+                                });
+                            }
+
+                          })
+
                         }
                         else {
                           this.showAlert('Link', 'This is not a Link')
@@ -4144,7 +4349,10 @@ class Profile extends Component {
 
           <View style={styles.MainView}>
 
-            <AskAsCustomer />
+            <AskAsCustomer 
+            Email={this.state.Email}
+            NickName={this.state.NickName}
+            />
 
           </View>
         </Modal>
@@ -4155,36 +4363,18 @@ class Profile extends Component {
           }
           style={styles.ModalView}>
 
-          <View style={[styles.modalS,{padding:0,paddingTop:10}]}>
-            <View style={{ flexDirection: 'row', marginBottom: 10 }}>
-              <View style={{ width: '20%', alignItems: 'flex-start' }}>
-
-              </View>
-              <View style={{ width: '60%', alignItems: 'center', justifyContent: 'center' }}>
-                <Text style={styles.textAddress}>View project details</Text>
-              </View>
-              <View style={{ width: '20%' }}>
-                <Text></Text>
-              </View>
-
+          <View style={[styles.modalS, { padding: 0, paddingTop: 0 }]}>
+            <View style={{ width: '100%', height: 50, backgroundColor: "#bc9855", justifyContent: 'center', alignItems: 'center', }}>
+              <Text style={{ fontFamily: 'SairaSemiCondensed-Bold', fontSize: 20, color: 'black' }}>View project details</Text>
             </View>
-            <LinearGradient
-              colors={['#bfcfb2', '#98a988', '#bfcfb2']}
-              style={{
-                left: 0,
-                right: 0,
-                height: 10,
-                width: '100%',
-                marginTop: 5,
-              }}
-            ></LinearGradient>
-            {/* <KeyboardAwareScrollView style={{ width: '100%', marginBottom: 5 }} showsVerticalScrollIndicator={false}> */}
-
-              <View style={[{ height: '100%', flexDirection: 'column', width: '100%',  }]}>
-                <ViewProject
-                  ProjectID={this.state.ProjectIDView}
-                />
-              </View>
+            <View style={[{ height: '100%', flexDirection: 'column', width: '100%', }]}>
+              <ViewProject
+                ProjectID={this.state.ProjectIDView}
+                ProjectName={this.state.ProjectNameView}
+                Email={this.state.Email}
+                NickName={this.state.NickName}
+              />
+            </View>
             {/* </KeyboardAwareScrollView> */}
           </View>
         </Modal>
@@ -4234,12 +4424,13 @@ class Profile extends Component {
           style={styles.ModalView}>
 
           <View style={{ backgroundColor: "#bfcfb2", width: '100%', height: "100%" }}>
-            
+
             <ProjectChatGroup
-             ProjectId = {this.state.ProjectIDChat}
-             Email = {this.state.Email}
-             NickName = {this.state.NickName}
-             ProjectChatGroup = {()=>this.setState({ ProjectChatModal: false })}
+              ProjectId={this.state.ProjectIDChat}
+              ProjectName={this.state.ProjectNameChat}
+              Email={this.state.Email}
+              NickName={this.state.NickName}
+              ProjectChatGroup={() => this.setState({ ProjectChatModal: false })}
             //  messages = 
             />
           </View>
@@ -4282,7 +4473,12 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
 
   },
-
+  dateInput:
+  {
+    marginHorizontal: 10,
+    fontFamily: 'SairaSemiCondensed-Regular',
+    paddingTop: 5
+  },
 
   text: {
     // fontWeight: 'bold',

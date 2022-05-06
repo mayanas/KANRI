@@ -4,6 +4,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import moment from "moment";
+import firestore from '@react-native-firebase/firestore';
 import {
   StyleSheet,
   Text,
@@ -34,6 +35,10 @@ class EditTask extends Component {
 
   }
   state = {
+    Email:this.props.Email,
+    NickName:this.props.NickName,
+    ProjectName:this.props.ProjectName,
+    ProjectID:this.props.ProjectID,
     TaskID: this.props.Task._id,
     showPicker: false,
     showPicker1: false,
@@ -83,6 +88,27 @@ class EditTask extends Component {
     }).catch(error => {
       console.log(error);
     });
+    if (this.state.email !== "") {
+      firestore()
+          .collection('NOTIFICATIONS')
+          .doc(this.state.email)
+          .collection('NOTIFICATIONS')
+          .add({
+              Boolean: false,
+              Type: "ModifiedFromProject",
+              SenderNickName: this.state.NickName,
+              message: this.state.newTaskTitle + " task from " + this.state.ProjectName + " has been modified",
+              projectId: this.state.ProjectID,
+              ProjectName:this.state.ProjectName,
+              // leaderEmail: item.Email,
+              Date: new Date().toDateString(),
+              createdAt: new Date().getTime(),
+              user: {
+                  _id: this.state.Email,
+                  email: this.state.Email
+              }
+          });
+  }
     this.props.ModalVisible();
 
   }

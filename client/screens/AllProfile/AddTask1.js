@@ -1,6 +1,7 @@
 
 import React, { Component } from 'react';
 import Icon from "react-native-vector-icons/MaterialIcons";
+import firestore from '@react-native-firebase/firestore';
 import {
     StyleSheet,
     Text,
@@ -18,13 +19,18 @@ class AddTask1 extends Component {
     }
     state = {
         AddTaskModal: false,
-        tasks: null
+        tasks: null,
+        Email: this.props.Email,
+        NickName: this.props.NickName,
+        ProjectName: this.props.ProjectName,
+        ProjectID:this.props.ProjectID,
+        CustomerEmail:this.props.CustomerEmail,
     }
     componentDidMount() {
         this.setState({ tasks: this.props.loadTasks })
     }
 
-    DeleteTask=async(item)=>{
+    DeleteTask = async (item) => {
         await fetch(serverLink + "/DeleteTask", {
             method: "POST",
             headers: {
@@ -40,24 +46,131 @@ class AddTask1 extends Component {
             console.log(resp);
         })
 
+        if(item.MemberEmail!==""){
+            firestore()
+            .collection('NOTIFICATIONS')
+            .doc(item.MemberEmail)
+            .collection('NOTIFICATIONS')
+            .add({
+                Boolean: false,
+                Type: "DeleteFromProject",
+                SenderNickName: this.state.NickName,
+                message: item.Title + " task from " + this.state.ProjectName + " has been deleted",
+                projectId: item.ProjectID,
+                // leaderEmail: item.Email,
+                Date: new Date().toDateString(),
+                createdAt: new Date().getTime(),
+                user: {
+                    _id: this.state.Email,
+                    email: this.state.Email
+                }
+            });
+        }
         this.props.ModalVisible();
     }
 
     update = async (item) => {
         // if (!item.Approved) {
-            let newMarkers = this.state.tasks.map(el => (
-                el._id === item._id ? {
-                    Content: item.Content, DeadLine: item.DeadLine, MemberEmail: item.MemberEmail, Priority: item.Priority,
-                    ProjectID: item.ProjectID,
-                    StartDate: item.StartDate, Title: item.Title, _id: item._id, Approved: !item.Approved
-                } : el
-            ))
-            this.setState({ tasks: newMarkers });
-            await this.updateApproved(item._id,!item.Approved);
+        let newMarkers = this.state.tasks.map(el => (
+            el._id === item._id ? {
+                Content: item.Content, DeadLine: item.DeadLine, MemberEmail: item.MemberEmail, Priority: item.Priority,
+                ProjectID: item.ProjectID,
+                StartDate: item.StartDate, Title: item.Title, _id: item._id, Approved: !item.Approved
+            } : el
+        ))
+        this.setState({ tasks: newMarkers });
+        await this.updateApproved(item._id, !item.Approved);
+
+        if (item.MemberEmail !== "") {
+            if(!item.Approved)
+            firestore()
+                .collection('NOTIFICATIONS')
+                .doc(item.MemberEmail)
+                .collection('NOTIFICATIONS')
+                .add({
+                    Boolean: false,
+                    Type: "ApprovedFromProject",
+                    SenderNickName: this.state.NickName,
+                    message: item.Title + " task from " + this.state.ProjectName + " has been approved",
+                    projectId: item.ProjectID,
+                    ProjectName:this.state.ProjectName,
+                    // leaderEmail: item.Email,
+                    Date: new Date().toDateString(),
+                    createdAt: new Date().getTime(),
+                    user: {
+                        _id: this.state.Email,
+                        email: this.state.Email
+                    }
+                });
+            else 
+            firestore()
+                .collection('NOTIFICATIONS')
+                .doc(item.MemberEmail)
+                .collection('NOTIFICATIONS')
+                .add({
+                    Boolean: false,
+                    Type: "ApprovedFromProject",
+                    SenderNickName: this.state.NickName,
+                    message: item.Title + " task from " + this.state.ProjectName + " has been disapproved",
+                    projectId: item.ProjectID,
+                    ProjectName:this.state.ProjectName,
+                    // leaderEmail: item.Email,
+                    Date: new Date().toDateString(),
+                    createdAt: new Date().getTime(),
+                    user: {
+                        _id: this.state.Email,
+                        email: this.state.Email
+                    }
+                });
+        }
+        if(this.state.CustomerEmail !== this.state.Email){
+            if(!item.Approved){
+                firestore()
+                .collection('NOTIFICATIONS')
+                .doc(this.state.CustomerEmail)
+                .collection('NOTIFICATIONS')
+                .add({
+                    Boolean: false,
+                    Type: "ApprovedFromProject",
+                    SenderNickName: this.state.NickName,
+                    message: item.Title + " task from " + this.state.ProjectName + " has been approved",
+                    projectId: item.ProjectID,
+                    ProjectName:this.state.ProjectName,
+                    // leaderEmail: item.Email,
+                    Date: new Date().toDateString(),
+                    createdAt: new Date().getTime(),
+                    user: {
+                        _id: this.state.Email,
+                        email: this.state.Email
+                    }
+                });
+            }
+            else{
+                firestore()
+                .collection('NOTIFICATIONS')
+                .doc(this.state.CustomerEmail)
+                .collection('NOTIFICATIONS')
+                .add({
+                    Boolean: false,
+                    Type: "ApprovedFromProject",
+                    SenderNickName: this.state.NickName,
+                    message: item.Title + " task from " + this.state.ProjectName + " has been disapproved",
+                    projectId: item.ProjectID,
+                    ProjectName:this.state.ProjectName,
+                    // leaderEmail: item.Email,
+                    Date: new Date().toDateString(),
+                    createdAt: new Date().getTime(),
+                    user: {
+                        _id: this.state.Email,
+                        email: this.state.Email
+                    }
+                });
+            }
+        }
         // }
 
     }
-    async updateApproved(id,approved) {
+    async updateApproved(id, approved) {
 
         await fetch(serverLink + "/updateApproved", {
             method: "POST",
@@ -82,7 +195,7 @@ class AddTask1 extends Component {
     ItemView = ({ item }) => {
 
         return (
-  
+
             <View style={styles.listTile}>
                 <View style={styles.leading}>
                     <Icon
@@ -103,17 +216,17 @@ class AddTask1 extends Component {
                 <View style={styles.trailing}>
                     <Icon
                         name="edit"
-                        style={{paddingHorizontal:10}}
+                        style={{ paddingHorizontal: 10 }}
                         size={20}
                         color="#666666"
                         onPress={() => { this.props.EditTasks(item) }}
                     />
-                     <Icon
+                    <Icon
                         name="delete"
-                        style={{paddingHorizontal:10}}
+                        style={{ paddingHorizontal: 10 }}
                         size={20}
                         color="#666666"
-                        onPress={async() => { await this.DeleteTask(item) }}
+                        onPress={async () => { await this.DeleteTask(item) }}
                     />
                 </View>
 
@@ -158,26 +271,26 @@ class AddTask1 extends Component {
                 </View>
                 <View style={styles.MainView}>
 
-                    <View style={{paddingTop:0,height:'85%'}}>
-                    <FlatList
-                    // height={'50%'}
-                    showsVerticalScrollIndicator={false}
-                        data={this.state.tasks}
-                        keyExtractor={(item) => item._id.toString()}
-                        ItemSeparatorComponent={this.ItemSeparatorView}
-                        renderItem={this.ItemView}
-                    />
-                    
-                </View>
-                
-                </View>
-                <View style={{left:190,bottom:5,justifyContent:'flex-end'}}>
-                    <TouchableOpacity onPress={() => { this.props.setStateModal() }} style={styles.fab}>
-                       <Icon 
-                       size={30}
-                       name ="add-task"/>
-                    </TouchableOpacity>
+                    <View style={{ paddingTop: 0, height: '85%' }}>
+                        <FlatList
+                            // height={'50%'}
+                            showsVerticalScrollIndicator={false}
+                            data={this.state.tasks}
+                            keyExtractor={(item) => item._id.toString()}
+                            ItemSeparatorComponent={this.ItemSeparatorView}
+                            renderItem={this.ItemView}
+                        />
+
                     </View>
+
+                </View>
+                <View style={{ left: 190, bottom: 5, justifyContent: 'flex-end' }}>
+                    <TouchableOpacity onPress={() => { this.props.setStateModal() }} style={styles.fab}>
+                        <Icon
+                            size={30}
+                            name="add-task" />
+                    </TouchableOpacity>
+                </View>
                 {/* </View> */}
 
 
@@ -268,8 +381,8 @@ const styles = StyleSheet.create({
         width: "20%",
         alignItems: 'flex-end',
         // paddingRight: 10,
-        flexDirection:'row',
-        
+        flexDirection: 'row',
+
     }
 });
 

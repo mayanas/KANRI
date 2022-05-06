@@ -23,16 +23,15 @@ import Start from "./screens/Start";
 import { LogBox } from 'react-native';
 import FirstTimeRegister from './screens/FirstTimeRegister';
 import ChangePassword from './screens/AllProfile/ChangePassword';
-import AddProject from './screens/AllProfile/Projects/AddProject';
+// import AddProject from './screens/AllProfile/Projects/AddProject';
 import ProfileForOthers from './screens/AllProfile/ProfileForOthers';
-import Project from './screens/AllProfile/Projects/Project';
+// import Project from './screens/AllProfile/Projects/Project';
 import AddPersonToPreject from './screens/AllProfile/Projects/AddPersonToProject';
 import AddTask from './screens/AllProfile/Projects/AddTask';
 import ChatScreen from './screens/AllProfile/ChatScreen';
 LogBox.ignoreLogs([
   "[react-native-gesture-handler] Seems like you\'re using an old API with gesture components, check out new Gestures system!",
 ]);
-
  
 const Stack = createNativeStackNavigator();
 
@@ -56,13 +55,14 @@ const Stack = createNativeStackNavigator();
           <Stack.Screen name="firstTimeRegister" component={FirstTimeRegister}></Stack.Screen>
           <Stack.Screen name="home" component={Home}></Stack.Screen>
           <Stack.Screen name="changePassword" component={ChangePassword}></Stack.Screen>
-          <Stack.Screen name="addProject" component={AddProject}></Stack.Screen>
+          {/* <Stack.Screen name="addProject" component={AddProject}></Stack.Screen> */}
           <Stack.Screen name="profileForOthers" component={ProfileForOthers}></Stack.Screen>
-          <Stack.Screen name="Project" component={Project}></Stack.Screen>
+          {/* <Stack.Screen name="Project" component={Project}></Stack.Screen> */}
           <Stack.Screen name="AddPersonToProject" component={AddPersonToPreject}></Stack.Screen>
           <Stack.Screen name="ChatScreen" component={ChatScreen}></Stack.Screen>
           <Stack.Screen name="AddTask" component={AddTask}></Stack.Screen>
       </Stack.Navigator>
+      
       </NavigationContainer>
       
      );

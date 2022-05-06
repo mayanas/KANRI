@@ -7,7 +7,7 @@
  */
 
 import React, { Component } from 'react';
-import { Alert, KeyboardAvoidingView ,LogBox} from 'react-native';
+import { Alert, KeyboardAvoidingView, LogBox } from 'react-native';
 import { ActivityIndicator, Searchbar } from 'react-native-paper';
 import LinearGradient from 'react-native-linear-gradient';
 import { serverLink } from '../serverLink';
@@ -27,12 +27,12 @@ import {
   RefreshControl,
 } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
-import { isEqualIcon } from 'react-native-paper/lib/typescript/components/Icon';
 import Loading from '../../Components/Loading';
 import ProfileForOthers from './ProfileForOthers';
 import Ionicons from 'react-native-vector-icons/dist/Ionicons';
 //
-
+import PushNotification, { Importance } from 'react-native-push-notification';
+import firestore from '@react-native-firebase/firestore';
 //  import FontAwesomeIcon from 'react-native-vector-icons/dist/FontAwesome';
 
 class HomeScreen extends Component {
@@ -40,7 +40,8 @@ class HomeScreen extends Component {
     super(props);
     this.state = {
       Email: this.props.route.params.Email,
-      NickName:'',
+      Token: '',
+      NickName: '',
       search: "",
       filteredDataSource: [],
       masterDataSource: [],
@@ -51,17 +52,20 @@ class HomeScreen extends Component {
       ProfileForOthersEmail: "",
       refreshing: false,
       Projects: null,
-      ProjectDescription1:"",
-      DescModal:false,
+      ProjectDescription1: "",
+      DescModal: false,
     }
     this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
   }
   async componentDidMount() {
+
     this.setState({ Email: this.props.route.params.Email })
     this.setState({ refreshing: true });
     await this.getProjectsHome();
     await this.getNickName();
     this.setState({ refreshing: false });
+
+
   }
   getNickName = async () => {
     const response = await fetch(serverLink + "/getNickName", {
@@ -72,7 +76,7 @@ class HomeScreen extends Component {
       },
       body: JSON.stringify(
         {
-          Email:this.state.Email
+          Email: this.state.Email
         }
       )
     });
@@ -83,8 +87,10 @@ class HomeScreen extends Component {
       console.log(body);
       this.setState({ NickName: body })
 
+
     }
   }
+
 
 
   UNSAFE_componentWillMount() {
@@ -133,7 +139,6 @@ class HomeScreen extends Component {
     this.setState({ refreshing: true });
     await this.getProjectsHome();
     this.wait(2000).then(() => this.setState({ refreshing: false }))
-
   }
   searchFilterFunction = async (text) => {
 
@@ -243,8 +248,10 @@ class HomeScreen extends Component {
               alignItems: 'center', justifyContent: 'center', borderRadius: 15,
               borderWidth: 0, flexDirection: 'row'
             }}
+              disabled={item.Email == this.state.Email}
               onPress={async () => {
                 /////////////////////////request to join///////////////////////
+                this.joinProject(item)
               }}>
               <Icon
                 name="plus-circle-outline"
@@ -323,10 +330,80 @@ class HomeScreen extends Component {
     }
   }
 
-  // GoToMessages=(srcEmail,dstEmail)=>{
-  //   this.setState({ProfileForOthersModal:false});
-  //   this.props.navigation.navigate('Messages',{srcEmail:srcEmail,dstEmail:dstEmail})
-  // }
+  joinProject = async(item) => {
+    
+    await fetch(serverLink + "/getJoin", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(
+        {
+          Type:"RequestToJoin",
+          SenderNickName: this.state.NickName,
+          SenderEmail:this.state.Email,
+          ProjectID: item._id,
+          ProjectName: item.ProjectName,
+          RecieverEmail: item.Email,
+        }
+      )
+    }).then(resp => {
+      return resp.json();
+    }).then(async jsonresponse => {
+      if (jsonresponse === "null") {
+        firestore()
+            .collection('NOTIFICATIONS')
+            .doc(item.Email)
+            .collection('NOTIFICATIONS')
+            // .doc(item.Email)
+            .add({
+              Boolean: false,
+              Type: "Join",
+              SenderNickName: this.state.NickName,
+              message: "Requests to join your project " + item.ProjectName,
+              projectId: item._id,
+              // leaderEmail: item.Email,
+              Date: new Date().toDateString(),
+              createdAt: new Date().getTime(),
+              user: {
+                _id: this.state.Email,
+                email: this.state.Email
+              }
+            });
+
+            await fetch(serverLink + "/Invitations", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json"
+                },
+                body: JSON.stringify(
+                  {
+                    Type:"RequestToJoin",
+                    SenderNickName: this.state.NickName,
+                    SenderEmail:this.state.Email,
+                    ProjectID: item._id,
+                    ProjectName: item.ProjectName,
+                    RecieverEmail: item.Email,
+                    CreationTime: new Date()
+                  }
+                )
+              }).then(resp => {
+                return resp.json();
+              }).then(jsonresponse => {
+                if (jsonresponse !== "null") {
+                  console.log(jsonresponse)
+                }
+          
+              }).catch(error => {
+                console.log(error);
+              });
+      }
+
+    }).catch(error => {
+      console.log(error);
+    });
+
+  }
   render() {
 
     return (
@@ -359,7 +436,7 @@ class HomeScreen extends Component {
               inputStyle={{
                 fontFamily: 'SairaSemiCondensed-Regular',
                 fontSize: 15,
-                
+
               }}
 
 
@@ -369,7 +446,7 @@ class HomeScreen extends Component {
                 this.setState({ search: text })
                 this.searchFilterFunction(text)
               }}
-              
+
 
               value={this.state.search}
             />
@@ -539,12 +616,12 @@ const styles = StyleSheet.create({
     fontFamily: 'SairaSemiCondensed-Regular',
   },
   textItems1: {
-    fontSize: 13,
+    fontSize: 14,
     color: 'black',
     fontFamily: 'SairaSemiCondensed-Regular',
   },
   boldText: {
-    fontSize: 13,
+    fontSize: 15,
     color: 'black',
     fontFamily: 'SairaSemiCondensed-Bold',
   },

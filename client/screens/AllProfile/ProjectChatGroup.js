@@ -8,7 +8,6 @@ import { serverLink } from '../serverLink';
 import firestore from '@react-native-firebase/firestore';
 import Loading from '../../Components/Loading';
 import Icon from 'react-native-vector-icons/dist/MaterialCommunityIcons';
-
 LogBox.ignoreLogs(["EventEmitter.removeListener"]);
 LogBox.ignoreLogs(['Require cycle:']);
 
@@ -21,14 +20,46 @@ class ProjectChatGroup extends Component {
             ProjectId: this.props.ProjectId,
             messages: [],
             loaded: true,
-            NickName:this.props.NickName
+            NickName:this.props.NickName,
+            TeamMembers:[],
+            ProjectName :this.props.ProjectName,
 
         }
     }
 
+    getTeamMembers = async () => {
+
+        // this.setState({ TeamMembers: [] })
+        await fetch(serverLink + "/getTeamMembersChat", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(
+            {
+              "ProjectID": this.state.ProjectId,
+            }
+          )
+        }).then(resp => {
+          return resp.json();
+        }).then(async (jsonresponse) => {
+          // console.log(jsonresponse.ProjectName)
+          if (jsonresponse !== "null") {
+            this.setState({
+              TeamMembers: jsonresponse
+            })
+
+          }
+          console.log(this.state.TeamMembers)
+    
+        }).catch(error => {
+          console.log(error);
+        });
+      }
     getMessagesLoad = async () => {
         this.setState({ loaded: false })
         await this.getMessages();
+        await this.getTeamMembers();
         this.setState({ loaded: true })
     }
     componentDidMount = async () => {
@@ -126,6 +157,30 @@ class ProjectChatGroup extends Component {
             messages: GiftedChat.append(previousState.messages, messages),
 
         }));
+
+        this.state.TeamMembers.map(member=>{
+            if(this.state.userName !== member.MemberEmail){
+                firestore()
+                .collection('NOTIFICATIONS')
+                .doc(member.MemberEmail)
+                .collection('NOTIFICATIONS')
+                .add({
+                  Boolean: false,
+                  Type: "GroupChat",
+                  SenderNickName: "Project "+this.state.ProjectName+" Group Chat ",
+                  message:this.state.NickName+ " : " +messages[0].text,
+                  projectId: this.state.ProjectId,
+                  ProjectName: this.state.ProjectName,
+                  // leaderEmail: item.Email,
+                  Date: new Date().toDateString(),
+                  createdAt: new Date().getTime(),
+                  user: {
+                    _id: this.state.userName,
+                    email: this.state.userName,
+                  }
+                });
+            }
+        })
 
         console.log(messages[0])
         await this.saveMessages(messages[0]);
