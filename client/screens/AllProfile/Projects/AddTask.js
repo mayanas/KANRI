@@ -255,7 +255,9 @@ class AddTask extends Component {
               <View style={{ paddingTop: 50 }}>
                 <SelectDropdown
                   dropdownBackgroundColor={"#98a988"}
-                  buttonStyle={[styles.textinputstyle, { width: '38%', height: 37 }]}
+                  buttonStyle={styles.textinputstyle11}
+                  dropdownStyle={{ backgroundColor: 'none' }}
+                  rowStyle={{backgroundColor:'#98a988',borderRadius:8}}
                   rowTextStyle={{fontFamily: 'SairaSemiCondensed-Regular',fontSize:16}}
                   buttonTextStyle={{fontFamily: 'SairaSemiCondensed-Regular',fontSize:16}}
                   styleInput={{ fontFamily: 'SairaSemiCondensed-Regular' }}
@@ -364,6 +366,16 @@ const styles = StyleSheet.create({
     width: 300,
     paddingHorizontal: 4,
     height: 47,
+    fontFamily: 'SairaSemiCondensed-Regular',
+    fontSize: 15,
+    borderRadius: 20,
+    textDecorationLine: 'none',
+    backgroundColor: "#bc9855"
+  },
+  textinputstyle11: {
+    width: 150,
+    paddingHorizontal: 4,
+    height: 37,
     fontFamily: 'SairaSemiCondensed-Regular',
     fontSize: 15,
     borderRadius: 20,

@@ -18,6 +18,10 @@
    BackHandler,
  } from 'react-native';
  import { serverLink } from './serverLink';
+
+//  console.warn({})
+//  LogBox.ignoreLogs(['Warning: ...']); // Ignore log notification by message
+//  LogBox.ignoreAllLogs();
 //  const serverLink="http://192.168.1.110:3001";
 //  const serverLink="http://172.19.15.206:3001";
  const FadeInView = (props) => {

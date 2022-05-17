@@ -167,9 +167,9 @@ export default function Home({route}) {
           // }} 
           />
         <Tab.Screen name="Notifications" component={Notifications} 
-        options={{ 
-          tabBarBadge: threads.length
-          , tabBarBadgeStyle: {backgroundColor:'#bc9855'}}}
+        // options={{ 
+        //   // tabBarBadge: threads.length
+        //   , tabBarBadgeStyle: {backgroundColor:'#bc9855'}}}
          initialParams={{ Email: route.params.Email }} />
         <Tab.Screen name="Messages" component={Messages} 
         // options={{ tabBarBadge: 3 }} 

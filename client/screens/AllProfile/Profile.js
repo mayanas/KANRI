@@ -241,6 +241,7 @@ class Profile extends Component {
       refreshing: false,
       FollowersList: [],
       FollowingsList: [],
+      CustomerEmailMeeting:'',
     }
     this.handleBackButtonClick = this.handleBackButtonClick.bind(this);
     this.phoneinput = React.createRef();
@@ -346,6 +347,7 @@ class Profile extends Component {
       )
     }).then(response => { return response.json() }).then(resp => {
       this.setState({ ProjectID: resp.insertedId })
+      console.log(this.state.ProjectID)
     })
 
     if (this.state.CustomerEmail !== this.state.Email) {
@@ -370,6 +372,7 @@ class Profile extends Component {
         });
     }
 
+    // if(this.state.FollowersList.length)
     this.state.FollowersList.map((follower) => {
       firestore()
         .collection('NOTIFICATIONS')
@@ -938,7 +941,7 @@ class Profile extends Component {
 
     return (
       <View style={{
-        height: '90%',
+        height: 270,
         width: 250,
         backgroundColor: '#98a988',
         margin: 15,
@@ -987,6 +990,7 @@ class Profile extends Component {
           }}
             onPress={async () => {
 
+              
               await this.getMeetingLink(item._id)
               if (this.state.MeetingLink === "")
                 this.showAlert('Meeting Link', 'No availabe link')
@@ -1022,6 +1026,7 @@ class Profile extends Component {
                 MeetingLink: item.MeetingLink,
                 ProjectIDFromMeeting: item._id,
                 ProjectNameMeeting: item.ProjectName,
+                CustomerEmailMeeting:item.CustomerEmail,
               })
               await this.getTeamMembers(item._id)
               this.setState({ AddMeetingModal: true, })
@@ -1101,7 +1106,7 @@ class Profile extends Component {
 
     return (
       <View style={{
-        height: '90%',
+        height: 270,
         width: 250,
         backgroundColor: '#98a988',
         margin: 15,
@@ -1450,7 +1455,7 @@ class Profile extends Component {
 
     return (
       <View style={{
-        height: '90%',
+        height: 250,
         width: 380,
         backgroundColor: '#98a988',
         margin: 15,
@@ -1685,7 +1690,7 @@ class Profile extends Component {
 
     return (
       <View style={{
-        height: '90%',
+        height: 250,
         width: 380,
         backgroundColor: '#98a988',
         margin: 15,
@@ -1884,7 +1889,7 @@ class Profile extends Component {
 
     return (
 
-      <View>
+      <View style={{height:'95%'}}>
         <View style={{ width: '100%', justifyContent: 'center', alignItems: 'flex-start', marginTop: 15 }}>
           <Text style={styles.title1}>{item.Title}</Text>
         </View>
@@ -2218,13 +2223,14 @@ class Profile extends Component {
 
               </View>
               <LinearGradient
-                colors={['#bfcfb2', '#98a988', '#bfcfb2']}
+                colors={['#bc9855', '#bc9855', '#bc9855']}
                 style={{
                   left: 0,
                   right: 0,
                   height: 10,
                   width: '100%',
                   marginTop: 5,
+                  marginBottom:5
                 }}
               ></LinearGradient>
 
@@ -2238,6 +2244,7 @@ class Profile extends Component {
                 }
               >
                 {/* InterestedIn Cards */}
+                {/* <View style={{ width: '100%', height: 320, }}> */}
                 <View style={{ width: '100%', height: 320, }}>
                   <Text style={[styles.text, { paddingHorizontal: 20 }]}>Interested In</Text>
                   <FlatList
@@ -2245,7 +2252,7 @@ class Profile extends Component {
                     showsHorizontalScrollIndicator={false}
                     horizontal
                     width={'100%'}
-                    height={'100%'}
+                    // height={'100%'}
                     keyExtractor={(item) => item.id.toString()}
                     data={this.state.InterestedIn}
                     renderItem={this.func}
@@ -2254,24 +2261,25 @@ class Profile extends Component {
 
                 </View>
                 <LinearGradient
-                  colors={['#bfcfb2', '#98a988', '#bfcfb2']}
+                  colors={['#bc9855', '#bc9855', '#bc9855']}
                   style={{
                     left: 0,
                     right: 0,
-                    height: 10,
+                    height: 1,
                     width: '100%',
                     marginTop: 5,
+                    marginBottom:5
                   }}
                 ></LinearGradient>
                 {/* Projects created */}
-                <View style={{ width: '100%', height: 320, }}>
+                <View style={{ width: '100%',  }}>
                   <Text style={[styles.text, { paddingHorizontal: 20 }]}>Created Projects</Text>
                   <FlatList
                     contentContainerStyle={this.state.Projects.length <= 1 ? { width: '100%' } : {}}
                     showsHorizontalScrollIndicator={false}
                     horizontal
                     width={'100%'}
-                    height={'100%'}
+                    // height={'100%'}
                     keyExtractor={(item) => item._id.toString()}
                     data={this.state.Projects}
                     renderItem={this.funcProjects}
@@ -2280,17 +2288,18 @@ class Profile extends Component {
 
                 </View>
                 <LinearGradient
-                  colors={['#bfcfb2', '#98a988', '#bfcfb2']}
+                  colors={['#bc9855', '#bc9855', '#bc9855']}
                   style={{
                     left: 0,
                     right: 0,
-                    height: 10,
+                    height: 1,
                     width: '100%',
                     marginTop: 5,
+                    marginBottom:5
                   }}
                 ></LinearGradient>
                 {/* Projects joined */}
-                <View style={{ width: '100%', height: 320, }}>
+                <View style={{ width: '100%',  }}>
                   <Text style={[styles.text, { paddingHorizontal: 20 }]}>Joined Projects</Text>
                   <FlatList
                     contentContainerStyle={this.state.ProjectsJoinedInfo.length <= 1 ? { width: '100%' } : {}}
@@ -2298,7 +2307,7 @@ class Profile extends Component {
                     showsHorizontalScrollIndicator={false}
                     horizontal
                     width={'100%'}
-                    height={'100%'}
+                    // height={'100%'}
                     keyExtractor={(item) => item._id.toString()}
                     data={this.state.ProjectsJoinedInfo}
                     renderItem={this.funcProjectsJoined}
@@ -2307,11 +2316,11 @@ class Profile extends Component {
 
                 </View>
                 <LinearGradient
-                  colors={['#bfcfb2', '#98a988', '#bfcfb2']}
+                  colors={['#bc9855', '#bc9855', '#bc9855']}
                   style={{
                     left: 0,
                     right: 0,
-                    height: 10,
+                    height: 1,
                     width: '100%',
                     marginTop: 5,
                   }}
@@ -3034,7 +3043,7 @@ class Profile extends Component {
 
             <SafeAreaView style={{ width: '100%', height: '100%', flex: 1 }}>
               {this.state.savedInfo ?
-                <KeyboardAwareScrollView showsVerticalScrollIndicator={false}>
+                // <KeyboardAwareScrollView showsVerticalScrollIndicator={false}>
                   <View style={{ width: '100%', height: 600 }}>
                     <ProgressSteps progressBarColor="#98a988" completedProgressBarColor="#bc9855"
                       activeStepIconColor="#bfcfb2" completedStepIconColor="#bc9855"
@@ -3057,6 +3066,9 @@ class Profile extends Component {
 
                         }}
                       >
+                        <KeyboardAwareScrollView enableOnAndroid
+                                                    showsVerticalScrollIndicator={false}
+                                                    behavior="padding" >
                         <View style={styles.RegisterRows}>
                           <Text style={[styles.textstyle1, { width: '40%', paddingHorizontal: 4 }]}>
                             Project Name
@@ -3123,6 +3135,7 @@ class Profile extends Component {
 
 
                         </View>
+                        </KeyboardAwareScrollView>
                       </ProgressStep>
 
                       <ProgressStep label="Details" onSubmit={async () => {
@@ -3168,6 +3181,9 @@ class Profile extends Component {
                         nextBtnStyle={{ backgroundColor: '#bc9855', borderRadius: 15, width: 100, alignItems: 'center' }}
                         nextBtnTextStyle={{ fontFamily: 'SairaSemiCondensed-Bold', fontSize: 15, color: "black" }}
                       >
+                        <KeyboardAwareScrollView enableOnAndroid
+                                                    showsVerticalScrollIndicator={false}
+                                                    behavior="padding" >
                         <View style={styles.RegisterRows}>
                           <Text style={[styles.textstyle1, { width: '40%', paddingHorizontal: 4 }]}>
                             Customer Email
@@ -3246,10 +3262,11 @@ class Profile extends Component {
 
 
                         </View>
+                        </KeyboardAwareScrollView>
                       </ProgressStep>
                     </ProgressSteps>
                   </View>
-                </KeyboardAwareScrollView>
+                // </KeyboardAwareScrollView>
                 :
                 <Loading />
               }
@@ -3277,7 +3294,7 @@ class Profile extends Component {
             {!this.state.loadProject ? <Loading /> :
 
               <View style={[styles.MainView1, { padding: 0 }]}>
-                <View style={{ flexDirection: 'row', marginBottom: 30 }}>
+                <View style={{ flexDirection: 'row', marginBottom: 20 }}>
                   <View style={{ width: '20%', alignItems: 'flex-start' }}>
                   </View>
                   <View style={{ width: '60%', alignItems: 'center', justifyContent: 'center' }}>
@@ -3292,13 +3309,14 @@ class Profile extends Component {
                   <SafeAreaView style={{ width: '100%', height: '100%', flex: 1 }}>
                     <View style={{ width: '100%', height: '100%' }}>
                       <LinearGradient
-                        colors={['#bfcfb2', '#98a988', '#bfcfb2']}
+                        colors={['#bc9855', '#bc9855', '#bc9855']}
                         style={{
                           left: 0,
                           right: 0,
                           height: 10,
                           width: '100%',
                           marginTop: 5,
+                          marginBottom:5,
                         }}
                       ></LinearGradient>
                       {/* Mission */}
@@ -3320,11 +3338,11 @@ class Profile extends Component {
                         </View>
                         <Text style={[styles.textinterest, { paddingHorizontal: 10 }]}>{this.state.ProjectMission1}</Text>
                         <LinearGradient
-                          colors={['#bfcfb2', '#98a988', '#bfcfb2']}
+                          colors={['#bc9855', '#bc9855', '#bc9855']}
                           style={{
                             left: 0,
                             right: 0,
-                            height: 10,
+                            height: 1,
                             width: '100%',
                             marginTop: 5,
                           }}
@@ -3367,11 +3385,11 @@ class Profile extends Component {
                         </View>
                         {/* <Text style={styles.textinterest}>{this.state.ProjectMission}</Text> */}
                         <LinearGradient
-                          colors={['#bfcfb2', '#98a988', '#bfcfb2']}
+                          colors={['#bc9855', '#bc9855', '#bc9855']}
                           style={{
                             left: 0,
                             right: 0,
-                            height: 10,
+                            height: 1,
                             width: '100%',
                             marginTop: 5,
                           }}
@@ -3416,11 +3434,11 @@ class Profile extends Component {
 
                       </View>
                       <LinearGradient
-                        colors={['#bfcfb2', '#98a988', '#bfcfb2']}
+                        colors={['#bc9855', '#bc9855', '#bc9855']}
                         style={{
                           left: 0,
                           right: 0,
-                          height: 10,
+                          height: 1,
                           width: '100%',
                           marginTop: 5,
                         }}
@@ -3444,11 +3462,11 @@ class Profile extends Component {
                         </View>
                         <Text style={[styles.textinterest, { textAlign: 'center' }]}>{this.state.ProjectDeadLine1} </Text>
                         <LinearGradient
-                          colors={['#bfcfb2', '#98a988', '#bfcfb2']}
+                          colors={['#bc9855', '#bc9855', '#bc9855']}
                           style={{
                             left: 0,
                             right: 0,
-                            height: 10,
+                            height: 1,
                             width: '100%',
                             marginTop: 5,
                           }}
@@ -3472,13 +3490,13 @@ class Profile extends Component {
                             // onPress={() => { this.props.navigation.navigate('AddPersonToProject', { Email: this.state.Email, ProjectID: this.state.ProjectID }) }}
                             /></View>
                         </View>
-                        <View style={{ width: '100%', height: 250, flex: 1 }}>
+                        <View style={{ width: '100%',  flex: 1 }}>
                           <FlatList
 
                             showsHorizontalScrollIndicator={false}
                             horizontal
                             width={'100%'}
-                            height={'100%'}
+                            // height={'100%'}
                             keyExtractor={(item) => item._id.toString()}
                             data={this.state.TeamMembers}
                             renderItem={this.funcProject}
@@ -3486,11 +3504,11 @@ class Profile extends Component {
                           />
                         </View>
                         <LinearGradient
-                          colors={['#bfcfb2', '#98a988', '#bfcfb2']}
+                          colors={['#bc9855', '#bc9855', '#bc9855']}
                           style={{
                             left: 0,
                             right: 0,
-                            height: 10,
+                            height: 1,
                             width: '100%',
                             marginTop: 5,
                           }}
@@ -3515,13 +3533,13 @@ class Profile extends Component {
                               onPress={() => { this.EditTasks() }}
                             /></View>
                         </View>
-                        <View style={{ width: '100%', height: 250, flex: 1 }}>
+                        <View style={{ width: '100%',  flex: 1 }}>
                           <FlatList
 
                             showsHorizontalScrollIndicator={false}
                             horizontal
                             width={'100%'}
-                            height={'100%'}
+                            // height={'100%'}
                             keyExtractor={(item) => item._id.toString()}
                             data={this.state.Tasks1}
                             renderItem={this.funcProjectTasks}
@@ -3529,11 +3547,11 @@ class Profile extends Component {
                           />
                         </View>
                         <LinearGradient
-                          colors={['#bfcfb2', '#98a988', '#bfcfb2']}
+                          colors={['#bc9855', '#bc9855', '#bc9855']}
                           style={{
                             left: 0,
                             right: 0,
-                            height: 10,
+                            height: 1,
                             width: '100%',
                             marginTop: 5,
                           }}
@@ -3577,13 +3595,14 @@ class Profile extends Component {
 
               </View>
               <LinearGradient
-                colors={['#bfcfb2', '#98a988', '#bfcfb2']}
+                colors={['#bc9855', '#bc9855', '#bc9855']}
                 style={{
                   left: 0,
                   right: 0,
                   height: 10,
                   width: '100%',
                   marginTop: 5,
+                  marginBottom:5,
                 }}
               ></LinearGradient>
 
@@ -3680,13 +3699,14 @@ class Profile extends Component {
 
             </View>
             <LinearGradient
-              colors={['#bfcfb2', '#98a988', '#bfcfb2']}
+              colors={['#bc9855', '#bc9855', '#bc9855']}
               style={{
                 left: 0,
                 right: 0,
                 height: 10,
                 width: '100%',
                 marginTop: 5,
+                marginBottom:5
               }}
             ></LinearGradient>
             <KeyboardAwareScrollView style={{ width: '100%', marginBottom: 5 }}>
@@ -3726,13 +3746,14 @@ class Profile extends Component {
 
               </View>
               <LinearGradient
-                colors={['#bfcfb2', '#98a988', '#bfcfb2']}
+                colors={['#bc9855', '#bc9855', '#bc9855']}
                 style={{
                   left: 0,
                   right: 0,
                   height: 10,
                   width: '100%',
                   marginTop: 5,
+                  marginBottom:5
                 }}
               ></LinearGradient>
               <KeyboardAwareScrollView style={{}}>
@@ -3811,13 +3832,14 @@ class Profile extends Component {
 
               </View>
               <LinearGradient
-                colors={['#bfcfb2', '#98a988', '#bfcfb2']}
+                colors={['#bc9855', '#bc9855', '#bc9855']}
                 style={{
                   left: 0,
                   right: 0,
                   height: 10,
                   width: '100%',
                   marginTop: 5,
+                  marginBottom:5
                 }}
               ></LinearGradient>
               <KeyboardAwareScrollView style={{}}>
@@ -3910,13 +3932,14 @@ class Profile extends Component {
 
               </View>
               <LinearGradient
-                colors={['#bfcfb2', '#98a988', '#bfcfb2']}
+                colors={['#bc9855', '#bc9855', '#bc9855']}
                 style={{
                   left: 0,
                   right: 0,
                   height: 10,
                   width: '100%',
                   marginTop: 5,
+                  marginBottom:5
                 }}
               ></LinearGradient>
               {/* <KeyboardAwareScrollView style={{}}> */}
@@ -3928,7 +3951,8 @@ class Profile extends Component {
                   </Text>
                 </View>
 
-                <View style={{ paddingTop: 0, height: '85%', width: '100%', marginHorizontal: 0 }}>
+                {/* <View style={{ paddingTop: 0, height: '85%', width: '100%', marginHorizontal: 0 }}> */}
+                <View style={{ paddingTop: 0,width: '100%', marginHorizontal: 0 }}>
                   <FlatList
                     // height={'50%'}
                     showsVerticalScrollIndicator={false}
@@ -3974,7 +3998,7 @@ class Profile extends Component {
             }} />
           </View> */}
           <View style={styles.MainView}>
-            {this.state.DeadLineSaved ? <View style={styles.modalS}>
+            {this.state.DeadLineSaved ? <View style={[styles.modalS,{marginHorizontal:0}]}>
               <View style={{ flexDirection: 'row', marginBottom: 10 }}>
                 <View style={{ width: '20%', alignItems: 'flex-start' }}>
 
@@ -3990,13 +4014,14 @@ class Profile extends Component {
 
               <KeyboardAwareScrollView style={{}}>
                 <LinearGradient
-                  colors={['#bfcfb2', '#98a988', '#bfcfb2']}
+                  colors={['#bc9855', '#bc9855', '#bc9855']}
                   style={{
                     left: 0,
                     right: 0,
                     height: 10,
                     width: '100%',
                     marginTop: 5,
+                    marginBottom:5
                   }}
                 ></LinearGradient>
                 <View style={[styles.RegisterRows, { height: '100%', flexDirection: 'row' }]}>
@@ -4094,7 +4119,7 @@ class Profile extends Component {
               ProjectID={this.state.ProjectID}
               NickName={this.state.NickName}
               ProjectName={this.state.ProjectName1}
-              ProjectMission={this.state.ProjectMission}
+              ProjectMission={this.state.ProjectMission1}
             />
           </View>
         </Modal>
@@ -4288,7 +4313,8 @@ class Profile extends Component {
                         // this.setState({ AddMeetingModal: false })
                       }
                       else {
-                        console.log(this.state.MeetingLink)
+                        
+                        console.log(this.state.CustomerEmailMeeting)
                         if (await this.isValidURL(this.state.MeetingLink)) {
                           // this.showAlert('j',this.isValidURL(this.state.MeetingLink))
                           this.setState({ MeetingSaved: false })
@@ -4321,6 +4347,26 @@ class Profile extends Component {
                             }
 
                           })
+                          if(this.state.CustomerEmailMeeting!==this.state.Email){
+                            firestore()
+                                .collection('NOTIFICATIONS')
+                                .doc(this.state.CustomerEmailMeeting)
+                                .collection('NOTIFICATIONS')
+                                .add({
+                                  Boolean: false,
+                                  Type: "Meeting",
+                                  SenderNickName: this.state.NickName,
+                                  message: "Meeting link added to your project " + this.state.ProjectNameMeeting + ", Date " + this.state.MeetingDate,
+                                  projectId: this.state.ProjectIDFromMeeting,
+                                  // leaderEmail: item.Email,
+                                  Date: new Date().toDateString(),
+                                  createdAt: new Date().getTime(),
+                                  user: {
+                                    _id: this.state.Email,
+                                    email: this.state.Email
+                                  }
+                                });
+                          }
 
                         }
                         else {

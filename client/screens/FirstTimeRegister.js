@@ -26,10 +26,11 @@
   SafeAreaView ,
   ToastAndroid,
   PermissionsAndroid,
+  Modal
  } from 'react-native';
 import { ScrollView, TextInput } from 'react-native-gesture-handler';
 import CheckBoxItem from '../Components/CheckBoxItem';
-import { Modal } from 'react-native-paper';
+// import {  } from 'react-native-paper';
 
 import { LogBox } from 'react-native';
 LogBox.ignoreLogs(['Require cycle:']);

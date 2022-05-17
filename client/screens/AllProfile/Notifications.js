@@ -230,16 +230,16 @@ export default function Notifications({ navigation, route }) {
                     setItem(item)
                     switch (item.Type) {
                       case "Follow":
-                        setProfileForOthersModal(true);
+                        setProfileForOthersModal(true);/////
                         break;
                       case "Join":
-                        navigation.navigate('Invitations');
+                        navigation.navigate('Invitations');/////
                         break;
                       case "Meeting":
                         navigation.navigate('Profile');
                         break;
                       case "CreatedProject":
-                        setProfileForOthersModal(true);
+                        setProfileForOthersModal(true);/////
                         break;
                       case "DeleteProject":
                         setProfileForOthersModal(true);
@@ -268,8 +268,28 @@ export default function Notifications({ navigation, route }) {
                       case "DeleteMemberFromProject":
                         navigation.navigate('Profile');
                         break;
+
                       case "InviteToDoProject":
                         navigation.navigate('Invitations');
+                        break;
+
+                      case "AcceptInviteToJoin":
+                        navigation.navigate('Profile');
+                        break;
+                      case "DeclineInviteToJoin":
+                        navigation.navigate('Profile');
+                        break;
+                      case "AcceptRequestToJoin":
+                        navigation.navigate('Profile');
+                        break;
+                      case "DeclineRequestToJoin":
+                        navigation.navigate('Profile');
+                        break;
+                      case "AcceptInviteToDoProject":
+                        navigation.navigate('Profile');
+                        break;
+                      case "DeclineInviteToDoProject":
+                        navigation.navigate('Profile');
                         break;
 
                     }

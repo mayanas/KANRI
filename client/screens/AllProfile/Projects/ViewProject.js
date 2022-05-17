@@ -26,10 +26,10 @@ LogBox.ignoreLogs([
 LogBox.ignoreLogs(['Require cycle:']);
 // const serverLink = "http://192.168.1.15:3001";
 
-const data = {
-  labels: ["Swim", "Bike", "Run"], // optional
-  data: [0.4, 0.6, 0.8]
-};
+// const data = {
+//   labels: ["Swim", "Bike", "Run"], // optional
+//   data: [0.4, 0.6, 0.8]
+// };
 
 class ViewProject extends Component {
   constructor(props) {
@@ -116,7 +116,8 @@ class ViewProject extends Component {
         }
       )
     }).then(async response => { return response.json() }).then(async resp => {
-      await this.setState({ data: resp })
+      if(resp!=="null"){
+        await this.setState({ data: resp })
       this.setState({
         dataLength: this.state.data.length,
         tasksApproved: [],
@@ -168,6 +169,7 @@ class ViewProject extends Component {
       )
       console.log(this.state.tasks.length)
       this.setState({ projectProgress: Math.round(this.state.projectProgress / this.state.dataLength * 100) })
+      }
     })
 
     return

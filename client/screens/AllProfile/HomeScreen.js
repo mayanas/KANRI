@@ -122,7 +122,13 @@ class HomeScreen extends Component {
     }).then(jsonresponse => {
       if (jsonresponse !== "null") {
         this.setState({
-          Projects: jsonresponse
+          Projects: []
+        })
+        jsonresponse.map(pro=>{
+          if(pro.Email!==this.state.Email)
+          {
+            this.setState({Projects:[...this.state.Projects,pro]})
+          }
         })
 
       }
@@ -345,6 +351,7 @@ class HomeScreen extends Component {
           ProjectID: item._id,
           ProjectName: item.ProjectName,
           RecieverEmail: item.Email,
+          // CreationTime: new Date()
         }
       )
     }).then(resp => {
@@ -360,7 +367,7 @@ class HomeScreen extends Component {
               Boolean: false,
               Type: "Join",
               SenderNickName: this.state.NickName,
-              message: "Requests to join your project " + item.ProjectName,
+              message: "Requested to join your project " + item.ProjectName,
               projectId: item._id,
               // leaderEmail: item.Email,
               Date: new Date().toDateString(),
@@ -370,6 +377,7 @@ class HomeScreen extends Component {
                 email: this.state.Email
               }
             });
+            this.showAlert(this.state.NickName, "Your request has been sent")
 
             await fetch(serverLink + "/Invitations", {
                 method: "POST",
@@ -397,6 +405,9 @@ class HomeScreen extends Component {
               }).catch(error => {
                 console.log(error);
               });
+      }
+      else {
+        this.showAlert(this.state.NickName, jsonresponse)
       }
 
     }).catch(error => {
@@ -479,12 +490,14 @@ class HomeScreen extends Component {
             :
             <SafeAreaView style={{
               backgroundColor: '#bfcfb2', width: '100%',
-              height: '100%'
+              height: '90%'
             }}
 
             >
 
               <FlatList
+              vertical
+              showsVerticalScrollIndicator={false}
                 width={'100%'}
                 height={'100%'}
                 data={this.state.Projects}

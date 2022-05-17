@@ -21,6 +21,7 @@ import {
   Modal,
   TouchableRipple,
   Switch,
+  Alert,
   BackHandler,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
@@ -104,6 +105,12 @@ class AddPersonToPreject extends Component {
 
   // function to delete 
   deleteTodo = (_id, NickName, MemberEmail) => {
+    // this.setState({added1[this.state.added.indexOf(_id)].Accepted:false})
+    let newMarkers = this.state.added1.map(el => (
+      el.MemberID === _id ? {...el,Accepted:false
+      } : el
+  ))
+  this.setState({ added1: newMarkers });
     this.setState({
       masterDataSource: [...this.state.masterDataSource, {
         _id: _id
@@ -306,7 +313,23 @@ class AddPersonToPreject extends Component {
       />
     );
   };
+  showAlert = (title, field) =>
+  Alert.alert(
+    title,
+    field,
+    [
+      {
+        text: "Cancel",
 
+        style: "cancel",
+      },
+    ],
+    {
+      cancelable: true,
+
+
+    }
+  );
   getItem = async (item) => {
 
 
@@ -404,6 +427,9 @@ class AddPersonToPreject extends Component {
           console.log(error);
         });
       }
+      else if(jsonresponse!=="invited"){
+        this.showAlert(this.state.NickName,jsonresponse)
+      }
 
     }).catch(error => {
       console.log(error);
@@ -488,7 +514,7 @@ class AddPersonToPreject extends Component {
           ProjectID: this.state.ProjectID,
           MemberID: MemberID,
           MemberEmail: MemberEmail,
-          Type: "AddToProject",
+          Type: "InviteToProject",
           SenderNickName: this.state.NickName,
           SenderEmail: this.state.Email,
           ProjectName: this.state.ProjectName,

@@ -208,8 +208,8 @@ class AskAsCustomer extends Component {
                         width: '10%', borderColor: '#bc9855', borderWidth: 1,
                         borderBottomColor: '#bfcfb2'
                     }}>
-                        <Icon
-                            name="add-sharp"
+                        <Ionicons
+                            name="add"
                             size={20}
                             color="black"
                             onPress={() => { this.getItem(item) }}
@@ -730,7 +730,7 @@ class AskAsCustomer extends Component {
                                 width: '90%',
                                 marginHorizontal: '5%',
                                 // position:'relative',
-                                height: 70,
+                                height: 100,
                                 borderColor: "#bc9855",
                                 borderWidth: 1,
                                 marginVertical: 10,

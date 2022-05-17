@@ -110,6 +110,10 @@ class ProfileForOthers extends Component {
   async componentDidMount() {
     if (this.state.Email === this.state.GuestEmail) this.setState({ FollowEnable: false })
     await this.loadProfile();
+    this.setState({
+      followtext: "Follow",
+      color: "#bc9855",
+    })
 
   }
   async getInfo() {
@@ -294,14 +298,12 @@ class ProfileForOthers extends Component {
           .collection('NOTIFICATIONS')
           .doc(item.Email)
           .collection('NOTIFICATIONS')
-          // .doc(item.Email)
           .add({
             Boolean: false,
             Type: "Join",
             SenderNickName: this.state.GuestNickName,
-            message: "Requests to join your project " + item.ProjectName,
+            message: "Requested to join your project " + item.ProjectName,
             projectId: item._id,
-            // leaderEmail: item.Email,
             Date: new Date().toDateString(),
             createdAt: new Date().getTime(),
             user: {
@@ -309,6 +311,7 @@ class ProfileForOthers extends Component {
               email: this.state.GuestEmail
             }
           });
+          this.showAlert(this.state.NickName, "Your request has been sent")
 
         await fetch(serverLink + "/Invitations", {
           method: "POST",
@@ -337,6 +340,9 @@ class ProfileForOthers extends Component {
           console.log(error);
         });
       }
+      else {
+        this.showAlert("Join "+item.ProjectName, jsonresponse)
+      }
 
     }).catch(error => {
       console.log(error);
@@ -346,7 +352,7 @@ class ProfileForOthers extends Component {
 
     return (
       <View style={{
-        height: '90%',
+        height: 270,
         width: 250,
         backgroundColor: '#98a988',
         margin: 15,
@@ -422,7 +428,7 @@ class ProfileForOthers extends Component {
 
     return (
       <View style={{
-        height: '90%',
+        height: 270,
         width: 250,
         backgroundColor: '#98a988',
         margin: 15,
@@ -798,11 +804,11 @@ class ProfileForOthers extends Component {
                   <TouchableOpacity
                     disabled={!this.state.FollowEnable}
                     onPress={async () => {
-                      if (this.state.Followed) {
-                        await this.UnFollowButtonPressed();
+                      if (this.state.followtext==="Follow") {
+                        await this.FollowButtonPressed();
                       }
                       else {
-                        await this.FollowButtonPressed();
+                        await this.UnFollowButtonPressed();
                       }
 
                     }
@@ -872,13 +878,14 @@ class ProfileForOthers extends Component {
                   </TouchableOpacity>
                 </View>
                 <LinearGradient
-                  colors={['#bfcfb2', '#98a988', '#bfcfb2']}
+                  colors={['#bc9855', '#bc9855', '#bc9855']}
                   style={{
                     left: 0,
                     right: 0,
                     height: 10,
                     width: '100%',
                     marginTop: 5,
+                    marginBottom:5,
                   }}
                 ></LinearGradient>
 
@@ -910,25 +917,26 @@ class ProfileForOthers extends Component {
 
                 </View>
                 <LinearGradient
-                  colors={['#bfcfb2', '#98a988', '#bfcfb2']}
+                  colors={['#bc9855', '#bc9855', '#bc9855']}
                   style={{
                     left: 0,
                     right: 0,
-                    height: 10,
+                    height: 1,
                     width: '100%',
                     marginTop: 5,
+                    marginBottom:5
 
                   }}
                 ></LinearGradient>
                 {/* Projects created */}
-                <View style={{ width: '100%', height: 320, }}>
+                <View style={{ width: '100%', }}>
                   <Text style={[styles.text, { paddingHorizontal: 20 }]}>Created Projects</Text>
                   <FlatList
                     contentContainerStyle={this.state.Projects.length <= 1 ? { width: '100%' } : {}}
                     showsHorizontalScrollIndicator={false}
                     horizontal
                     width={'100%'}
-                    height={'100%'}
+                    // height={'100%'}
                     keyExtractor={(item) => item._id.toString()}
                     data={this.state.Projects}
                     renderItem={this.funcProjects}
@@ -937,24 +945,25 @@ class ProfileForOthers extends Component {
 
                 </View>
                 <LinearGradient
-                  colors={['#bfcfb2', '#98a988', '#bfcfb2']}
+                  colors={['#bc9855', '#bc9855', '#bc9855']}
                   style={{
                     left: 0,
                     right: 0,
-                    height: 10,
+                    height: 1,
                     width: '100%',
                     marginTop: 5,
+                    marginBottom:5
                   }}
                 ></LinearGradient>
                 {/* Projects joined */}
-                <View style={{ width: '100%', height: 320, }}>
+                <View style={{ width: '100%',  }}>
                   <Text style={[styles.text, { paddingHorizontal: 20 }]}>Joined Projects</Text>
                   <FlatList
                     contentContainerStyle={this.state.ProjectsJoinedInfo.length <= 1 ? { width: '100%' } : {}}
                     showsHorizontalScrollIndicator={false}
                     horizontal
                     width={'100%'}
-                    height={'100%'}
+                    // height={'100%'}
                     keyExtractor={(item) => item._id.toString()}
                     data={this.state.ProjectsJoinedInfo}
                     renderItem={this.funcProjectsJoined}
@@ -963,11 +972,11 @@ class ProfileForOthers extends Component {
 
                 </View>
                 <LinearGradient
-                  colors={['#bfcfb2', '#98a988', '#bfcfb2']}
+                  colors={['#bc9855', '#bc9855', '#bc9855']}
                   style={{
                     left: 0,
                     right: 0,
-                    height: 10,
+                    height: 1,
                     width: '100%',
                     marginTop: 5,
                   }}
@@ -998,13 +1007,14 @@ class ProfileForOthers extends Component {
 
             </View>
             <LinearGradient
-              colors={['#bfcfb2', '#98a988', '#bfcfb2']}
+              colors={['#bc9855', '#bc9855', '#bc9855']}
               style={{
                 left: 0,
                 right: 0,
                 height: 10,
                 width: '100%',
                 marginTop: 5,
+                marginBottom:5
               }}
             ></LinearGradient>
             <KeyboardAwareScrollView style={{ width: '100%', marginBottom: 5 }}>

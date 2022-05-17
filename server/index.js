@@ -113,6 +113,8 @@ app.post("/saveProfileInfo", (req, res) => {
     ProfileImage: req.body.ProfileImage,
     InterestedIn: req.body.InterestedIn,
     Followers: req.body.Followers,
+    FollowersList:[],
+    FollowingsList:[],
     Following: req.body.Following,
     Projects: req.body.Projects,
     Views: req.body.Views,
@@ -325,6 +327,7 @@ app.post("/saveProjectInfo", (req, res) => {
     MeetingLink: "",
     MeetingDate: "",
     CreationTime: req.body.CreationTime,
+    Messages:[],
   };
   const user = users.insertOne(query, function (err, result) {
     if (err) throw err;
@@ -892,7 +895,7 @@ app.post("/Invitations", (req, res) => {
     ProjectID: req.body.ProjectID,
     ProjectName: req.body.ProjectName,
     RecieverEmail: req.body.RecieverEmail,
-    CreationTime:req.body.CreationTime,
+    CreationTime: req.body.CreationTime,
   };
   const user = users.insertOne(query, function (err, result) {
     if (err) throw err;
@@ -915,7 +918,7 @@ app.post("/InvitationsCustomer", (req, res) => {
     ProjectDeadLine: req.body.ProjectDeadLine,
 
     RecieverEmail: req.body.RecieverEmail,
-    CreationTime:req.body.CreationTime,
+    CreationTime: req.body.CreationTime,
   };
   const user = users.insertOne(query, function (err, result) {
     if (err) throw err;
@@ -947,54 +950,88 @@ app.post("/InvitationsAsktojoin", (req, res) => {
 
 app.post("/getJoin", (req, res) => {
   const database = client.db('KANRI');
-  const users = database.collection('Invitations');
 
-  users.findOne({ 
-    Type: req.body.Type,
-    SenderNickName: req.body.SenderNickName,
-    SenderEmail: req.body.SenderEmail,
+  database.collection('ProjectTeamMembers').findOne({
+    MemberEmail: req.body.SenderEmail,
     ProjectID: req.body.ProjectID,
-    ProjectName: req.body.ProjectName,
-    RecieverEmail: req.body.RecieverEmail,
-   }, { projection: { _id: 1, } }, function (err, result) {
+  }, { projection: { _id: 1, Accepted: 1 } }, function (err, result) {
     if (err) throw err;
     if (result == null) {
-      res.send(JSON.stringify("null"));
+      database.collection('Invitations').findOne({
+        Type: req.body.Type,
+        SenderNickName: req.body.SenderNickName,
+        SenderEmail: req.body.SenderEmail,
+        ProjectID: req.body.ProjectID,
+        ProjectName: req.body.ProjectName,
+        RecieverEmail: req.body.RecieverEmail,
+        // CreationTime: req.body.CreationTime,
+      }, { projection: { _id: 1, } }, function (err, result) {
+        if (err) throw err;
+        if (result == null) {
+          res.send(JSON.stringify("null"));
+        }
+        else {
+          console.log(result);
+          res.send(JSON.stringify("You have already requested to join " + req.body.ProjectName));
+        }
+      });
     }
     else {
       console.log(result);
-      res.send(JSON.stringify(result));
+      if (result.Accepted)
+        res.send(JSON.stringify("You are already a member in " + req.body.ProjectName));
+      else {
+        res.send(JSON.stringify("You have been already invited to join " + req.body.ProjectName+", please check the invitations tab"));
+      }
     }
   });
+
 })
+
 app.post("/getInviteToProject", (req, res) => {
   const database = client.db('KANRI');
-  const users = database.collection('Invitations');
-
-  users.findOne({ 
-    Type: req.body.Type,
+  database.collection('Invitations').findOne({
+    Type: "RequestToJoin",
     SenderNickName: req.body.SenderNickName,
     SenderEmail: req.body.SenderEmail,
     ProjectID: req.body.ProjectID,
     ProjectName: req.body.ProjectName,
-    ProjectMission: req.body.ProjectMission,
     RecieverEmail: req.body.RecieverEmail,
-   }, { projection: { _id: 1, } }, function (err, result) {
+  }, { projection: { _id: 1, } }, function (err, result) {
     if (err) throw err;
     if (result == null) {
-      res.send(JSON.stringify("null"));
+      database.collection('Invitations').findOne({
+        Type: req.body.Type,
+        SenderNickName: req.body.SenderNickName,
+        SenderEmail: req.body.SenderEmail,
+        ProjectID: req.body.ProjectID,
+        ProjectName: req.body.ProjectName,
+        ProjectMission: req.body.ProjectMission,
+        RecieverEmail: req.body.RecieverEmail,
+      }, { projection: { _id: 1, } }, function (err, result) {
+        if (err) throw err;
+        if (result == null) {
+          res.send(JSON.stringify("null"));
+        }
+        else {
+        //   // console.log(result);
+          res.send(JSON.stringify("invited"));
+        }
+      });
     }
     else {
       console.log(result);
-      res.send(JSON.stringify(result));
+      res.send(JSON.stringify("This person has already requested to join this project, please check the invitations tab"));
     }
   });
+
+  
 })
 app.post("/getProjectsCustomer", (req, res) => {
   const database = client.db('KANRI');
   const users = database.collection('Projects');
 
-  users.find({CustomerEmail:req.body.Email},{projection:{_id:1,Messages:0,CustomerEmail:0}}).sort({ CreationTime: -1 }).toArray(function (err, result) {
+  users.find({ CustomerEmail: req.body.Email }, { projection: { _id: 1, Messages: 0, CustomerEmail: 0 } }).sort({ CreationTime: -1 }).toArray(function (err, result) {
     if (err) throw err;
     if (result.length == 0) {
       res.send(JSON.stringify("null"));
@@ -1005,6 +1042,131 @@ app.post("/getProjectsCustomer", (req, res) => {
     }
   });
 })
+
+app.post("/getInvitations", (req,res) => {
+  const database = client.db('KANRI');
+console.log(req.body.RecieverEmail)
+  database.collection('Invitations').find(
+    {
+      RecieverEmail:req.body.RecieverEmail
+    }).sort({ CreationTime: -1 }).toArray(function (err, result)  {
+    if (err) throw err;
+    if (result == null) {
+      res.send(JSON.stringify("null"));
+    }
+
+    else {
+      console.log(result);
+      res.send(JSON.stringify(result));
+    }
+  });
+})
+app.post("/getNickName1", (req, res) => {
+  const database = client.db('KANRI');
+  const users = database.collection('ProfileInfo');
+  users.findOne({ Email: req.body.Email }, { projection: { _id: 1, NickName: 1 } }, function (err, result) {
+    if (err) throw err;
+    if (result == null) res.send(JSON.stringify("null"));
+    else {
+      // console.log(result.Password);
+      res.send(JSON.stringify(result));
+    }
+
+  });
+});
+app.post("/RequestToJoinDone", (req, res) => {
+  const database = client.db('KANRI');
+  const users = database.collection('ProjectTeamMembers');
+  console.log(req.body.item)
+  var myquery = { 
+    ProjectID:req.body.item.ProjectID,
+    MemberID:req.body.id,
+     MemberEmail:req.body.item.RecieverEmail,
+    Accepted:true };
+
+  users.insertOne(myquery, function (err, obj) {
+    if (err) throw err;
+    database.collection('Invitations').deleteOne({_id:ObjectId(req.body.item._id)},function(err,result){
+      if (err) throw err;
+      res.send(JSON.stringify('done'))
+    })
+  });
+});
+app.post("/RequestToJoinDecline", (req, res) => {
+  const database = client.db('KANRI');
+  console.log(req.body._id)
+    database.collection('Invitations').deleteOne({_id:ObjectId(req.body._id)},function(err,result){
+      if (err) throw err;
+      res.send(JSON.stringify("done"))
+    })
+
+});
+app.post("/InviteToJoinDone", (req, res) => {
+  const database = client.db('KANRI');
+  const users = database.collection('ProjectTeamMembers');
+  console.log(req.body.item)
+  var myquery = { ProjectID:req.body.item.ProjectID, MemberEmail:req.body.item.RecieverEmail };
+  var newvalues = {
+    $set: {
+      Accepted: true,
+    }
+  };
+  users.updateOne(myquery, newvalues, function (err, obj) {
+    if (err) throw err;
+    database.collection('Invitations').deleteOne({_id:ObjectId(req.body.item._id)},function(err,result){
+      if (err) throw err;
+      res.send(JSON.stringify('done'))
+    })
+  });
+});
+app.post("/InviteToJoinDecline", (req, res) => {
+  const database = client.db('KANRI');
+  const users = database.collection('ProjectTeamMembers');
+  console.log(req.body.item)
+  var myquery = { ProjectID:req.body.item.ProjectID, MemberEmail:req.body.item.RecieverEmail };
+
+  users.deleteOne(myquery, function (err, obj) {
+    if (err) throw err;
+    database.collection('Invitations').deleteOne({_id:ObjectId(req.body.item._id)},function(err,result){
+      if (err) throw err;
+      res.send(JSON.stringify('done'))
+    })
+  });
+});
+app.post("/InviteToDoProjectDone", (req, res) => {
+  const database = client.db('KANRI');
+  const users = database.collection('Projects');
+  console.log(req.body.item)
+  var myquery = { 
+    Email:req.body.item.RecieverEmail, 
+    CustomerEmail:req.body.item.SenderEmail,
+    ProjectName:req.body.item.ProjectName,
+    ProjectMission:req.body.item.ProjectMission,
+    ProjectDescription:req.body.item.ProjectDescription,
+    ProjectBudget:req.body.item.ProjectBudget,
+    RemainingBudget:req.body.item.ProjectBudget,
+    DeadLine:req.body.item.ProjectDeadLine,
+    MeetingLink:'',
+    CreationTime:req.body.CreationTime,
+    MeetingDate:''
+  };
+
+  users.insertOne(myquery, function (err, obj) {
+    if (err) throw err;
+    database.collection('Invitations').deleteOne({_id:ObjectId(req.body.item._id)},function(err,result){
+      if (err) throw err;
+      res.send(JSON.stringify('done'))
+    })
+  });
+});
+app.post("/InviteToDoProjectDecline", (req, res) => {
+  const database = client.db('KANRI');
+  const users = database.collection('ProjectTeamMembers');
+  database.collection('Invitations').deleteOne({_id:ObjectId(req.body._id)},function(err,result){
+    if (err) throw err;
+    res.send(JSON.stringify('done'))
+  })
+});
 
 
 app.post("/sendToken", (req, res) => {
