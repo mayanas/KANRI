@@ -1889,7 +1889,7 @@ class Profile extends Component {
 
     return (
 
-      <View style={{height:'95%'}}>
+      <View style={{height:110}}>
         <View style={{ width: '100%', justifyContent: 'center', alignItems: 'flex-start', marginTop: 15 }}>
           <Text style={styles.title1}>{item.Title}</Text>
         </View>
@@ -4773,7 +4773,7 @@ const styles = StyleSheet.create({
   title1: {
     // width: "60%",
     textAlign: 'center',
-    fontSize: 18,
+    fontSize: 16,
     fontFamily: 'SairaSemiCondensed-Regular'
   },
   trailing1: {
